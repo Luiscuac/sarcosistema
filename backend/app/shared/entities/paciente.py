@@ -4,7 +4,7 @@ Entidad Paciente: varios modulos la referencian (laboratorio, imagenes, accesos)
 from sqlalchemy import BigInteger, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.config.database import Base
+from app.config.database import Base
 
 
 class Paciente(Base):

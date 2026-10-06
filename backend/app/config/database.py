@@ -4,7 +4,7 @@ Conexion a PostgreSQL. Equivalente a database.config.ts
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
-from src.config.settings import settings
+from app.config.settings import settings
 
 
 class Base(DeclarativeBase):

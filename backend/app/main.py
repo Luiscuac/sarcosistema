@@ -5,11 +5,11 @@ Equivalente a main.ts + app.module.ts: importa y conecta todos los modulos.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.accesos.router import router as accesos_router
-from src.ia.router import router as ia_router
-from src.imagenes.router import router as imagenes_router
-from src.laboratorio.router import router as laboratorio_router
-from src.shared.exceptions import registrar_manejadores_de_error
+from app.accesos.router import router as accesos_router
+from app.ia.router import router as ia_router
+from app.imagenes.router import router as imagenes_router
+from app.laboratorio.router import router as laboratorio_router
+from app.shared.exceptions import registrar_manejadores_de_error
 
 app = FastAPI(title="Sistema Hospital Sarcobamba", version="0.1.0")
 

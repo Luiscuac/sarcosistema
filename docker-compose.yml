@@ -19,8 +19,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./backend/src:/app/src
-
+      - ./backend/app:/app/app
   # IA local (Whisper.cpp + Ollama) segun la slide 9: no sale del servidor local.
   # Descomentar cuando se integre:
   # ollama:
@@ -31,5 +30,4 @@ services:
   #     - ollama_data:/root/.ollama
 
 volumes:
-  db_data:
-  # ollama_data:
+  db_data: # ollama_data:

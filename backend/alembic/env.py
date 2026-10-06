@@ -8,12 +8,12 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from src.config.database import Base
-from src.config.settings import settings
+from app.config.database import Base
+from app.config.settings import settings
 
 # Importar aca todos los modulos con modelos para que Alembic los detecte:
-from src.laboratorio import models as _laboratorio_models  # noqa: F401
-from src.shared.entities import paciente as _paciente_models  # noqa: F401
+from app.laboratorio import models as _laboratorio_models  # noqa: F401
+from app.shared.entities import paciente as _paciente_models  # noqa: F401
 
 config = context.config
 fileConfig(config.config_file_name)

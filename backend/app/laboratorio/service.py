@@ -4,9 +4,9 @@ Equivalente a examen.service.ts: validar campos, reglas del backlog.
 """
 from fastapi import HTTPException
 
-from src.laboratorio.models import Examen
-from src.laboratorio.repository import ExamenRepository
-from src.laboratorio.schemas import CrearExamenDTO
+from app.laboratorio.models import Examen
+from app.laboratorio.repository import ExamenRepository
+from app.laboratorio.schemas import CrearExamenDTO
 
 
 class ExamenService:

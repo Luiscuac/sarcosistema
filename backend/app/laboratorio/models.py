@@ -5,7 +5,7 @@ Equivalente a examen.entity.ts en el diagrama original: define la tabla.
 from sqlalchemy import BigInteger, String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.config.database import Base
+from app.config.database import Base
 
 
 class Examen(Base):

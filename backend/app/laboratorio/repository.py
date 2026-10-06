@@ -5,7 +5,7 @@ Equivalente a resultado.repository.ts: si no se usa el ORM directo en el service
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.laboratorio.models import Examen
+from app.laboratorio.models import Examen
 
 
 class ExamenRepository:

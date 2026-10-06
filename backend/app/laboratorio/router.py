@@ -5,10 +5,10 @@ Equivalente a examen.controller.ts: POST /examenes, GET /examenes/:id
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.config.database import get_db
-from src.laboratorio.repository import ExamenRepository
-from src.laboratorio.schemas import CrearExamenDTO, ExamenOut
-from src.laboratorio.service import ExamenService
+from app.config.database import get_db
+from app.laboratorio.repository import ExamenRepository
+from app.laboratorio.schemas import CrearExamenDTO, ExamenOut
+from app.laboratorio.service import ExamenService
 
 router = APIRouter(prefix="/examenes", tags=["laboratorio"])
 
