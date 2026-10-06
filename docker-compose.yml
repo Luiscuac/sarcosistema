@@ -1,0 +1,35 @@
+# Configuracion comun + inicio coordinado de servicios (seccion 8: Mantenimiento)
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: hospital_sarcobamba
+      POSTGRES_USER: hospital
+      POSTGRES_PASSWORD: hospital_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    env_file: ./backend/.env
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/src:/app/src
+
+  # IA local (Whisper.cpp + Ollama) segun la slide 9: no sale del servidor local.
+  # Descomentar cuando se integre:
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - ollama_data:/root/.ollama
+
+volumes:
+  db_data:
+  # ollama_data:

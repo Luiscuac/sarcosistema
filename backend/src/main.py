@@ -1,0 +1,34 @@
+"""
+Punto de entrada de la aplicacion.
+Equivalente a main.ts + app.module.ts: importa y conecta todos los modulos.
+"""
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from src.accesos.router import router as accesos_router
+from src.ia.router import router as ia_router
+from src.imagenes.router import router as imagenes_router
+from src.laboratorio.router import router as laboratorio_router
+from src.shared.exceptions import registrar_manejadores_de_error
+
+app = FastAPI(title="Sistema Hospital Sarcobamba", version="0.1.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # frontend Vite en desarrollo
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+registrar_manejadores_de_error(app)
+
+app.include_router(laboratorio_router)
+app.include_router(imagenes_router)
+app.include_router(accesos_router)
+app.include_router(ia_router)
+
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
