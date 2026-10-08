@@ -2,8 +2,9 @@
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from app.accesos import dependencies, router
-from app.accesos.security import hashear_password, verificar_password
+from app.accesos.infrastructure.security.password_hasher import Argon2PasswordHasher
+from app.accesos.infrastructure.persistence import repository as usuario_repository
+from app.accesos.domain.entities import Usuario
 from app.config.database import get_db
 from app.main import app
 
@@ -16,25 +17,35 @@ async def client():
 
 @pytest.fixture
 def usuarios(monkeypatch):
-    password_hash = hashear_password("clave-de-prueba")
-    usuario = {
-        "id": 7, "identificador_acceso": "laboratorio_prueba",
-        "contrasena_hash": password_hash, "estado": "activo",
-        "rol": "laboratorio", "rol_activo": True,
-        "trabajador_estado": "activo",
-    }
+    password_hasher = Argon2PasswordHasher()
+    password_hash = password_hasher.hashear("clave-de-prueba")
+    usuario = Usuario(
+        id=7,
+        identificador_acceso="laboratorio_prueba",
+        contrasena_hash=password_hash,
+        rol="laboratorio",
+        activo=True,
+    )
 
-    async def por_identificador(_db, identificador):
-        return usuario if identificador == usuario["identificador_acceso"] else None
+    async def por_identificador(_repository, identificador):
+        return usuario if identificador == usuario.identificador_acceso else None
 
-    async def por_id(_db, usuario_id):
-        return usuario if usuario_id == usuario["id"] else None
+    async def por_id(_repository, usuario_id):
+        return usuario if usuario_id == usuario.id else None
 
     async def db_falsa():
         yield object()
 
-    monkeypatch.setattr(router, "buscar_usuario", por_identificador)
-    monkeypatch.setattr(dependencies, "buscar_usuario_por_id", por_id)
+    monkeypatch.setattr(
+        usuario_repository.SqlAlchemyUsuarioRepository,
+        "buscar_por_identificador",
+        por_identificador,
+    )
+    monkeypatch.setattr(
+        usuario_repository.SqlAlchemyUsuarioRepository,
+        "buscar_por_id",
+        por_id,
+    )
     app.dependency_overrides[get_db] = db_falsa
     yield usuario
     app.dependency_overrides.clear()
@@ -75,7 +86,7 @@ async def test_sin_token_o_token_invalido(client, usuarios):
 
 @pytest.mark.asyncio
 async def test_otra_funcion_no_accede_laboratorio(client, usuarios):
-    usuarios["rol"] = "medico"
+    usuarios.rol = "medico"
     respuesta = await client.post("/accesos/login", json={
         "identificador_acceso": "laboratorio_prueba", "password": "clave-de-prueba",
     })
@@ -85,4 +96,4 @@ async def test_otra_funcion_no_accede_laboratorio(client, usuarios):
 
 
 def test_hash_corrupto_no_autentica():
-    assert verificar_password("clave-de-prueba", "hash-invalido") is False
+    assert Argon2PasswordHasher().verificar("clave-de-prueba", "hash-invalido") is False

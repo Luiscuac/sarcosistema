@@ -12,7 +12,7 @@ from app.config.database import Base
 from app.config.settings import settings
 
 # Importar aca todos los modulos con modelos para que Alembic los detecte:
-from app.laboratorio import models as _laboratorio_models  # noqa: F401
+from app.laboratorio.infrastructure.persistence import models as _laboratorio_models  # noqa: F401
 from app.shared.entities import paciente as _paciente_models  # noqa: F401
 
 config = context.config

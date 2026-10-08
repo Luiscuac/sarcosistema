@@ -1,91 +1,60 @@
-# SarcoSistema — Hospital Sarcobamba
+﻿# SarcoSistema — Hospital Sarcobamba
 
-Monolito modular: cada módulo (`laboratorio`, `imagenes`, `accesos`, `ia`) sigue
-capas tipo MVC (router → service → repository → models/schemas), con código
-compartido en `shared/`.
+Monolito modular: cada módulo mantiene sus reglas, casos de uso y adaptadores. En los módulos con flujo implementado, el backend sigue arquitectura limpia y usa MVC en presentación: el router recibe HTTP, delega al caso de uso y convierte la respuesta. El dominio y la aplicación no dependen de FastAPI ni SQLAlchemy.
 
 ## Stack
 
-- **Backend:** Python 3.12 + FastAPI + PostgreSQL (pgvector) — ver `backend/`
-- **Frontend:** React + Vite + Axios + React Query — ver `frontend/`
-- **IA:** Whisper.cpp + Ollama, corriendo en servidor local (sin costo por uso)
-
-## Cómo levantar el proyecto en desarrollo
-
-```bash
-# 1. Backend + base de datos (solo en una instalación nueva)
-cd backend
-cp .env.example .env          # completar DATABASE_URL y JWT_SECRET_KEY
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt -r requirements-dev.txt
-cd ..
-docker compose up -d db
-cd backend
-alembic upgrade head           # solo si existen migraciones pendientes
-uvicorn app.main:app --reload
-
-# 2. Frontend (en otra terminal)
-cd frontend
-cp .env.example .env
-npm install
-npm run dev
-```
-
-Backend en `http://localhost:8000/docs` (documentación automática de FastAPI).
-Frontend en `http://localhost:5173`.
+- **Backend:** Python + FastAPI + PostgreSQL (pgvector), en `backend/`
+- **Frontend:** React + Vite + Axios + React Query, en `frontend/`
+- **IA:** componentes experimentales y sin flujo funcional integrado
 
 ## Estructura
 
-```
-backend/src/
-  laboratorio/   imagenes/   accesos/   ia/     ← módulos del backlog
-  shared/                                        ← código compartido
-  config/                                        ← conexión BD, variables de entorno
+```text
+backend/app/
+  laboratorio/
+    domain/           # entidades y reglas
+    application/      # casos de uso y puertos
+    infrastructure/   # adaptadores SQLAlchemy
+    presentation/     # routers y esquemas HTTP
+  accesos/
+    application/      # caso de uso de inicio de sesión y puertos
+    infrastructure/   # consultas SQL, JWT y hash de contraseñas
+    presentation/     # endpoints y dependencias HTTP
+  imagenes/ ia/       # módulos esqueleto hasta que tengan casos de uso
+  shared/             # utilidades verdaderamente transversales
+  config/             # composición, configuración y sesión de BD
+
 frontend/src/
-  components/  pages/  services/  hooks/  context/  routes/
+  app/                 # aplicación, rutas y proveedores globales
+  features/
+    accesos/           # API, sesión, páginas y componentes de acceso
+    inicio/            # páginas de inicio
+    laboratorio/       # API, hooks, páginas y componentes de laboratorio
+  shared/              # cliente HTTP, UI y utilidades compartidas
 ```
 
-## Convenciones de cada módulo backend
+Los casos de uso dependen de protocolos (puertos); los adaptadores concretos se conectan en presentación/composición. Los repositorios llaman `flush()` y no confirman la transacción. `get_db` administra la transacción de cada operación HTTP para que los cambios coordinados se confirmen juntos.
 
-| Capa | Archivo | Equivale a (diagrama original) |
-|---|---|---|
-| Endpoints | `router.py` | `*.controller.ts` |
-| Lógica de negocio | `service.py` | `*.service.ts` |
-| Entidad / tabla | `models.py` | `*.entity.ts` |
-| Forma de entrada/salida | `schemas.py` | `*.dto.ts` |
-| Consultas a la BD | `repository.py` | `*.repository.ts` |
+## Desarrollo
 
-## Primer flujo: acceso a laboratorio con base existente
+Configura `backend/.env` con `DATABASE_URL` y `JWT_SECRET_KEY`. Para una base nueva, Docker Compose monta `database/schema.sql` como inicialización del servicio PostgreSQL. Para una base existente, no vuelvas a inicializar ni sobrescribas el esquema; aplica el procedimiento acordado con el equipo.
 
-Si PostgreSQL ya tiene el esquema, no ejecutes `database/schema.sql` ni vuelvas a
-crear la base. Configura `DATABASE_URL` y una clave aleatoria larga en
-`JWT_SECRET_KEY` en el entorno local del backend, sin subirlas a Git. Configura
-`VITE_API_URL=http://localhost:8000` para el frontend.
-
-Desde `backend`, en Windows y con el entorno virtual instalado:
+Desde `backend`, con dependencias instaladas:
 
 ```powershell
 .venv\Scripts\python.exe -m scripts.verificar_esquema_accesos
 .venv\Scripts\python.exe -m scripts.preparar_usuario_prueba laboratorio_prueba
-.venv\Scripts\python.exe -m pytest -q
 .venv\Scripts\python.exe -m uvicorn app.main:app --reload
 ```
 
-El comando `preparar_usuario_prueba` solicita la contraseña de forma interactiva
-y guarda solo el hash Argon2id. Si la cuenta aún no existe, requiere un trabajador
-ficticio activo ya cargado y la opción `--trabajador-id ID`; crea la cuenta con
-el rol `laboratorio`. No cambia una cuenta de otro rol. Con una cuenta existente,
-omite esa opción para renovar su contraseña de prueba.
+La preparación de una cuenta solicita la contraseña interactivamente y guarda solo su hash Argon2id. El backend publica documentación en `http://localhost:8000/docs`.
 
-En otra terminal, desde `frontend`:
+En otra terminal:
 
 ```powershell
-npm run build
+cd frontend
 npm run dev
 ```
 
-Abre `http://localhost:5173/login`. El acceso es común para todos los roles:
-una cuenta de laboratorio entra a `/laboratorio` y los demás roles llegan a
-`/inicio`, donde se indica que su módulo aún no forma parte del piloto.
-Una contraseña errónea muestra un error. Abre `/laboratorio` sin sesión o tras
-cerrar sesión para comprobar la redirección.
+La aplicación frontend se sirve en `http://localhost:5173`.

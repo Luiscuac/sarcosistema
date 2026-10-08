@@ -1,0 +1,2 @@
+class ExamenNoEncontrado(Exception):
+    pass

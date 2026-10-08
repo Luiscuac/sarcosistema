@@ -10,7 +10,7 @@ from getpass import getpass
 
 from sqlalchemy import text
 
-from app.accesos.security import hashear_password
+from app.accesos.infrastructure.security.password_hasher import Argon2PasswordHasher
 from app.config.database import SessionLocal
 
 
@@ -71,7 +71,8 @@ def main():
     password = getpass("Contraseña de prueba: ")
     if not password or password != getpass("Repite la contraseña: "):
         raise SystemExit("La contraseña está vacía o no coincide")
-    print(asyncio.run(preparar(args.identificador, args.trabajador_id, hashear_password(password))))
+    password_hash = Argon2PasswordHasher().hashear(password)
+    print(asyncio.run(preparar(args.identificador, args.trabajador_id, password_hash)))
 
 
 if __name__ == "__main__":
