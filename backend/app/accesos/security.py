@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 
 import jwt
 from argon2 import PasswordHasher
+from argon2.exceptions import InvalidHashError, VerificationError
 
 ALGORITHM = "HS256"
 ph = PasswordHasher()
@@ -17,7 +18,7 @@ def hashear_password(password: str) -> str:
 def verificar_password(password: str, hash_guardado: str) -> bool:
     try:
         return ph.verify(hash_guardado, password)
-    except Exception:
+    except (InvalidHashError, VerificationError):
         return False
 
 

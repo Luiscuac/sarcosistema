@@ -1,16 +1,21 @@
-// Usuario logueado, rol, token.
 import { createContext, useContext, useState } from 'react'
 
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-  const [usuario, setUsuario] = useState(null) // { nombre, rol, token }
+  const [token, setToken] = useState(() => sessionStorage.getItem('token'))
 
-  const login = (datosUsuario) => setUsuario(datosUsuario)
-  const logout = () => setUsuario(null)
+  const login = (accessToken) => {
+    sessionStorage.setItem('token', accessToken)
+    setToken(accessToken)
+  }
+  const logout = () => {
+    sessionStorage.removeItem('token')
+    setToken(null)
+  }
 
   return (
-    <AuthContext.Provider value={{ usuario, login, logout }}>
+    <AuthContext.Provider value={{ token, login, logout }}>
       {children}
     </AuthContext.Provider>
   )

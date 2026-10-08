@@ -6,11 +6,15 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config.database import get_db
+from app.accesos.dependencies import requiere_rol
 from app.laboratorio.repository import ExamenRepository
 from app.laboratorio.schemas import CrearExamenDTO, ExamenOut
 from app.laboratorio.service import ExamenService
 
-router = APIRouter(prefix="/examenes", tags=["laboratorio"])
+router = APIRouter(
+    prefix="/examenes", tags=["laboratorio"],
+    dependencies=[Depends(requiere_rol("laboratorio"))],
+)
 
 
 def get_service(db: AsyncSession = Depends(get_db)) -> ExamenService:

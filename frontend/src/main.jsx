@@ -1,5 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import '@fontsource/inter/latin-400.css'
+import '@fontsource/inter/latin-600.css'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
