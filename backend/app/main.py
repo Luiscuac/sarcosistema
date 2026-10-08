@@ -5,6 +5,9 @@ Equivalente a main.ts + app.module.ts: importa y conecta todos los modulos.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from sqlalchemy import text
+from app.config.database import engine
+
 from app.accesos.router import router as accesos_router
 from app.ia.router import router as ia_router
 from app.imagenes.router import router as imagenes_router
@@ -32,3 +35,12 @@ app.include_router(ia_router)
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+    
+@app.get("/health/db")
+async def health_db():
+    async with engine.connect() as conn:
+        resultado = await conn.execute(
+            text("select count(*) from information_schema.tables where table_schema = 'public' and table_type = 'BASE TABLE'")
+        )
+        return {"db": "ok", "tablas_publicas": resultado.scalar_one()}
