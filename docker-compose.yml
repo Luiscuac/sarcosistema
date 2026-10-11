@@ -15,12 +15,15 @@ services:
   backend:
     build: ./backend
     env_file: ./backend/.env
+    environment:
+      WHISPER_MODEL_DIR: /app/.models/whisper
     depends_on:
       - db
     ports:
       - "8000:8000"
-  # IA local (Whisper.cpp + Ollama) segun la slide 9: no sale del servidor local.
-  # Descomentar cuando se integre:
+    volumes:
+      - whisper_models:/app/.models/whisper
+  # Ollama puede añadirse más adelante si se aprueba la asistencia de redacción.
   # ollama:
   #   image: ollama/ollama:latest
   #   ports:
@@ -29,4 +32,5 @@ services:
   #     - ollama_data:/root/.ollama
 
 volumes:
-  db_data: # ollama_data:
+  db_data:
+  whisper_models:
