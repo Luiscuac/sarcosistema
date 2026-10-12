@@ -1,5 +1,3 @@
-"""Transcripción local mediante faster-whisper."""
-
 import asyncio
 from functools import cached_property
 from io import BytesIO
@@ -7,12 +5,10 @@ from threading import Lock
 
 from faster_whisper import WhisperModel
 
-
-class ErrorTranscripcion(Exception):
-    """Error al cargar el modelo o transcribir el audio."""
+from app.ia.application.errors.transcription_error import ErrorTranscripcion
 
 
-class TranscripcionService:
+class FasterWhisperService:
     def __init__(
         self,
         model_size: str,
@@ -39,19 +35,27 @@ class TranscripcionService:
         )
 
     async def transcribir(self, audio_bytes: bytes) -> str:
-        """Transcribe audio en español sin bloquear el event loop de FastAPI."""
         try:
             return await asyncio.to_thread(self._transcribir_sync, audio_bytes)
         except Exception as error:
-            raise ErrorTranscripcion("faster-whisper no pudo cargar el modelo o transcribir el audio") from error
+            raise ErrorTranscripcion(
+                "faster-whisper no pudo cargar el modelo o transcribir el audio"
+            ) from error
 
     def _transcribir_sync(self, audio_bytes: bytes) -> str:
-        # Serializa el uso del modelo único para limitar el consumo de memoria.
         with self._inference_lock:
-            segmentos, _ = self.model.transcribe(
-                BytesIO(audio_bytes),
-                language="es",
-                task="transcribe",
-                vad_filter=True,
-            )
-            return "".join(segmento.text for segmento in segmentos).strip()
+            texto = self._transcribir_con_filtro(audio_bytes, filtrar_voz=True)
+            if texto:
+                return texto
+
+            # El VAD puede descartar voz baja o distante; reintenta el audio completo.
+            return self._transcribir_con_filtro(audio_bytes, filtrar_voz=False)
+
+    def _transcribir_con_filtro(self, audio_bytes: bytes, filtrar_voz: bool) -> str:
+        segmentos, _ = self.model.transcribe(
+            BytesIO(audio_bytes),
+            language="es",
+            task="transcribe",
+            vad_filter=filtrar_voz,
+        )
+        return "".join(segmento.text for segmento in segmentos).strip()

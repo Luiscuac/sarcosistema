@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import LoginPage from '../features/accesos/pages/LoginPage.jsx'
 import InicioPage from '../features/inicio/pages/InicioPage.jsx'
 import LaboratorioPage from '../features/laboratorio/pages/LaboratorioPage.jsx'
+import IaPage from '../features/ia/pages/IaPage.jsx'
 import ProtectedRoute from '../features/accesos/auth/ProtectedRoute.jsx'
 
 export default function AppRouter() {
@@ -18,6 +19,11 @@ export default function AppRouter() {
         <Route path="/laboratorio" element={
           <ProtectedRoute rolesPermitidos={['laboratorio']}>
             {({ usuario, logout }) => <LaboratorioPage usuario={usuario} logout={logout} />}
+          </ProtectedRoute>
+        } />
+        <Route path="/ia" element={
+          <ProtectedRoute>
+            {({ usuario, logout }) => <IaPage usuario={usuario} logout={logout} />}
           </ProtectedRoute>
         } />
       </Routes>

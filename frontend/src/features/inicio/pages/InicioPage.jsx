@@ -14,6 +14,7 @@ export default function InicioPage({ usuario, logout }) {
         ) : (
           <p>El módulo para este rol todavía no está disponible en el piloto.</p>
         )}
+        <Link className="inicio-link" to="/ia">Transcripción experimental</Link>
         <button className="primary-button" onClick={logout}>Cerrar sesión</button>
       </section>
     </main>
