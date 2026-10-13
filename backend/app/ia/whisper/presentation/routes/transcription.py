@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 
 from app.accesos.domain.entities import Usuario
 from app.accesos.presentation.dependencies.current_user import usuario_actual
-from app.ia.application.errors.transcription_error import ErrorTranscripcion
-from app.ia.application.use_cases.transcribir_audio import TranscribirAudio
-from app.ia.infrastructure.providers import proveer_transcribir_audio
-from app.ia.presentation.schemas.transcription_response import TranscripcionResponse
+from app.ia.whisper.application.errors.transcription_error import ErrorTranscripcion
+from app.ia.whisper.application.use_cases.transcribir_audio import TranscribirAudio
+from app.ia.whisper.infrastructure.providers import proveer_transcribir_audio
+from app.ia.whisper.presentation.schemas.transcription_response import TranscripcionResponse
 
 router = APIRouter()
 
