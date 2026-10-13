@@ -16,13 +16,15 @@ compartido en `shared/`.
 # 1. Backend + base de datos
 cd backend
 cp .env.example .env          # completar DATABASE_URL y JWT_SECRET_KEY
-python -m venv .venv && source .venv/bin/activate
+python -m venv .venv && source .venv/bin/activate #Si este no funciona este de abajo
+python -m venv .venv; .\.venv\Scripts\Activate.ps1
+
 pip install -r requirements.txt -r requirements-dev.txt
 cd ..
 docker compose up -d db
 cd backend
 alembic upgrade head           # cuando existan migraciones
-uvicorn src.main:app --reload
+uvicorn app.main:app --reload # uvicorn src.main:app --reload ya no
 
 # 2. Frontend (en otra terminal)
 cd frontend
