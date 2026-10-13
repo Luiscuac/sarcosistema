@@ -1,8 +1,8 @@
 from functools import lru_cache
 
 from app.config.settings import settings
-from app.ia.whisper.application.use_cases.transcribir_audio import TranscribirAudio
-from app.ia.whisper.infrastructure.transcription.faster_whisper_service import FasterWhisperService
+from backend.app.ia.whisper.application.use_cases.transcribir_audio import TranscribirAudio
+from backend.app.ia.whisper.infrastructure.transcription.faster_whisper_service import FasterWhisperService
 
 
 @lru_cache(maxsize=1)

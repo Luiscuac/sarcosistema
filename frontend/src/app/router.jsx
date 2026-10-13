@@ -3,7 +3,7 @@ import LoginPage from '../features/accesos/pages/LoginPage.jsx'
 import InicioPage from '../features/inicio/pages/InicioPage.jsx'
 import LaboratorioPage from '../features/laboratorio/pages/LaboratorioPage.jsx'
 import IaPage from '../features/ia/whisper/pages/IaPage.jsx'
-import TranscriptorPage from '../features/ia/transcriptor/pages/TranscriptorPage.jsx'
+import TranscriptorPage from '../features/ia/transporter/pages/TranscriptorPage.js'
 import ProtectedRoute from '../features/accesos/auth/ProtectedRoute.jsx'
 
 export default function AppRouter() {

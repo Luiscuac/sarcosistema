@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { transcribirAudio } from '../api/iaApi.js'
+import { transcribirAudio } from '../../api/iaApi.js'
 
 function mensajeDeError(error) {
   if (error?.name === 'NotAllowedError' || error?.name === 'PermissionDeniedError') {

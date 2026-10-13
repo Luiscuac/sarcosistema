@@ -5,7 +5,7 @@ from threading import Lock
 
 from faster_whisper import WhisperModel
 
-from app.ia.whisper.application.errors.transcription_error import ErrorTranscripcion
+from backend.app.ia.whisper.application.errors.transcription_error import ErrorTranscripcion
 
 
 class FasterWhisperService:
