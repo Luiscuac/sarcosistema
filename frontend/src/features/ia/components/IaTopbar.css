@@ -1,0 +1,7 @@
+.ia-topbar { min-height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 0 32px; border-bottom: 1px solid var(--line); background: #fff; }
+.ia-topbar > span { color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: .06em; }
+.ia-session { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.ia-session-status { display: inline-flex; align-items: center; gap: 7px; padding: 6px 9px; border: 1px solid var(--line); border-radius: 6px; color: #53606b; font-size: 11px; white-space: nowrap; }
+.ia-session-status > span { width: 6px; height: 6px; border-radius: 50%; background: var(--brand); }
+.ia-session-user { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); font-size: 12px; font-weight: 600; }
+@media (max-width: 700px) { .ia-topbar { min-height: 58px; padding: 10px 20px; } .ia-topbar > span { font-size: 9px; } .ia-session-status { display: none; } .ia-session-user { max-width: 120px; } }

@@ -1,0 +1,5 @@
+.ia-page { min-height: 100vh; display: grid; grid-template-columns: 224px minmax(0, 1fr); background: var(--surface); }
+.ia-main { min-width: 0; }
+.ia-content { max-width: 1200px; margin: 0 auto; padding: 34px 36px 48px; }
+@media (max-width: 1000px) { .ia-page { grid-template-columns: 190px minmax(0, 1fr); } .ia-content { padding: 28px 24px 40px; } }
+@media (max-width: 700px) { .ia-page { grid-template-columns: 1fr; } .ia-content { padding: 26px 20px 36px; } }
