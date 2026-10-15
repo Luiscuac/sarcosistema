@@ -1,0 +1,12 @@
+.ia-sidebar { min-height: 100vh; display: flex; flex-direction: column; background: #fff; border-right: 1px solid var(--line); }
+.ia-sidebar-heading { height: 72px; display: grid; align-content: center; gap: 3px; padding: 0 22px; border-bottom: 1px solid var(--line); }
+.ia-sidebar-heading strong { font-size: 16px; font-weight: 600; letter-spacing: -.02em; }
+.ia-sidebar-heading span { color: var(--muted); font-size: 9px; letter-spacing: .06em; }
+.ia-nav { display: grid; gap: 4px; padding: 22px 12px; }
+.ia-nav-item { min-height: 39px; display: flex; align-items: center; padding: 0 14px; border-radius: 6px; font-size: 12px; text-decoration: none; }
+.ia-nav-item--active { background: #edf6f4; color: var(--brand); font-weight: 600; }
+.ia-nav-item--inactive { color: #53606b; }
+.ia-nav-item--inactive:hover { background: #f5f6f8; }
+.ia-signout { width: 100%; min-height: 58px; margin-top: auto; padding: 0 22px; border: 0; border-top: 1px solid var(--line); background: #fff; color: #53606b; font-size: 12px; text-align: left; }
+.ia-signout:hover { background: #f5f6f8; }
+@media (max-width: 700px) { .ia-sidebar { min-height: auto; } .ia-sidebar-heading { height: 58px; } .ia-nav { display: none; } .ia-signout { min-height: 40px; margin: 0; padding: 0 22px; } }

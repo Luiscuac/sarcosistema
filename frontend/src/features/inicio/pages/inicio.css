@@ -1,0 +1,10 @@
+.inicio-page { min-height: 100vh; background: var(--surface); }
+.inicio-content { display: grid; justify-items: start; gap: 14px; max-width: 850px; padding: 36px 48px; }
+.inicio-content h1 { margin: 0 0 10px; font-size: 30px; }
+.inicio-content p { margin: 0; line-height: 1.5; }
+.inicio-content .primary-button { margin-top: 18px; }
+.inicio-link { color: var(--brand); font-weight: 700; }
+@media (max-width: 700px) {
+  .inicio-content { padding: 30px 22px; }
+  .inicio-content h1 { font-size: 25px; }
+}
