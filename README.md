@@ -11,7 +11,7 @@ compartido en `shared/`.
 - **IA:** Whisper.cpp + Ollama, corriendo en servidor local (sin costo por uso)
 
 ## Cómo levantar el proyecto en desarrollo
-
+### PYTHON 3.13 ###
 ```bash
 # 1. Backend + base de datos
 cd backend
