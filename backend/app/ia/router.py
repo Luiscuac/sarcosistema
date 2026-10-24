@@ -1,6 +1,8 @@
-"""Endpoints del componente de IA (dictado de informes/recetas)."""
 from fastapi import APIRouter
 
-router = APIRouter(prefix="/ia", tags=["ia"])
+from app.ia.transcriptor.presentation.routes.router import router as transcriptor_router
+from app.ia.whisper.presentation.routes.router import router as whisper_router
 
-# TODO: endpoint de transcripcion; la IA propone, el profesional valida y confirma
+router = APIRouter(prefix="/ia", tags=["ia"])
+router.include_router(whisper_router)
+router.include_router(transcriptor_router)

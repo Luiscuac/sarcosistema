@@ -1,21 +1,15 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import App from './App.jsx'
-import { AuthProvider } from './context/AuthContext.jsx'
-import { NotificacionProvider } from './context/NotificacionContext.jsx'
-import './assets/styles/globals.css'
-
-const queryClient = new QueryClient()
+import '@fontsource/inter/latin-400.css'
+import '@fontsource/inter/latin-600.css'
+import App from './app/App.jsx'
+import AppProviders from './app/AppProviders.jsx'
+import './shared/styles/globals.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <NotificacionProvider>
-          <App />
-        </NotificacionProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <AppProviders>
+      <App />
+    </AppProviders>
   </React.StrictMode>,
 )

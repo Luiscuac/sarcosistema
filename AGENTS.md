@@ -1,57 +1,49 @@
-# AGENTS.md (SarcoSistema)
+# AGENTS.md — SarcoSistema (rama `feature/transporter`)
 
-## Repo layout
-- `backend/` FastAPI app in `app/` (modular: `accesos/`, `laboratorio/`, `imagenes/`, `ia/`, `shared/`, `config/`). Main: `app/main.py`.
-- `frontend/` Vite + React (JSX). Entry: `src/main.jsx`, routes in `src/routes/AppRoutes.jsx`, API client in `src/services/api.js`.
-- `database/schema.sql` mounted into Postgres on first init (docker-compose).
-- `docker-compose.yml` brings up `db` (pgvector/pgvector:pg16). Backend/frontend run separately in dev.
+> Verificado el 23/10/2026 levantando la rama completa: backend + frontend + BD.
+> Ojo: versiones anteriores de este archivo describían otro layout del repo.
 
-## Dev commands (exact)
-### Backend
-```bash
+## Rama y layout (diferencias reales vs. lo que sugieren los nombres)
+
+- Rama activa: `feature/transporter` (upstream `origin/feature/transporter`). El backend usa **`backend/app/`** e imports **`app.*`** (no `src.*`).
+- Módulos backend en **arquitectura limpia** por carpeta: `domain/`, `application/`, `infrastructure/`, `presentation/` (p. ej. `app/laboratorio/presentation/router.py`, `app/accesos/application/use_cases/iniciar_sesion.py`). No busques `router.py`/`service.py`/`repository.py` sueltos: ya no existen.
+- Frontend organizado por **features**: `src/features/<modulo>/{api,pages,components,hooks}` + `src/shared/` (httpClient, notifications, ui). Router: `src/app/router.jsx`.
+- `transportador/` es un proyecto **independiente** (tiene su propio `requirements.txt` y `app/main.py`): **no** lo levanta `docker-compose.yml` ni el backend principal.
+- `ia` usa **faster-whisper** local (`app/ia/whisper/...`); el modelo se descarga en la primera transcripción (~460 MB con `WHISPER_MODEL_SIZE=small`).
+
+## Levantar el entorno (comandos exactos, Windows)
+
+```powershell
+docker compose up -d db                     # BD: hospital_sarcobamba, datos sembrados
+
+# Backend — OJO: requiere el import previo de paciente (ver bugs).
 cd backend
-cp .env.example .env        # set DATABASE_URL, JWT_SECRET_KEY
-python -m venv .venv && .\.venv\Scripts\activate  # Windows (or source .venv/bin/activate on Unix)
-pip install -r requirements.txt -r requirements-dev.txt
-# start DB
-cd ..
-docker compose up -d db
-# migrate (Alembic)
-cd backend
-alembic upgrade head        # only if migrations exist
-# run API
-uvicorn app.main:app --reload  # note: app package is under backend/app (run from backend/ or set PYTHONPATH)
-```
-Notes from repo:
-- Alembic env imports models: `app.laboratorio.models`, `app.shared.entities.paciente` (see `backend/alembic/env.py`). Add new models there if not auto-discovered.
-- Settings require `DATABASE_URL`, `JWT_SECRET_KEY` (see `app/config/settings.py`). `.env` is loaded via `pydantic-settings`.
-- DB is async SQLAlchemy (`app/config/database.py`). Health: `GET /health`, `GET /health/db`.
+.\.venv\Scripts\python.exe -c "import app.shared.entities.paciente; import uvicorn; uvicorn.run('app.main:app', host='127.0.0.1', port=8000)"
 
-### Frontend
-```bash
+# Frontend (otra terminal)
 cd frontend
-cp .env.example .env        # may not exist (see git history) - set VITE_API_URL
-npm install
-npm run dev                 # http://localhost:5173
-npm run build
-npm run lint
+npm run dev                                  # http://localhost:5173
 ```
-- API base URL comes from `import.meta.env.VITE_API_URL` (see `src/services/api.js`). Token attached from `localStorage.token` as `Authorization: Bearer ...`.
-- Dev server port 5173 (vite.config.js). CORS allows `http://localhost:5173`.
 
-### Tests
-- Backend: `pytest` (from `backend/` or repo root as configured). `pytest.ini_options` has `pythonpath = ["."]`, `testpaths = ["app", "tests"]`, `asyncio_mode = "auto"`. Shared fixtures in `backend/tests/conftest.py` (httpx AsyncClient). Module test placeholder in `backend/app/laboratorio/tests/test_laboratorio.py`.
-- CI: Backend runs on push/PR touching `backend/**` with Python 3.12, installs deps, runs `pytest` (sets `DATABASE_URL` and `JWT_SECRET_KEY` in env). Frontend builds on Node 20.
+- `.env` está en `.gitignore` (`backend/.gitignore`, `frontend/.gitignore`): editarlos es cambio **local**, no del repo.
+- `backend/.env` mínimo: `DATABASE_URL=postgresql+asyncpg://hospital:hospital_dev_password@localhost:5432/hospital_sarcobamba` + `JWT_SECRET_KEY`. `app/config/settings.py` los exige en el import.
+- CORS solo acepta `http://localhost:5173`.
+- Tras cambiar de rama, **reinicia uvicorn a mano** (no confíes en `--reload`: el watcher revive procesos viejos con código de la rama anterior y ocupa el puerto).
 
-## Architecture notes (non-obvious)
-- Module pattern per backend module: `router.py` (endpoints), `service.py` (business), `repository.py` (DB), `models.py` (SQLAlchemy), `schemas.py` (Pydantic). Mirrors MVC as described in README.
-- Shared: `app/shared/` has `entities/` (e.g. `paciente.py`), `utils/`, `exceptions.py`, `validators.py`. Errors registered via `registrar_manejadores_de_error(app)`.
-- DB init: docker-compose mounts `./database/schema.sql` to Postgres init dir; also Alembic migrations exist (`backend/alembic/`).
-- IA module present (`app/ia/`) with router/transcripcion; images have storage logic (`app/imagenes/storage.py`). Treat as scaffolding unless needed.
+## Bugs conocidos de la rama (verificados, sin tocar)
 
-## Gotchas
-- Run backend from `backend/` directory (or ensure `PYTHONPATH` includes `backend/` because imports are `app.*`).
-- `backend/.env` exists locally; `frontend/.env.example` was deleted in git history - if missing, create `.env` with `VITE_API_URL=http://localhost:8000`.
-- CORS is locked to `http://localhost:5173`.
-- Backend CI sets dummy env vars; local tests may need real DB or fixtures.
-- README mentions Python 3.12 in Stack but text shows "### PYTHON 3.13 ###" as a heading - follow actual environment; CI uses 3.12.
+1. **`POST /examenes` → 500 `NoReferencedTableError` ("could not find table 'paciente'")**: tras el refactor nadie importa `app/shared/entities/paciente.py` en tiempo de ejecución (solo `alembic/env.py`), así que SQLAlchemy no conoce el destino del FK `examen.paciente_id`. Fix de repo: agregar `from app.shared.entities import paciente` en `app/main.py`.
+2. **`backend/tests/test_accesos.py` desactualizado**: manda `"contrasena"` (el schema pide `"password"` → 422 en vez de 401) y llama a `/accesos/me` (ruta real `/accesos/yo` → 404). Fallan 2 de 8 pruebas.
+3. **`backend/create_test_user.py` roto**: importa `password_hasher`, ya inexistente (hoy es la clase `Argon2PasswordHasher`).
+4. **Falta la tabla `examen`** en `database/schema.sql` y `alembic/versions/` está vacío → la BD local la tuve que crear a mano.
+5. El repo quedó con `README.md` en **conflicto sin resolver (`UU`)** y un archivo basura `lkdjfa` sin trackear.
+
+## Datos ficticios sembrados localmente (útiles para probar)
+
+- Usuario: `lab_test` / `secreta123` (rol `laboratorio`, trabajador `T-999`).
+- Paciente `PAC-DEMO-001` (id 1) + examen "Hemograma completo" (id 1).
+
+## Pruebas y CI
+
+- Backend: `pytest` desde `backend/`. `pyproject`: `pythonpath=["."]`, `testpaths=["app","tests"]`, `asyncio_mode="auto"`. La fixture `client` está en `backend/tests/conftest.py` (httpx `ASGITransport`); **las pruebas pegan contra la BD real** (no hay dobles): exporta `DATABASE_URL`/`JWT_SECRET_KEY` como hace el CI.
+- CI: `.github/workflows/backend-ci.yml` (push/PR sobre `backend/**`, Python 3.12, `pytest`) y `frontend-ci.yml` (Node 20, `npm install && npm run build`).

@@ -16,5 +16,6 @@ SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
 
 async def get_db() -> AsyncSession:
-    async with SessionLocal() as session:
+    # Una transacción por operación HTTP; los repositorios solo hacen flush.
+    async with SessionLocal.begin() as session:
         yield session

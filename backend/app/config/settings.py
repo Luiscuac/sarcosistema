@@ -11,6 +11,11 @@ class Settings(BaseSettings):
     database_url: str
     jwt_secret_key: str
     debug: bool = False
+    whisper_model_size: str = "small"
+    whisper_device: str = "cpu"
+    whisper_compute_type: str = "int8"
+    whisper_model_dir: str = ".models/whisper"
+    whisper_cpu_threads: int = 4
 
 
 settings = Settings()
