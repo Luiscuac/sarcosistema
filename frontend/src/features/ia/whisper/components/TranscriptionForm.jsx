@@ -2,8 +2,8 @@ import AudioCaptureStage from './AudioCaptureStage.jsx'
 import AudioReview from './AudioReview.jsx'
 import TranscriptionProcessing from './TranscriptionProcessing.jsx'
 import TranscriptionResult from './TranscriptionResult.jsx'
-import useAudioRecorder from '../hooks/useAudioRecorder.js'
-import useTranscription from '../hooks/useTranscription.js'
+import useAudioRecorder from '../../hooks/useAudioRecorder.js'
+import useTranscription from '../../hooks/useTranscription.js'
 import './TranscriptionForm.css'
 
 export default function TranscriptionForm() {

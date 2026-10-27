@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { transcribirAudio } from '../api/iaApi.js'
+import { transcribirAudio } from '../whisper/api/iaApi.js'
 import { mensajeDeError } from '../utils/audio.js'
 
 export default function useTranscription({ audio, nombreAudio, onTranscriptionError }) {
