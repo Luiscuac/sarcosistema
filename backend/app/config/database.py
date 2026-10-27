@@ -11,7 +11,9 @@ class Base(DeclarativeBase):
     pass
 
 
-engine = create_async_engine(settings.database_url, echo=settings.debug)
+# No activar ``echo``: SQLAlchemy también imprime los parámetros y podría
+# exponer identificadores o datos clínicos en los logs del servidor.
+engine = create_async_engine(settings.database_url, echo=False)
 SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
 

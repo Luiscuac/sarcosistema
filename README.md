@@ -106,7 +106,13 @@ WHISPER_MODEL_DIR=.models/whisper
 WHISPER_CPU_THREADS=4
 ```
 
-Para una base nueva, Docker Compose monta `database/schema.sql` como inicialización del servicio PostgreSQL. Para una base existente, no vuelvas a inicializar ni sobrescribas el esquema; aplica el procedimiento acordado con el equipo.
+Para una base nueva, Docker Compose monta `database/schema.sql` como inicialización del servicio PostgreSQL. En ambos casos, después de comprobar que `backend/.env` apunta a la base correcta, ejecuta las migraciones incrementales desde `backend`:
+
+```powershell
+alembic upgrade head
+```
+
+La revisión inicial comprueba que el esquema base ya existe; las siguientes revisiones agregan cambios sin recrearlo. Nunca vuelvas a ejecutar `schema.sql` sobre una base existente. Las instrucciones y el alcance de la primera migración de laboratorio están en `docs/laboratorio/migraciones.md`.
 
 Con el entorno activo y desde `backend`, verifica el esquema, prepara una cuenta de prueba e inicia el servidor:
 
