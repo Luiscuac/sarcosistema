@@ -19,7 +19,7 @@ async def transcribir_audio(
     _usuario: Usuario = Depends(usuario_actual),
     caso_uso: TranscribirAudio = Depends(proveer_transcribir_audio),
 ) -> TranscripcionResponse:
-    """Transcribe audio localmente; el resultado siempre requiere revisión humana."""
+    """Transcribe audio localmente"""
     nombre = (archivo.filename or "").lower()
     extension = "." + nombre.rsplit(".", 1)[-1] if "." in nombre else ""
     if extension not in FORMATOS_AUDIO:

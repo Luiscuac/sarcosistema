@@ -1,0 +1,16 @@
+.ia-empty-result { min-height: 267px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; border: 1px solid #edf0f2; border-radius: 5px; background: #fafbfc; text-align: center; }
+.ia-wave-icon { color: #8caaa6; font-size: 28px; line-height: 1; }
+.ia-empty-result strong { color: #53606b; font-size: 12px; font-weight: 600; }
+.ia-empty-result > span:last-child { color: #89939d; font-size: 10px; }
+.ia-transcription { width: 100%; min-height: 267px; resize: vertical; padding: 13px; border: 1px solid var(--line); border-radius: 5px; color: var(--ink); font: inherit; font-size: 12px; line-height: 1.65; }
+.ia-review-note { display: flex; align-items: flex-start; gap: 8px; margin: 12px 0 0; color: #53606b; font-size: 10px; line-height: 1.5; }
+.ia-review-note span { width: 15px; height: 15px; flex: 0 0 15px; display: grid; place-items: center; border: 1px solid #cbd3da; border-radius: 50%; color: var(--muted); font-size: 9px; font-weight: 600; }
+.ia-result-screen.ia-result-screen { min-height: 0; }
+.ia-result-topline { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+.ia-result-topline .ia-stage-eyebrow { margin-bottom: 7px; }
+.ia-complete-badge { display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px; border: 1px solid #d6e8e5; border-radius: 20px; background: #f0f8f6; color: var(--brand); font-size: 10px; white-space: nowrap; }
+.ia-complete-badge span { font-size: 12px; font-weight: 700; }
+.ia-result-screen .ia-transcription { min-height: 260px; }
+.ia-result-bottom { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 14px; }
+.ia-result-bottom .ia-review-note { margin: 0; }
+@media (max-width: 700px) { .ia-result-topline { align-items: flex-start; flex-direction: column; } .ia-result-bottom { align-items: flex-start; flex-direction: column; } }

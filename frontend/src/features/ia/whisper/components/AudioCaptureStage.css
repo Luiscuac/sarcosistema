@@ -1,0 +1,21 @@
+.ia-microphone { position: relative; width: 68px; height: 68px; display: grid; place-items: center; margin: 3px 0 20px; border: 1px solid #d6e8e5; border-radius: 50%; background: #f0f8f6; color: transparent; font-size: 0; }
+.ia-microphone::before { content: ''; width: 14px; height: 24px; border-radius: 9px; background: var(--brand); }
+.ia-microphone::after { content: ''; position: absolute; top: 20px; width: 24px; height: 19px; border: 2px solid var(--brand); border-top: 0; border-radius: 0 0 14px 14px; transform: translateY(5px); }
+.ia-recording-screen { background: linear-gradient(180deg, #fff 0%, #fffafa 100%); }
+.ia-live-indicator { display: inline-flex; align-items: center; gap: 7px; margin-bottom: 12px; color: #b33838; font-size: 10px; font-weight: 700; letter-spacing: .08em; }
+.ia-live-indicator span { width: 7px; height: 7px; border-radius: 50%; background: #c74747; animation: ia-pulse 1.2s infinite; }
+.ia-microphone--active { border-color: #f1dada; background: #fff4f4; }
+.ia-microphone--active::before, .ia-microphone--active::after { background-color: #b33838; border-color: #b33838; }
+.ia-timer { margin-top: 14px; color: var(--ink); font-variant-numeric: tabular-nums; font-size: 24px; font-weight: 600; letter-spacing: .04em; }
+.ia-record-button--stop { border-color: #b33838; background: #b33838; }
+.ia-record-button--stop:hover { background: #962d2d; }
+.ia-record-button--stop > span { width: 10px; height: 10px; border-radius: 2px; }
+.ia-microphone-picker { width: min(100%, 390px); display: grid; gap: 8px; margin-top: 19px; text-align: left; }
+.ia-microphone-picker label { color: #53606b; font-size: 10px; font-weight: 600; }
+.ia-microphone-picker select { width: 100%; min-height: 38px; padding: 0 10px; border: 1px solid var(--line); border-radius: 5px; background: #fff; color: var(--ink); font: inherit; font-size: 11px; }
+.ia-microphone-hint { color: var(--muted); font-size: 10px; }
+.ia-microphone-picker .ia-secondary-button { justify-self: start; min-height: 32px; padding: 0 10px; }
+.ia-input-level { width: min(100%, 330px); display: grid; justify-items: center; gap: 7px; margin-top: 17px; color: var(--muted); font-size: 10px; }
+.ia-input-level-track { width: 100%; height: 7px; overflow: hidden; border-radius: 5px; background: #e9edef; }
+.ia-input-level-track > span { display: block; height: 100%; border-radius: inherit; background: var(--brand); transition: width .1s linear; }
+@keyframes ia-pulse { 50% { opacity: .4; transform: scale(.78); } }

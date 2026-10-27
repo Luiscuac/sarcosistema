@@ -1,0 +1,6 @@
+.ia-stage-card.ia-review-screen { min-height: 390px; }
+.ia-audio-preview { width: min(100%, 460px); margin-top: 25px; }
+.ia-review-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; margin-top: 18px; }
+.ia-review-actions .ia-record-button { margin-top: 0; }
+.ia-review-actions .ia-secondary-button { min-height: 46px; padding: 0 18px; }
+@media (max-width: 700px) { .ia-stage-card.ia-review-screen { min-height: 350px; } }
