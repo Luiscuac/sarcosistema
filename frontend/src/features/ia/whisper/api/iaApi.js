@@ -1,4 +1,4 @@
-import httpClient from '../../../shared/api/httpClient.js'
+import httpClient from '../../../../shared/api/httpClient.js'
 
 export async function transcribirAudio(archivo, nombre = 'grabacion.webm') {
   const datos = new FormData()

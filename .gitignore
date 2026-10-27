@@ -3,3 +3,6 @@
 .vscode/
 .idea/
 /backend/.models/
+/transportador/.venv/
+__pycache__/
+*.py[cod]

@@ -1,5 +1,5 @@
-from app.ia.application.errors.transcription_error import ErrorTranscripcion
-from app.ia.application.ports.transcription_service import ServicioTranscripcion
+from app.ia.whisper.application.errors.transcription_error import ErrorTranscripcion
+from app.ia.whisper.application.ports.transcription_service import ServicioTranscripcion
 
 
 class TranscribirAudio:
