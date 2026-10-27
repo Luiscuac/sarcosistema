@@ -5,3 +5,6 @@
 /backend/.models/
 /.tmp_docs/
 /frontend/package-lock-main-local.json
+/transportador/.venv/
+__pycache__/
+*.py[cod]

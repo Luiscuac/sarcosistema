@@ -4,6 +4,33 @@ Monolito modular: cada módulo mantiene sus reglas, casos de uso y adaptadores. 
 
 ## Stack
 
+- **Backend:** Python 3.12 + FastAPI + PostgreSQL (pgvector) — ver `backend/`
+- **Frontend:** React + Vite + Axios + React Query — ver `frontend/`
+- **IA:** Whisper.cpp + Ollama, corriendo en servidor local (sin costo por uso)
+
+## Cómo levantar el proyecto en desarrollo
+### PYTHON 3.13 ###
+```bash
+# 1. Backend + base de datos
+cd backend
+cp .env.example .env          # completar DATABASE_URL y JWT_SECRET_KEY
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt -r requirements-dev.txt
+cd ..
+docker compose up -d db
+cd backend
+alembic upgrade head           # cuando existan migraciones
+uvicorn src.main:app --reload
+
+# 2. Frontend (en otra terminal)
+cd frontend
+cp .env.example .env
+npm install
+npm run dev
+```
+
+Backend en `http://localhost:8000/docs` (documentación automática de FastAPI).
+Frontend en `http://localhost:5173`.
 - **Backend:** Python + FastAPI + PostgreSQL (pgvector), en `backend/`
 - **Frontend:** React + Vite + Axios + React Query, en `frontend/`
 - **IA:** transcripción experimental con faster-whisper, ejecutada localmente dentro del backend

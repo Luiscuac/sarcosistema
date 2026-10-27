@@ -2,9 +2,9 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import LoginPage from '../features/accesos/pages/LoginPage.jsx'
 import InicioPage from '../features/inicio/pages/InicioPage.jsx'
 import LaboratorioPage from '../features/laboratorio/pages/LaboratorioPage.jsx'
-import IaPage from '../features/ia/pages/IaPage.jsx'
+import IaPage from '../features/ia/whisper/pages/IaPage.jsx'
 import ProtectedRoute from '../features/accesos/auth/ProtectedRoute.jsx'
-
+import TranscriptorPage from '../features/ia/transporter/pages/TranscriptorPage.jsx'
 export default function AppRouter() {
   return (
     <BrowserRouter>
@@ -24,6 +24,11 @@ export default function AppRouter() {
         <Route path="/ia" element={
           <ProtectedRoute>
             {({ usuario, logout }) => <IaPage usuario={usuario} logout={logout} />}
+          </ProtectedRoute>
+        } />
+        <Route path="/transcriptor" element={
+          <ProtectedRoute>
+            {({ usuario, logout }) => <TranscriptorPage usuario={usuario} logout={logout} />}
           </ProtectedRoute>
         } />
       </Routes>
