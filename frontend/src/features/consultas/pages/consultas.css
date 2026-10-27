@@ -1,0 +1,65 @@
+.med-page { min-height: 100vh; display: grid; grid-template-columns: 224px minmax(0, 1fr); background: var(--surface); color: var(--ink); }
+.med-sidebar { display: flex; flex-direction: column; min-height: 100vh; background: #fff; border-right: 1px solid var(--line); }
+.med-sidebar-heading { height: 72px; display: grid; align-content: center; gap: 3px; padding: 0 22px; border-bottom: 1px solid var(--line); }
+.med-sidebar-heading strong { font-size: 16px; font-weight: 600; letter-spacing: -.02em; }
+.med-sidebar-heading span { font-size: 10px; color: var(--muted); letter-spacing: .06em; }
+.med-sidebar nav { display: grid; gap: 4px; padding: 22px 12px; }
+.med-sidebar a { padding: 12px 14px; border-radius: 6px; font-size: 12px; color: #53606b; text-decoration: none; }
+.med-sidebar .med-nav-active { background: #edf6f4; color: var(--brand); font-weight: 600; }
+.med-signout { margin-top: auto; width: 100%; min-height: 58px; padding: 0 22px; border: 0; border-top: 1px solid var(--line); background: #fff; text-align: left; font-size: 12px; color: #53606b; }
+.med-topbar { min-height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 0 32px; border-bottom: 1px solid var(--line); background: #fff; }
+.med-topbar > span { font-size: 11px; color: var(--muted); font-weight: 600; letter-spacing: .06em; }
+.med-topbar > div { display: flex; align-items: center; gap: 12px; font-size: 12px; }
+.med-session { border: 1px solid var(--line); border-radius: 6px; padding: 6px 9px; color: var(--brand); font-size: 11px; }
+.med-main { min-width: 0; }
+.med-content { max-width: 1480px; margin: 0 auto; padding: 34px 36px 48px; }
+.med-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; margin-bottom: 28px; }
+.med-heading h1 { margin: 0; padding-left: 12px; border-left: 3px solid var(--brand); font-size: 22px; line-height: 1.25; font-weight: 600; }
+.med-heading p:not(.med-eyebrow) { margin: 10px 0 0 15px; font-size: 12px; color: var(--muted); }
+.med-eyebrow { margin: 0 0 9px; color: var(--brand); font-size: 10px; font-weight: 600; letter-spacing: .09em; }
+.med-panel, .med-patient { border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+.med-panel { margin-top: 18px; overflow: hidden; }
+.med-panel-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 22px; gap: 16px; }
+.med-panel-header h2 { margin: 0; font-size: 15px; font-weight: 600; }
+.med-panel-header span, .med-hint { color: var(--muted); font-size: 11px; }
+.med-search { display: grid; gap: 8px; margin: 0 22px 18px; font-size: 11px; font-weight: 600; color: #53606b; }
+.med-search input, .med-fields :is(input,textarea) { width: 100%; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--ink); font: inherit; font-size: 12px; }
+.med-search input { height: 40px; padding: 0 12px; background: #f9fafb; }
+.med-table-wrap { overflow-x: auto; }
+.med-table { width: 100%; border-collapse: collapse; text-align: left; }
+.med-table th { padding: 12px 20px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: #fafbfc; color: var(--muted); font-size: 10px; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
+.med-table td { padding: 14px 20px; border-bottom: 1px solid var(--line); font-size: 12px; vertical-align: top; }
+.med-table td small { display: block; margin-top: 5px; font-size: 10px; color: var(--muted); }
+.med-table a, .med-link-button { color: var(--brand); font-size: 11px; font-weight: 600; }
+.med-badge { border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; font-size: 10px; }
+.med-message { padding: 28px 22px; margin: 0; color: var(--muted); font-size: 12px; }
+.med-pagination { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 14px 22px; font-size: 11px; color: var(--muted); }
+.med-pagination button, .med-form-actions > button:not(.primary-button), .med-link-button { border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--brand); padding: 8px 11px; font: inherit; font-size: 11px; text-decoration: none; }
+.med-pagination button:disabled { opacity: .5; }
+.med-patient { padding: 20px 22px; }
+.med-patient > div strong, .med-patient > div span { display: block; }
+.med-patient strong { font-size: 15px; }
+.med-patient > div span { margin-top: 5px; color: var(--muted); font-size: 11px; }
+.med-patient dl { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 20px 0 0; }
+.med-patient dt, .med-detail dt { color: var(--muted); font-size: 11px; }
+.med-patient dd { margin: 5px 0 0; font-size: 12px; }
+.med-button-link { display: inline-flex; align-items: center; text-decoration: none; white-space: nowrap; }
+.med-metadata { display: flex; flex-wrap: wrap; gap: 12px 22px; padding: 16px 0; color: #53606b; font-size: 11px; }
+.med-form { padding: 0 24px 20px; }
+.med-form fieldset { border: 0; border-bottom: 1px solid var(--line); margin: 0; padding: 22px 0; min-width: 0; }
+.med-form legend { padding: 22px 0 0; font-size: 14px; font-weight: 600; }
+.med-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
+.med-fields label { display: grid; gap: 6px; font-size: 11px; font-weight: 600; color: #53606b; }
+.med-fields input { min-height: 38px; padding: 8px 10px; }
+.med-fields textarea { min-height: 72px; padding: 9px 10px; resize: vertical; }
+.med-hint { margin: 14px 0 0; }
+.med-error { font-size: 12px; color: #a33b16; }
+.med-form-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 20px; }
+.med-detail { padding: 0 24px; }
+.med-detail-section { padding: 20px 0; border-bottom: 1px solid var(--line); }
+.med-detail-section h2 { font-size: 14px; margin: 0 0 14px; }
+.med-detail dl { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; margin: 0; }
+.med-detail dd { margin: 5px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; }
+.med-page :is(input,textarea,a,button):focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+@media(max-width:900px) { .med-page { grid-template-columns: 190px minmax(0,1fr); } .med-content { padding: 28px 24px; } .med-table { min-width: 780px; } }
+@media(max-width:700px) { .med-page { grid-template-columns: 1fr; } .med-sidebar { min-height: auto; } .med-sidebar-heading { height: 58px; } .med-sidebar nav { display: flex; padding: 8px; } .med-signout { min-height: 40px; } .med-topbar { min-height: 58px; padding: 10px 20px; } .med-session { display: none; } .med-content { padding: 26px 20px; } .med-heading { flex-wrap: wrap; } .med-patient dl, .med-fields, .med-detail dl { grid-template-columns: 1fr; } }

@@ -12,6 +12,7 @@ from app.accesos.presentation.routes.router import router as accesos_router
 from app.ia.whisper.presentation.routes.router import router as ia_router
 from app.imagenes.router import router as imagenes_router
 from app.laboratorio.presentation.router import router as laboratorio_router
+from app.consultas.presentation.router import router as consultas_router
 from app.shared.exceptions import registrar_manejadores_de_error
 
 app = FastAPI(title="Sistema Hospital Sarcobamba", version="0.1.0")
@@ -27,6 +28,7 @@ app.add_middleware(
 registrar_manejadores_de_error(app)
 
 app.include_router(laboratorio_router)
+app.include_router(consultas_router)
 app.include_router(imagenes_router)
 app.include_router(accesos_router)
 app.include_router(ia_router)
