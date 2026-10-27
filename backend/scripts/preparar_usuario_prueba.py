@@ -1,8 +1,9 @@
-"""Prepara una cuenta ficticia de laboratorio sin exponer la contraseña en argumentos.
+"""Prepara una cuenta ficticia de laboratorio con una contraseña interactiva.
 
 Uso desde backend:
-  python -m scripts.preparar_usuario_prueba laboratorio_prueba --trabajador-id 123
-Para una cuenta ya existente, omitir --trabajador-id y se actualizará su hash.
+  python -m scripts.preparar_usuario_prueba laboratorio_prueba
+Por defecto crea un trabajador de demostración si hace falta. También se puede
+usar --trabajador-id para vincularla a un trabajador ficticio ya existente.
 """
 import argparse
 import asyncio
@@ -11,7 +12,10 @@ from getpass import getpass
 from sqlalchemy import text
 
 from app.accesos.infrastructure.security.password_hasher import Argon2PasswordHasher
-from app.config.database import SessionLocal
+from app.config.database import SessionLocal, engine
+
+IDENTIFICADOR_TRABAJADOR_PRUEBA = "T-DEMO-LAB-001"
+NOMBRE_TRABAJADOR_PRUEBA = "Usuario de demostración de laboratorio"
 
 
 async def preparar(identificador: str, trabajador_id: int | None, password_hash: str):
@@ -40,17 +44,46 @@ async def preparar(identificador: str, trabajador_id: int | None, password_hash:
             """), {"hash": password_hash, "id": usuario["id"]})
             return "Contraseña de la cuenta existente actualizada."
 
-        if trabajador_id is None:
-            raise ValueError("La cuenta no existe; indica --trabajador-id de un trabajador ficticio activo")
-
         rol = (await db.execute(text("""
             SELECT id FROM public.rol WHERE codigo = 'laboratorio' AND activo = true
         """))).scalar_one_or_none()
-        trabajador = (await db.execute(text("""
-            SELECT id FROM public.trabajador WHERE id = :id AND estado = 'activo'
-        """), {"id": trabajador_id})).scalar_one_or_none()
-        if rol is None or trabajador is None:
-            raise ValueError("Se requiere el rol laboratorio y un trabajador activo existentes")
+        if rol is None:
+            raise ValueError("No existe un rol laboratorio activo en la base")
+
+        if trabajador_id is None:
+            trabajador = (await db.execute(text("""
+                SELECT id, estado, nombre_completo FROM public.trabajador
+                WHERE identificador = :identificador
+            """), {"identificador": IDENTIFICADOR_TRABAJADOR_PRUEBA})).mappings().one_or_none()
+            if trabajador is None:
+                trabajador_id = (await db.execute(text("""
+                    INSERT INTO public.trabajador
+                        (identificador, nombre_completo, estado, fecha_inicio)
+                    VALUES (:identificador, :nombre, 'activo', CURRENT_DATE)
+                    RETURNING id
+                """), {
+                    "identificador": IDENTIFICADOR_TRABAJADOR_PRUEBA,
+                    "nombre": NOMBRE_TRABAJADOR_PRUEBA,
+                })).scalar_one()
+                await db.execute(text("""
+                    INSERT INTO public.trabajador_estado_historial
+                        (trabajador_id, estado, fecha_vigencia)
+                    VALUES (:trabajador_id, 'activo', CURRENT_DATE)
+                """), {"trabajador_id": trabajador_id})
+            else:
+                if (trabajador["estado"] != "activo"
+                        or trabajador["nombre_completo"] != NOMBRE_TRABAJADOR_PRUEBA):
+                    raise ValueError(
+                        "El identificador reservado para demostración ya existe con otros datos; "
+                        "no se modificó"
+                    )
+                trabajador_id = trabajador["id"]
+        else:
+            trabajador = (await db.execute(text("""
+                SELECT id FROM public.trabajador WHERE id = :id AND estado = 'activo'
+            """), {"id": trabajador_id})).scalar_one_or_none()
+            if trabajador is None:
+                raise ValueError("El ID debe pertenecer a un trabajador activo")
 
         await db.execute(text("""
             INSERT INTO public.usuario
@@ -66,8 +99,10 @@ async def preparar(identificador: str, trabajador_id: int | None, password_hash:
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("identificador", help="identificador de acceso ficticio")
-    parser.add_argument("--trabajador-id", type=int, help="solo al crear una cuenta nueva")
+    parser.add_argument("--trabajador-id", type=int, help="ID de un trabajador ficticio activo existente")
     args = parser.parse_args()
+    # Evita que SQLAlchemy imprima parámetros sensibles (incluido el hash) con DEBUG=true.
+    engine.echo = False
     password = getpass("Contraseña de prueba: ")
     if not password or password != getpass("Repite la contraseña: "):
         raise SystemExit("La contraseña está vacía o no coincide")
