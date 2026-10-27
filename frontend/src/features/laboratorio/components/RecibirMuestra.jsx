@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { recibirMuestraSolicitud } from '../api/laboratorioApi.js'
 import { agruparPorCategoria } from '../utils/agruparSolicitudes.js'
+import './muestras/RecibirMuestra.css'
 
 function mensajeError(error) {
   const detail = error.response?.data?.detail

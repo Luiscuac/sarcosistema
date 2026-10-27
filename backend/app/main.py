@@ -11,7 +11,7 @@ from app.config.database import engine
 from app.accesos.presentation.routes.router import router as accesos_router
 from app.ia.whisper.presentation.routes.router import router as ia_router
 from app.imagenes.router import router as imagenes_router
-from app.laboratorio.presentation.router import router as laboratorio_router
+from app.laboratorio.presentation.routes.router import router as laboratorio_router
 from app.shared.exceptions import registrar_manejadores_de_error
 
 app = FastAPI(title="Sistema Hospital Sarcobamba", version="0.1.0")

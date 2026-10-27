@@ -1,7 +1,10 @@
 import { useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { buscarPacientes, crearPaciente, crearSolicitud, listarEstudiosCatalogo } from '../api/laboratorioApi.js'
-import './NuevaSolicitud.css'
+import DatosPedido from './nueva-solicitud/DatosPedido.jsx'
+import EstudiosSolicitados from './nueva-solicitud/EstudiosSolicitados.jsx'
+import PacienteSolicitud from './nueva-solicitud/PacienteSolicitud.jsx'
+import './nueva-solicitud/NuevaSolicitud.css'
 
 const pacienteVacio = {
   nombre_completo: '',
@@ -161,89 +164,21 @@ export default function NuevaSolicitud({ onClose, onCreated }) {
 
         <form onSubmit={enviar}>
           <div className="lab-dialog-body">
-            <section className="lab-form-section">
-              <h3>1. Paciente</h3>
-              {paciente ? (
-                <div className="lab-selected-patient">
-                  <div><strong>{paciente.nombre_completo}</strong><span>{paciente.codigo_paciente} · {paciente.numero_documento || 'Sin documento'}{paciente.historia_clinica ? ` · HC ${paciente.historia_clinica}` : ''}</span></div>
-                  <button type="button" onClick={() => setPaciente(null)}>Cambiar</button>
-                </div>
-              ) : nuevoPaciente ? (
-                <div className="lab-inline-patient-form">
-                  <div className="lab-form-grid">
-                    <label>Nombre completo<input required minLength="2" value={datosPaciente.nombre_completo} onChange={(e) => cambiarPaciente('nombre_completo', e.target.value)} /></label>
-                    <label>Fecha de nacimiento<input required type="date" value={datosPaciente.fecha_nacimiento} onChange={(e) => cambiarPaciente('fecha_nacimiento', e.target.value)} /></label>
-                    <label>Sexo registrado<select value={datosPaciente.sexo} onChange={(e) => cambiarPaciente('sexo', e.target.value)}><option value="no_especificado">No especificado</option><option value="F">F</option><option value="M">M</option><option value="otro">Otro</option></select></label>
-                    <label>N.º de historia clínica<input value={datosPaciente.historia_clinica} onChange={(e) => cambiarPaciente('historia_clinica', e.target.value)} placeholder="Si figura en el registro" maxLength="80" /></label>
-                    <label>Código externo del hospital<input value={datosPaciente.codigo_externo} onChange={(e) => cambiarPaciente('codigo_externo', e.target.value)} placeholder="Si figura en el registro" maxLength="80" /></label>
-                    <label className="lab-checkbox-label"><input type="checkbox" checked={datosPaciente.sin_documento} onChange={(e) => cambiarPaciente('sin_documento', e.target.checked)} /> Persona sin documento</label>
-                    {!datosPaciente.sin_documento && <>
-                      <label>Tipo de documento<input required value={datosPaciente.tipo_documento} onChange={(e) => cambiarPaciente('tipo_documento', e.target.value)} /></label>
-                      <label>Número de documento<input required value={datosPaciente.numero_documento} onChange={(e) => cambiarPaciente('numero_documento', e.target.value)} /></label>
-                    </>}
-                  </div>
-                  <div className="lab-inline-actions">
-                    <button type="button" onClick={() => setNuevoPaciente(false)}>Cancelar</button>
-                    <button className="primary-button" type="button" disabled={crearPacienteMutation.isPending} onClick={crearPacienteAhora}>
-                      {crearPacienteMutation.isPending ? 'Guardando…' : 'Guardar paciente'}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <label className="lab-search-label">Buscar por nombre, documento, historia clínica o código
-                    <input autoFocus type="search" value={termino} onChange={(e) => setTermino(e.target.value)} placeholder="Escribe al menos 2 caracteres" />
-                  </label>
-                  {pacientesQuery.isLoading && <p className="lab-form-hint">Buscando pacientes…</p>}
-                  {pacientesQuery.isError && <p className="lab-form-error">No se pudo buscar. Comprueba la conexión e inténtalo de nuevo.</p>}
-                  {(pacientesQuery.data ?? []).map((item) => (
-                    <button className="lab-patient-option" type="button" key={item.id} onClick={() => { setPaciente(item); setErrorLocal('') }}>
-                      <strong>{item.nombre_completo}</strong><span>{item.codigo_paciente} · {item.numero_documento || 'Sin documento'} · {item.fecha_nacimiento}{item.historia_clinica ? ` · HC ${item.historia_clinica}` : ''}{item.codigo_externo ? ` · Código ${item.codigo_externo}` : ''}</span>
-                    </button>
-                  ))}
-                  {termino.trim().length >= 2 && pacientesQuery.data?.length === 0 && <p className="lab-form-hint">No se encontró el paciente. Puedes registrar una identificación mínima.</p>}
-                  <button className="lab-text-button" type="button" onClick={() => setNuevoPaciente(true)}>Registrar paciente si no existe</button>
-                </>
-              )}
-            </section>
-
-            <section className="lab-form-section">
-              <h3>2. Datos del pedido</h3>
-              <div className="lab-form-grid">
-                <label>Referencia del formulario<input value={datosSolicitud.referencia_papel_formulario} onChange={(e) => cambiarSolicitud('referencia_papel_formulario', e.target.value)} placeholder="Opcional" /></label>
-                <label>Establecimiento solicitante<input value={datosSolicitud.establecimiento_solicitante_nombre} onChange={(e) => cambiarSolicitud('establecimiento_solicitante_nombre', e.target.value)} placeholder="Según D-8" /></label>
-                <label>Profesional solicitante<input required value={datosSolicitud.medico_solicitante_nombre} onChange={(e) => cambiarSolicitud('medico_solicitante_nombre', e.target.value)} /></label>
-                <label>Prioridad<select value={datosSolicitud.prioridad} onChange={(e) => cambiarSolicitud('prioridad', e.target.value)}><option value="sin_prioridad">Programada / sin prioridad</option><option value="urgente">Urgente</option></select></label>
-                <label className="lab-full-field">Diagnóstico principal<input value={datosSolicitud.diagnostico_principal} onChange={(e) => cambiarSolicitud('diagnostico_principal', e.target.value)} placeholder="Opcional" /></label>
-              </div>
-            </section>
-
-            <section className="lab-form-section">
-              <h3>3. Estudios solicitados</h3>
-              {catalogoQuery.isLoading && <p className="lab-form-hint">Cargando catálogo…</p>}
-              {catalogoQuery.isError && <p className="lab-form-error">No se pudo cargar el catálogo de laboratorio.</p>}
-              {!catalogoQuery.isLoading && !catalogoQuery.isError && !(catalogoQuery.data ?? []).length && (
-                <p className="lab-form-hint">No hay estudios disponibles para registrar. Contacta al administrador del sistema.</p>
-              )}
-              <p className="lab-form-hint">Selecciona las pruebas indicadas en el pedido. Cada una quedará asociada a esta solicitud.</p>
-              <label className="lab-search-label lab-study-search">Buscar estudio
-                <input type="search" value={busquedaEstudio} onChange={(event) => setBusquedaEstudio(event.target.value)} placeholder="Nombre de la prueba" />
-              </label>
-              <p className="lab-form-hint" role="status">{estudioIds.length} {estudioIds.length === 1 ? 'estudio seleccionado' : 'estudios seleccionados'}</p>
-              {gruposVisibles.map((grupo) => <div className="lab-study-group" key={grupo.codigo ?? 'sin-categoria'}>
-                  <h4>{grupo.nombre}</h4>
-                  <div className="lab-study-options">
-                    {grupo.estudios.map((estudio) => (
-                      <label className="lab-study-option" key={estudio.id}>
-                        <input type="checkbox" checked={estudioIds.includes(estudio.id)} onChange={() => alternarEstudio(estudio.id)} />
-                        <span><strong>{estudio.nombre}</strong></span>
-                      </label>
-                    ))}
-                  </div>
-                </div>)}
-              {terminoEstudio && !estudiosVisibles.length &&
-                <p className="lab-form-hint">No hay estudios con ese nombre.</p>}
-            </section>
+            <PacienteSolicitud
+              paciente={paciente} nuevoPaciente={nuevoPaciente} datosPaciente={datosPaciente}
+              termino={termino} pacientesQuery={pacientesQuery} crearPacientePendiente={crearPacienteMutation.isPending}
+              onSelect={(seleccionado) => { setPaciente(seleccionado); setErrorLocal('') }}
+              onTerminoChange={setTermino} onStartCreate={() => setNuevoPaciente(true)}
+              onCancelCreate={() => setNuevoPaciente(false)} onPacienteChange={cambiarPaciente}
+              onCreatePaciente={crearPacienteAhora}
+            />
+            <DatosPedido datos={datosSolicitud} onChange={cambiarSolicitud} />
+            <EstudiosSolicitados
+              cargando={catalogoQuery.isLoading} error={catalogoQuery.isError} catalogo={catalogoQuery.data ?? []}
+              busqueda={busquedaEstudio} onBusquedaChange={setBusquedaEstudio}
+              cantidadSeleccionada={estudioIds.length} idsSeleccionados={estudioIds}
+              grupos={gruposVisibles} estudiosVisibles={estudiosVisibles} onToggle={alternarEstudio}
+            />
             {errorLocal && <p className="lab-form-error" role="alert">{errorLocal}</p>}
           </div>
           <footer className="lab-dialog-footer">

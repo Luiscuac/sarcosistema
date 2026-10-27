@@ -1,0 +1,6 @@
+.lab-result-group { padding: 20px 0; border-bottom: 1px solid var(--line); }
+.lab-result-group h3 { margin: 0 0 12px; font-size: 13px; }
+.lab-result-field small { color: var(--muted); font-weight: 400; }
+.lab-search-label textarea { width: 100%; padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px; color: var(--ink); font: inherit; font-size: 12px; resize: vertical; }
+.lab-result-note { margin: 12px 0 0; padding: 11px 12px; border: 1px solid var(--line); border-radius: 6px; background: #f9fafb; color: #53606b; font-size: 11px; line-height: 1.5; }
+.lab-result-status { padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); font-size: 11px; }

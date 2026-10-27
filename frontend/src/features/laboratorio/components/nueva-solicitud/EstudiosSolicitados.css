@@ -1,0 +1,10 @@
+.lab-study-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+.lab-study-group { margin-top: 18px; }
+.lab-study-group h4 { margin: 0; padding-bottom: 8px; border-bottom: 1px solid var(--line); color: var(--ink); font-size: 12px; font-weight: 600; }
+.lab-study-search { margin-top: 14px; }
+.lab-study-option { display: flex; align-items: flex-start; gap: 9px; min-height: 60px; padding: 11px; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+.lab-study-option input { margin-top: 3px; accent-color: var(--brand); }
+.lab-study-option span, .lab-study-option strong, .lab-study-option small { display: block; }
+.lab-study-option strong { color: var(--ink); font-size: 11px; font-weight: 600; }
+.lab-study-option small { margin-top: 5px; color: var(--muted); font-size: 10px; }
+@media (max-width: 640px) { .lab-study-options { grid-template-columns: 1fr; } }
