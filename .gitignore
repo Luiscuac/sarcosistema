@@ -8,3 +8,4 @@
 /transportador/.venv/
 __pycache__/
 *.py[cod]
+/COMANDOS.txt
