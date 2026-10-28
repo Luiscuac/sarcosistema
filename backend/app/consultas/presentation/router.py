@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy.ext.asyncio import AsyncSession
+from functools import lru_cache
 
 from app.accesos.domain.entities import Usuario
 from app.accesos.presentation.dependencies.current_user import usuario_actual
@@ -10,12 +11,42 @@ from app.consultas.application.use_cases.consultar_pacientes import ConsultarPac
 from app.consultas.application.use_cases.registrar_consulta import RegistrarConsulta
 from app.consultas.infrastructure.persistence.repository import SqlAlchemyConsultaRepository
 from app.consultas.presentation.schemas import ConsultaNueva
+from app.consultas.presentation.schemas import ExtraerDatosRequest
+from app.consultas.application.use_cases.extraer_datos_clinicos import ExtraerDatosClinicos
+from app.consultas.application.ports.extractor_clinico import ErrorExtractor
+from app.consultas.infrastructure.ia.ollama import OllamaExtractor
+from app.config.settings import settings
 
 router = APIRouter(prefix='/consultas', tags=['consultas'], dependencies=[Depends(requiere_rol('medico'))])
 
 
 def get_repository(db: AsyncSession = Depends(get_db)) -> SqlAlchemyConsultaRepository:
     return SqlAlchemyConsultaRepository(db)
+
+
+@lru_cache
+def get_extractor():
+    if not settings.clinical_extractor_enabled:
+        raise HTTPException(503, 'El autocompletado no está habilitado. Puedes continuar manualmente.')
+    try:
+        return OllamaExtractor(settings.ollama_url, settings.ollama_model,
+                               settings.clinical_extractor_timeout_seconds)
+    except ValueError:
+        raise HTTPException(503, 'La configuración del extractor local no es válida.') from None
+
+
+@router.post('/extraer-datos-clinicos')
+async def extraer_datos_clinicos(
+    datos: ExtraerDatosRequest,
+    repo: SqlAlchemyConsultaRepository = Depends(get_repository),
+    extractor=Depends(get_extractor),
+):
+    try:
+        return await ExtraerDatosClinicos(repo, extractor).ejecutar(datos.paciente_id, datos.transcripcion)
+    except LookupError:
+        raise HTTPException(404, 'Paciente no encontrado.') from None
+    except ErrorExtractor:
+        raise HTTPException(503, 'No se pudo analizar con el modelo local. Reintenta o continúa manualmente.') from None
 
 
 @router.get('/pacientes')

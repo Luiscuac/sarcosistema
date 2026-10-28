@@ -130,11 +130,15 @@ class SqlAlchemyConsultaRepository:
         if insertado is None:
             return await self._repeticion(datos, medico, clinicos, params), False
 
+        revision = None
+        if datos.revision_ia is not None:
+            revisiones = datos.revision_ia if isinstance(datos.revision_ia, list) else [datos.revision_ia]
+            revision = json.dumps({'revision_ia_declarada_por_medico': [r.model_dump(mode='json') for r in revisiones]})
         await self.db.execute(text('''
             INSERT INTO public.auditoria_accion (fecha_hora, usuario_id, accion,
-                entidad_afectada, referencia_registro)
-            VALUES (now(), :usuario, 'crear', 'consulta', :referencia)
-        '''), {'usuario': usuario_id, 'referencia': str(insertado)})
+                entidad_afectada, referencia_registro, detalle)
+            VALUES (now(), :usuario, 'crear', 'consulta', :referencia, CAST(:detalle AS jsonb))
+        '''), {'usuario': usuario_id, 'referencia': str(insertado), 'detalle': revision})
         return await self.obtener_consulta(insertado), True
 
     async def _repeticion(self, datos, medico, clinicos, params):

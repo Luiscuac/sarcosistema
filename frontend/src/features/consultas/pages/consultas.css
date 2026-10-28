@@ -61,5 +61,27 @@
 .med-detail dl { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; margin: 0; }
 .med-detail dd { margin: 5px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; }
 .med-page :is(input,textarea,a,button):focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.med-assistant { padding: 0 22px 20px; }
+.med-assistant .med-panel-header { padding-inline: 0; }
+.med-consent { display: flex; align-items: flex-start; gap: 8px; color: #53606b; font-size: 12px; line-height: 1.5; }
+.med-consent input { accent-color: var(--brand); }
+.med-ai-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 12px 0; }
+.med-assistant button { padding: 8px 11px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--brand); font-size: 12px; }
+.med-assistant button:disabled { opacity: .5; }
+.med-ai-actions > span { color: var(--muted); font-size: 11px; }
+.med-assistant details { padding: 12px 0; border-top: 1px solid var(--line); font-size: 12px; }
+.med-assistant summary { cursor: pointer; color: var(--brand); font-weight: 600; }
+.med-transcript, .med-ai-current { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; line-height: 1.6; }
+.med-ai-text { display: grid; gap: 6px; margin: 12px 0; font-size: 11px; color: #53606b; }
+.med-ai-text :is(textarea,input) { width: 100%; padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px; color: var(--ink); background: #fff; font: inherit; font-size: 12px; resize: vertical; }
+.med-ai-warning { padding: 10px; background: #fffaf0; border: 1px solid #ead8a2; border-radius: 6px; color: #825b08; font-size: 11px; }
+.med-suggestion { margin: 12px 0; padding: 14px; border: 1px solid var(--line); border-left: 3px solid var(--brand); border-radius: 6px; }
+.med-suggestion--rechazada { opacity: .65; border-left-color: var(--line); }
+.med-suggestion--aceptada { background: #f7fbfa; }
+.med-ai-title { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; }
+.med-ai-title span { color: var(--muted); font-size: 11px; }
+.med-suggestion blockquote { margin: 10px 0; padding: 8px 12px; border-left: 2px solid var(--line); color: var(--muted); font-size: 11px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.med-ai-badge { color: var(--brand); font-size: 10px; font-weight: 400; }
+.med-field-from-ai :is(input,textarea) { border-color: var(--brand); background: #f7fbfa; }
 @media(max-width:900px) { .med-page { grid-template-columns: 190px minmax(0,1fr); } .med-content { padding: 28px 24px; } .med-table { min-width: 780px; } }
 @media(max-width:700px) { .med-page { grid-template-columns: 1fr; } .med-sidebar { min-height: auto; } .med-sidebar-heading { height: 58px; } .med-sidebar nav { display: flex; padding: 8px; } .med-signout { min-height: 40px; } .med-topbar { min-height: 58px; padding: 10px 20px; } .med-session { display: none; } .med-content { padding: 26px 20px; } .med-heading { flex-wrap: wrap; } .med-patient dl, .med-fields, .med-detail dl { grid-template-columns: 1fr; } }

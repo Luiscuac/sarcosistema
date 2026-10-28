@@ -18,6 +18,9 @@ export default function useAudioRecorder() {
   const streamRef = useRef(null)
   const medidorRef = useRef(null)
   const partesRef = useRef([])
+  const montadoRef = useRef(true)
+  const inicioPendienteRef = useRef(false)
+  const solicitudRef = useRef(0)
   const [estado, setEstado] = useState('ready')
   const [segundos, setSegundos] = useState(0)
   const [audio, setAudio] = useState(null)
@@ -84,6 +87,7 @@ export default function useAudioRecorder() {
     let streamTemporal
     try {
       streamTemporal = await navigator.mediaDevices.getUserMedia({ audio: true })
+      if (!montadoRef.current) return
       const dispositivos = await navigator.mediaDevices.enumerateDevices()
       const entradas = dispositivos.filter((dispositivo) => dispositivo.kind === 'audioinput')
       setMicrofonos(entradas)
@@ -96,22 +100,31 @@ export default function useAudioRecorder() {
       setError(mensajeDeError(errorMicrofono))
     } finally {
       streamTemporal?.getTracks().forEach((pista) => pista.stop())
-      setBuscandoMicrofonos(false)
+      if (montadoRef.current) setBuscandoMicrofonos(false)
     }
   }
 
   async function iniciarGrabacion() {
+    if (inicioPendienteRef.current || recorderRef.current?.state === 'recording') return
+    inicioPendienteRef.current = true
+    const solicitud = ++solicitudRef.current
     setError('')
     setSegundos(0)
     setAudio(null)
     setAudioUrl('')
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+      inicioPendienteRef.current = false
       setError('Este navegador no permite grabar audio. Prueba con una versión reciente de Chrome, Edge, Firefox o Safari.')
       return
     }
+    setEstado('requesting')
     try {
       const restriccionesAudio = microfonoId ? { deviceId: { exact: microfonoId } } : true
       const stream = await navigator.mediaDevices.getUserMedia({ audio: restriccionesAudio })
+      if (!montadoRef.current || solicitud !== solicitudRef.current) {
+        stream.getTracks().forEach((pista) => pista.stop())
+        return
+      }
       streamRef.current = stream
       iniciarMedidor(stream)
       const dispositivoEnUso = stream.getAudioTracks()[0]?.getSettings().deviceId
@@ -157,10 +170,13 @@ export default function useAudioRecorder() {
       recorder.start()
       setEstado('recording')
     } catch (errorGrabacion) {
+      if (!montadoRef.current || solicitud !== solicitudRef.current) return
       streamRef.current?.getTracks().forEach((pista) => pista.stop())
       streamRef.current = null
       setError(mensajeDeError(errorGrabacion))
       setEstado('ready')
+    } finally {
+      if (solicitud === solicitudRef.current) inicioPendienteRef.current = false
     }
   }
 
@@ -176,19 +192,39 @@ export default function useAudioRecorder() {
     setEstado('ready')
   }
 
-  useEffect(() => () => {
+  function cancelarGrabacion() {
+    solicitudRef.current += 1
+    inicioPendienteRef.current = false
     if (recorderRef.current?.state === 'recording') {
       recorderRef.current.onstop = null
       recorderRef.current.stop()
     }
     detenerMedidor()
     streamRef.current?.getTracks().forEach((pista) => pista.stop())
+    streamRef.current = null
+    partesRef.current = []
+    setNivelMicrofono(0)
+    limpiarGrabacion()
+  }
+
+  useEffect(() => {
+    montadoRef.current = true
+    return () => {
+    montadoRef.current = false
+    solicitudRef.current += 1
+    if (recorderRef.current?.state === 'recording') {
+      recorderRef.current.onstop = null
+      recorderRef.current.stop()
+    }
+    detenerMedidor()
+    streamRef.current?.getTracks().forEach((pista) => pista.stop())
+    }
   }, [])
 
   return {
     estado, setEstado, segundos, tiempo: formatearTiempo(segundos), audio, audioUrl,
     nombreAudio, microfonos, microfonoId, setMicrofonoId, buscandoMicrofonos,
     nivelMicrofono, error, setError, buscarMicrofonos, iniciarGrabacion,
-    detenerGrabacion, limpiarGrabacion,
+    detenerGrabacion, limpiarGrabacion, cancelarGrabacion,
   }
 }

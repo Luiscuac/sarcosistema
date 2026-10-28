@@ -2,6 +2,7 @@ from uuid import UUID
 from math import isfinite
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from app.consultas.domain.extraccion import CampoClinico
 
 
 NARRATIVAS = (
@@ -17,10 +18,31 @@ MEDICIONES = (
 )
 
 
+class RevisionIA(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    propuesta_id: UUID
+    modelo: str = Field(min_length=1, max_length=100, pattern=r'^[a-zA-Z0-9_.:/-]+$')
+    campos_aceptados: list[CampoClinico] = Field(max_length=24)
+
+
+class ExtraerDatosRequest(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    paciente_id: int = Field(gt=0)
+    transcripcion: str = Field(min_length=2, max_length=12000)
+
+    @field_validator('transcripcion')
+    @classmethod
+    def no_vacia(cls, value):
+        if len(value.strip()) < 2:
+            raise ValueError('La transcripción está vacía.')
+        return value
+
+
 class ConsultaNueva(BaseModel):
     model_config = ConfigDict(extra='forbid')
     paciente_id: int = Field(gt=0)
     clave_idempotencia: UUID
+    revision_ia: RevisionIA | list[RevisionIA] | None = None
     motivo_consulta: str = Field(min_length=1, max_length=5000)
     diagnostico_principal: str = Field(min_length=1, max_length=5000)
     sintomas: str | None = None
@@ -66,6 +88,8 @@ class ConsultaNueva(BaseModel):
 
     @model_validator(mode='after')
     def validar(self):
+        if isinstance(self.revision_ia, list) and len(self.revision_ia) > 50:
+            raise ValueError('Demasiadas revisiones IA en una consulta.')
         if not self.motivo_consulta or not self.diagnostico_principal:
             raise ValueError('Motivo de consulta y diagnóstico principal son obligatorios.')
         if self.saturacion_oxigeno is not None and self.saturacion_oxigeno > 100:
@@ -75,4 +99,4 @@ class ConsultaNueva(BaseModel):
         return self
 
     def contenido(self):
-        return self.model_dump(exclude={'paciente_id', 'clave_idempotencia', 'motivo_consulta'}, mode='json')
+        return self.model_dump(exclude={'paciente_id', 'clave_idempotencia', 'motivo_consulta', 'revision_ia'}, mode='json')
