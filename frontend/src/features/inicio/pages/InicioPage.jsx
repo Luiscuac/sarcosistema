@@ -9,7 +9,9 @@ export default function InicioPage({ usuario, logout }) {
         <h1>Bienvenido a SarcoSistema</h1>
         <p>Sesión iniciada como <strong>{usuario.identificador_acceso}</strong>.</p>
         <p>Tu rol: <strong>{usuario.rol}</strong>.</p>
-        {usuario.rol === 'laboratorio' ? (
+        {usuario.rol === 'medico' ? (
+          <Link className="inicio-link" to="/consultas">Entrar a consulta médica</Link>
+        ) : usuario.rol === 'laboratorio' ? (
           <Link className="inicio-link" to="/laboratorio">Entrar a laboratorio</Link>
         ) : (
           <p>El módulo para este rol todavía no está disponible en el piloto.</p>

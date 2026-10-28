@@ -142,3 +142,7 @@ npm run dev
 ```
 
 La aplicación frontend se sirve en `http://localhost:5173`.
+
+### Consulta médica y dictado asistido
+
+El rol `medico` accede a `/consultas`: búsqueda de pacientes, historial, registro SOAP y detalle en lectura. El panel de dictado reutiliza Whisper y propone campos mediante Ollama **local**; requiere revisión campo a campo y nunca guarda automáticamente. El formulario manual sigue disponible si el modelo falla. Configuración, privacidad, pruebas reales y limitaciones: [`docs/consultas/autocompletado-ia.md`](docs/consultas/autocompletado-ia.md). Preparación del módulo manual: [`docs/consultas/uso-y-migracion.md`](docs/consultas/uso-y-migracion.md).
