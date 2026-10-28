@@ -11,9 +11,23 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: 
+        working-directory: backend
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: hospital_sarcobamba
+          POSTGRES_USER: hospital
+          POSTGRES_PASSWORD: hospital_dev_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U hospital -d hospital_sarcobamba"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
     env:
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/test_db
+      DATABASE_URL: postgresql+asyncpg://hospital:hospital_dev_password@localhost:5432/hospital_sarcobamba
       JWT_SECRET_KEY: test-secret
     steps:
       - uses: actions/checkout@v4
@@ -21,4 +35,11 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements.txt -r requirements-dev.txt
-      - run: pytest
+      - name: Esquema base
+        run: psql "$DATABASE_URL" -f ../database/schema.sql
+        env:
+          DATABASE_URL: postgresql://hospital:hospital_dev_password@localhost:5432/hospital_sarcobamba
+      - name: Migraciones
+        run: alembic upgrade head
+      - name: Pruebas
+        run: pytest

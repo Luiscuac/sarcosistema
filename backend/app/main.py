@@ -9,7 +9,7 @@ from sqlalchemy import text
 from app.config.database import engine
 
 from app.accesos.presentation.routes.router import router as accesos_router
-from app.ia.whisper.presentation.routes.router import router as ia_router
+from app.ia.router import router as ia_router
 from app.imagenes.router import router as imagenes_router
 from app.laboratorio.presentation.router import router as laboratorio_router
 from app.consultas.presentation.router import router as consultas_router

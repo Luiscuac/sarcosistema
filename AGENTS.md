@@ -1,49 +1,54 @@
-# AGENTS.md — SarcoSistema (rama `feature/transporter`)
+# AGENTS.md — SarcoSistema
 
-> Verificado el 23/10/2026 levantando la rama completa: backend + frontend + BD.
-> Ojo: versiones anteriores de este archivo describían otro layout del repo.
+> Verificado el 28/10/2026 levantando la rama `main` (backend 143 pruebas, frontend 19).
 
-## Rama y layout (diferencias reales vs. lo que sugieren los nombres)
+## Estructura
 
-- Rama activa: `feature/transporter` (upstream `origin/feature/transporter`). El backend usa **`backend/app/`** e imports **`app.*`** (no `src.*`).
-- Módulos backend en **arquitectura limpia** por carpeta: `domain/`, `application/`, `infrastructure/`, `presentation/` (p. ej. `app/laboratorio/presentation/router.py`, `app/accesos/application/use_cases/iniciar_sesion.py`). No busques `router.py`/`service.py`/`repository.py` sueltos: ya no existen.
-- Frontend organizado por **features**: `src/features/<modulo>/{api,pages,components,hooks}` + `src/shared/` (httpClient, notifications, ui). Router: `src/app/router.jsx`.
-- `transportador/` es un proyecto **independiente** (tiene su propio `requirements.txt` y `app/main.py`): **no** lo levanta `docker-compose.yml` ni el backend principal.
-- `ia` usa **faster-whisper** local (`app/ia/whisper/...`); el modelo se descarga en la primera transcripción (~460 MB con `WHISPER_MODEL_SIZE=small`).
+- **Backend** en `backend/app/`, imports `app.*`. Cada módulo sigue **arquitectura limpia** por carpeta: `domain/`, `application/`, `infrastructure/`, `presentation/`. No hay `__init__.py`: se usan *namespace packages* (no los agregues solo por costumbre).
+- Módulos: `accesos` (login/JWT/roles), `laboratorio` (catálogo, solicitudes, muestras, resultados), `consultas` (pacientes, historial, SOAP, extracción asistida), `ia` (whisper + transcriptor), `imagenes` (vacío), `shared`, `config`.
+- **Composición única de IA**: `app/ia/router.py` (prefijo `/ia`) incluye whisper y transcriptor. `main.py` incluye `app.ia.router`; **no** enlaces los routers internos de `ia/` directo (antes causaba `/ia/ia/transcribir`).
+- Los repositorios hacen `flush()`; la transacción por petición la administra `get_db` (`SessionLocal.begin()`).
+- **Frontend** en `frontend/src/`: `app/` (router + providers), `features/<modulo>/`, `shared/`. Pruebas con **`node:test`** (no vitest/jest): archivos `*.test.js` junto al código.
 
-## Levantar el entorno (comandos exactos, Windows)
+## Levantar el entorno (Windows)
 
 ```powershell
-docker compose up -d db                     # BD: hospital_sarcobamba, datos sembrados
-
-# Backend — OJO: requiere el import previo de paciente (ver bugs).
+docker compose up -d db
 cd backend
-.\.venv\Scripts\python.exe -c "import app.shared.entities.paciente; import uvicorn; uvicorn.run('app.main:app', host='127.0.0.1', port=8000)"
-
-# Frontend (otra terminal)
+.\.venv\Scripts\python.exe -m alembic upgrade head   # OBLIGATORIO: 7 migraciones
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload
+# otra terminal
 cd frontend
-npm run dev                                  # http://localhost:5173
+npm run dev
 ```
 
-- `.env` está en `.gitignore` (`backend/.gitignore`, `frontend/.gitignore`): editarlos es cambio **local**, no del repo.
-- `backend/.env` mínimo: `DATABASE_URL=postgresql+asyncpg://hospital:hospital_dev_password@localhost:5432/hospital_sarcobamba` + `JWT_SECRET_KEY`. `app/config/settings.py` los exige en el import.
-- CORS solo acepta `http://localhost:5173`.
-- Tras cambiar de rama, **reinicia uvicorn a mano** (no confíes en `--reload`: el watcher revive procesos viejos con código de la rama anterior y ocupa el puerto).
+- `backend/.env` y `frontend/.env` están en `.gitignore` (cambios locales). Credenciales del Compose: `hospital:hospital_dev_password@localhost:5432/hospital_sarcobamba`.
+- Sin `alembic upgrade head` fallan pruebas que verifican `alembic_version` (p. ej. `tests/test_preparar_medico_demo.py`) y los flujos contra PostgreSQL.
+- Tras **cambiar de rama**, reinicia uvicorn a mano: el watcher de `--reload` deja procesos viejos que se quedan con el puerto 8000 y código obsoleto.
 
-## Bugs conocidos de la rama (verificados, sin tocar)
+## Dependencia con trampa conocida
 
-1. **`POST /examenes` → 500 `NoReferencedTableError` ("could not find table 'paciente'")**: tras el refactor nadie importa `app/shared/entities/paciente.py` en tiempo de ejecución (solo `alembic/env.py`), así que SQLAlchemy no conoce el destino del FK `examen.paciente_id`. Fix de repo: agregar `from app.shared.entities import paciente` en `app/main.py`.
-2. **`backend/tests/test_accesos.py` desactualizado**: manda `"contrasena"` (el schema pide `"password"` → 422 en vez de 401) y llama a `/accesos/me` (ruta real `/accesos/yo` → 404). Fallan 2 de 8 pruebas.
-3. **`backend/create_test_user.py` roto**: importa `password_hasher`, ya inexistente (hoy es la clase `Argon2PasswordHasher`).
-4. **Falta la tabla `examen`** en `database/schema.sql` y `alembic/versions/` está vacío → la BD local la tuve que crear a mano.
-5. El repo quedó con `README.md` en **conflicto sin resolver (`UU`)** y un archivo basura `lkdjfa` sin trackear.
+- `requirements.txt` fija `av>=15,<17`: **PyAV 19 retiró `metadata_errors`**, que usa `faster-whisper==1.2.1` al decodificar audio. Si instalas sin el pin, `/ia/transcribir` falla y `tests/test_whisper_audio_compatibilidad.py` lo detecta.
 
-## Datos ficticios sembrados localmente (útiles para probar)
+## Pruebas
 
-- Usuario: `lab_test` / `secreta123` (rol `laboratorio`, trabajador `T-999`).
-- Paciente `PAC-DEMO-001` (id 1) + examen "Hemograma completo" (id 1).
+- Backend: `cd backend`, exporta `DATABASE_URL` y `JWT_SECRET_KEY` (los pone el CI) y ejecuta `pytest`. Suite completa ≈ 3.5 s; si hay un fallo aislado por entorno, confirma con `pytest -q -x`.
+- `backend/conftest.py` provee `client` (httpx `ASGITransport`) y `usuarios` (parchea `SqlAlchemyUsuarioRepository` y anula `get_db`). Pruebas de integración en `backend/tests/` usan PostgreSQL real con rollback.
+- Convención de pruebas nuevas: `app/<modulo>/tests/test_*.py`, dobles de repositorio/caso de uso con `app.dependency_overrides`, y verificación de que los errores de dominio no filtran detalles internos.
+- Frontend: `npm test`, `npm run lint`, `npm run build` (los tres corre el CI).
 
-## Pruebas y CI
+## CI
 
-- Backend: `pytest` desde `backend/`. `pyproject`: `pythonpath=["."]`, `testpaths=["app","tests"]`, `asyncio_mode="auto"`. La fixture `client` está en `backend/tests/conftest.py` (httpx `ASGITransport`); **las pruebas pegan contra la BD real** (no hay dobles): exporta `DATABASE_URL`/`JWT_SECRET_KEY` como hace el CI.
-- CI: `.github/workflows/backend-ci.yml` (push/PR sobre `backend/**`, Python 3.12, `pytest`) y `frontend-ci.yml` (Node 20, `npm install && npm run build`).
+- `backend-ci.yml`: `working-directory: backend`, servicio `pgvector/pgvector:pg16`, aplica `../database/schema.sql` y luego `alembic upgrade head`, y por último `pytest`.
+- `frontend-ci.yml`: `npm ci` → `lint` → `test` → `build`.
+
+## Corregido en esta rama (no volver a introducir)
+
+- Carpeta `app/ia/Transporter` → **`app/ia/transcriptor`** (mayúscula inicial la hacía inimportable).
+- `formatearFecha` interpreta las fechas de calendario (`YYYY-MM-DD`) como día local; antes se mostraba un día antes en zonas horarias negativas.
+- `frontend/package.json` tenía pruebas (`*.test.js`) sin script `test` ni paso en CI.
+
+## Datos ficticios locales para probar
+
+- Usuario `lab_test` / `secreta123` (rol laboratorio). Paciente `PAC-DEMO-001` (id 1).
+- `python -m scripts.preparar_medico_demo` y `python -m scripts.preparar_usuario_prueba <identificador>` crean cuentas ficticias (el segundo pide la contraseña de forma interactiva).
