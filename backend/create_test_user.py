@@ -2,7 +2,7 @@ import asyncio
 from app.config.database import SessionLocal
 from app.accesos.infrastructure.persistence.models.usuario import Usuario
 from app.accesos.infrastructure.persistence.models.rol import Rol
-from app.accesos.infrastructure.security.password_hasher import password_hasher
+from app.accesos.infrastructure.security.password_hasher import Argon2PasswordHasher
 from sqlalchemy import select, insert, text
 
 async def seed_user():
@@ -40,7 +40,7 @@ async def seed_user():
 
         nuevo_usuario = Usuario(
             identificador_acceso="lab_test",
-            contrasena_hash=password_hasher.hash("secreta123"),
+            contrasena_hash=Argon2PasswordHasher().hashear("secreta123"),
             rol_id=rol_id,
             trabajador_id=trabajador_id,
             estado="activo"
