@@ -15,13 +15,6 @@
   font-weight: 600;
 }
 
-.auth-form-heading p {
-  margin: 0;
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.5;
-}
-
 .auth-field {
   display: grid;
   gap: 7px;
@@ -59,16 +52,6 @@
 .auth-submit {
   width: 100%;
   margin-top: 6px;
-}
-
-.auth-help {
-  margin: 20px 0 0;
-  padding-top: 18px;
-  border-top: 1px solid var(--line);
-  color: var(--muted);
-  font-size: 11px;
-  line-height: 1.5;
-  text-align: center;
 }
 
 @media (max-width: 480px) {

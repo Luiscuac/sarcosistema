@@ -12,6 +12,7 @@ class PacienteResumen:
     sexo: str
     historia_clinica: str | None = None
     codigo_externo: str | None = None
+    telefono: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,3 +25,4 @@ class PacienteNuevo:
     sin_documento: bool
     historia_clinica: str | None = None
     codigo_externo: str | None = None
+    telefono: str | None = None

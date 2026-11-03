@@ -16,6 +16,7 @@ class Solicitud(Base):
     referencia: Mapped[str] = mapped_column(Text, nullable=False)
     paciente_id: Mapped[int] = mapped_column(ForeignKey("paciente.id"), nullable=False)
     referencia_papel_formulario: Mapped[str | None] = mapped_column(Text, nullable=True)
+    procedencia: Mapped[str] = mapped_column(Text, nullable=False, default="este_centro")
     fecha_solicitud: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     establecimiento_solicitante_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     establecimiento_solicitante_nombre_snapshot: Mapped[str | None] = mapped_column(Text, nullable=True)

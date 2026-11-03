@@ -3,13 +3,13 @@
 from datetime import date, time
 from decimal import Decimal
 from types import SimpleNamespace
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from pydantic import ValidationError
 
 from app.laboratorio.presentation.schemas import CrearPacienteRequest, RecibirMuestraRequest, RecibirMuestraSolicitudRequest
-from app.laboratorio.domain.entities import AccionAuditoria, MuestraSolicitudNueva
+from app.laboratorio.domain.entities import AccionAuditoria, IncidenciaSolicitudNueva, MuestraSolicitudNueva
 from app.laboratorio.application.service import LaboratorioService
 from app.laboratorio.infrastructure.persistence.repository import (
     SqlAlchemyExamenRepository, campos_obligatorios_faltantes,
@@ -33,6 +33,7 @@ def test_recibir_muestra_acepta_hora_registrada():
         fecha_toma=date(2026, 10, 22),
         hora_toma=time(9, 30),
         hora_no_registrada=False,
+        responsable_recepcion="Ana Pérez",
     )
 
     assert solicitud.tipo_muestra == "Orina"
@@ -44,6 +45,7 @@ def test_recibir_muestra_acepta_hora_no_registrada():
         fecha_toma=date(2026, 10, 22),
         hora_toma=None,
         hora_no_registrada=True,
+        responsable_recepcion="Ana Pérez",
     )
 
     assert solicitud.hora_no_registrada is True
@@ -62,6 +64,7 @@ def test_recibir_muestra_rechaza_combinacion_de_hora_inconsistente(
             fecha_toma=date(2026, 10, 22),
             hora_toma=hora_toma,
             hora_no_registrada=hora_no_registrada,
+            responsable_recepcion="Ana Pérez",
         )
 
 
@@ -72,6 +75,7 @@ def test_recibir_muestra_rechaza_tipo_vacio():
             fecha_toma=date(2026, 10, 22),
             hora_toma=time(9, 30),
             hora_no_registrada=False,
+            responsable_recepcion="Ana Pérez",
         )
 
 
@@ -81,6 +85,7 @@ def test_muestra_de_solicitud_acepta_varios_estudios():
         tipo_muestra="  Sangre  ",
         fecha_toma=date(2026, 10, 22),
         hora_toma=time(9, 30),
+        responsable_recepcion="Ana Pérez",
     )
     assert solicitud.estudio_ids == [11, 12]
     assert solicitud.tipo_muestra == "Sangre"
@@ -94,6 +99,7 @@ def test_muestra_de_solicitud_rechaza_seleccion_invalida(ids):
             tipo_muestra="Sangre",
             fecha_toma=date(2026, 10, 22),
             hora_toma=time(9, 30),
+            responsable_recepcion="Ana Pérez",
         )
 
 
@@ -120,6 +126,64 @@ async def test_repositorio_no_crea_muestra_sin_seleccion_valida(ids):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("ids", [(), (11, 11)])
+async def test_repositorio_no_registra_incidencia_con_seleccion_invalida(ids):
+    incidencia = IncidenciaSolicitudNueva(1, ids, "muestra_no_entregada", "No trajo la muestra", "Ana Pérez")
+    db = SimpleNamespace(execute=AsyncMock())
+    with pytest.raises(ValueError, match="estudios distintos"):
+        await SqlAlchemyExamenRepository(db).registrar_incidencias_solicitud(incidencia, 7)
+    db.execute.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_incidencia_rechaza_estudios_de_otra_solicitud_sin_guardar_nada():
+    incidencia = IncidenciaSolicitudNueva(1, (11, 12), "muestra_no_entregada", "No trajo la muestra", "Ana Pérez")
+    filas = [SimpleNamespace(id=11, solicitud_id=1, estado="pendiente_muestra"),
+             SimpleNamespace(id=12, solicitud_id=2, estado="pendiente_muestra")]
+    resultado = SimpleNamespace(scalars=lambda: SimpleNamespace(all=lambda: filas))
+    db = SimpleNamespace(execute=AsyncMock(return_value=resultado), add=Mock(), flush=AsyncMock())
+    with pytest.raises(ValueError, match="pertenecer a esta solicitud"):
+        await SqlAlchemyExamenRepository(db).registrar_incidencias_solicitud(incidencia, 7)
+    db.add.assert_not_called()
+    db.flush.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_incidencia_cierra_los_estudios_como_no_realizados():
+    incidencia = IncidenciaSolicitudNueva(
+        1, (11, 12), "muestra_no_entregada", "No trajo la muestra", "Ana Pérez",
+    )
+    filas = [
+        SimpleNamespace(id=11, solicitud_id=1, estado="pendiente_muestra"),
+        SimpleNamespace(id=12, solicitud_id=1, estado="pendiente_muestra"),
+    ]
+    resultado = SimpleNamespace(scalars=lambda: SimpleNamespace(all=lambda: filas))
+    db = SimpleNamespace(execute=AsyncMock(return_value=resultado), add=Mock(), flush=AsyncMock())
+    cantidad = await SqlAlchemyExamenRepository(db).registrar_incidencias_solicitud(incidencia, 7)
+    assert cantidad == 2
+    assert all(estudio.estado == "no_realizado" for estudio in filas)
+    assert all(estudio.updated_by == 7 for estudio in filas)
+    assert db.add.call_count == 2
+    db.flush.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_publicacion_exige_el_mismo_profesional_del_borrador():
+    estudio = SimpleNamespace(estado="resultado_en_preparacion")
+    resultado = SimpleNamespace(responsable_analisis="Ana Pérez")
+    db = SimpleNamespace(
+        execute=AsyncMock(side_effect=[
+            SimpleNamespace(scalar_one_or_none=lambda: estudio),
+            SimpleNamespace(scalar_one_or_none=lambda: resultado),
+        ]),
+        flush=AsyncMock(),
+    )
+    with pytest.raises(ValueError, match="nombre del profesional responsable"):
+        await SqlAlchemyExamenRepository(db).publicar_resultado(5, 7, "Otra persona")
+    db.flush.assert_not_awaited()
+
+
+@pytest.mark.asyncio
 async def test_endpoint_registra_una_muestra_para_estudios_de_la_solicitud(client, usuarios):
     class ServicioFalso:
         async def recibir_muestra_solicitud(self, toma, usuario_id):
@@ -138,7 +202,7 @@ async def test_endpoint_registra_una_muestra_para_estudios_de_la_solicitud(clien
             "/laboratorio/solicitudes/4/muestras",
             headers={"Authorization": f"Bearer {token}"},
             json={"estudio_ids": [11, 12], "tipo_muestra": "Sangre",
-                  "fecha_toma": "2026-10-22", "hora_toma": "09:30:00"},
+                  "fecha_toma": "2026-10-22", "hora_toma": "09:30:00", "responsable_recepcion": "Ana Pérez"},
         )
         assert respuesta.status_code == 201
         assert respuesta.json() == {"referencia_muestra": "MUE-PRUEBA"}

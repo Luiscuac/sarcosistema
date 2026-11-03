@@ -33,6 +33,7 @@ from app.laboratorio.infrastructure.persistence.models.resultados import (
 from app.laboratorio.infrastructure.persistence.models.auditoria import (
     AuditoriaAccion,
 )
+from app.laboratorio.infrastructure.persistence.models.incidencias import IncidenciaMuestra
 
 __all__ = [
     "Servicio",
@@ -51,4 +52,5 @@ __all__ = [
     "VersionResultado",
     "DetalleValorResultado",
     "AuditoriaAccion",
+    "IncidenciaMuestra",
 ]

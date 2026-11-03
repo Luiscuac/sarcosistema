@@ -16,6 +16,7 @@ class Paciente(Base):
     codigo_paciente: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
     historia_clinica: Mapped[str | None] = mapped_column(Text, nullable=True)
     codigo_externo: Mapped[str | None] = mapped_column(Text, nullable=True)
+    telefono: Mapped[str | None] = mapped_column(Text, nullable=True)
     tipo_documento: Mapped[str | None] = mapped_column(Text, nullable=True)
     numero_documento: Mapped[str | None] = mapped_column(Text, nullable=True)
     sin_documento: Mapped[bool] = mapped_column(Boolean, nullable=False)

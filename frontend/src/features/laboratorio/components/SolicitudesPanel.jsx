@@ -5,10 +5,9 @@ import { useExamenes } from '../hooks/useExamenes.js'
 import { agruparSolicitudes } from '../utils/agruparSolicitudes.js'
 import SolicitudRow from './solicitudes/SolicitudRow.jsx'
 
-export default function SolicitudesPanel({ onRecibirMuestra, onAbrirResultado }) {
+export default function SolicitudesPanel() {
   const [busqueda, setBusqueda] = useState('')
   const [vista, setVista] = useState('pendientes')
-  const [solicitudAbierta, setSolicitudAbierta] = useState(null)
   const { data: estudios = [], isLoading, isError } = useExamenes()
   const publicadosQuery = useQuery({ queryKey: ['examenes', 'publicados'], queryFn: listarResultadosPublicados, enabled: vista === 'publicados' })
   const estudiosActuales = vista === 'pendientes' ? estudios : publicadosQuery.data ?? []
@@ -29,13 +28,12 @@ export default function SolicitudesPanel({ onRecibirMuestra, onAbrirResultado })
     <div className="lab-list-panel">
       <div className="lab-list-toolbar">
         <div>
-          <h2>{vista === 'pendientes' ? 'Solicitudes pendientes' : 'Resultados publicados'}</h2>
-          <p>Una fila por solicitud. Abre la solicitud para trabajar cada estudio.</p>
+          <h2>{vista === 'pendientes' ? 'Solicitudes pendientes' : 'Solicitudes finalizadas'}</h2>
         </div>
       </div>
       <div className="lab-list-tabs" role="tablist" aria-label="Filtrar solicitudes">
-        <button type="button" role="tab" aria-selected={vista === 'pendientes'} className={vista === 'pendientes' ? 'is-active' : ''} onClick={() => { setVista('pendientes'); setSolicitudAbierta(null) }}>Pendientes</button>
-        <button type="button" role="tab" aria-selected={vista === 'publicados'} className={vista === 'publicados' ? 'is-active' : ''} onClick={() => { setVista('publicados'); setSolicitudAbierta(null) }}>Publicados</button>
+        <button type="button" role="tab" aria-selected={vista === 'pendientes'} className={vista === 'pendientes' ? 'is-active' : ''} onClick={() => setVista('pendientes')}>Pendientes</button>
+        <button type="button" role="tab" aria-selected={vista === 'publicados'} className={vista === 'publicados' ? 'is-active' : ''} onClick={() => setVista('publicados')}>Finalizadas</button>
       </div>
       <input
         className="lab-search"
@@ -47,7 +45,7 @@ export default function SolicitudesPanel({ onRecibirMuestra, onAbrirResultado })
       />
       <div className="lab-table-wrap">
         <table className="lab-table">
-          <caption className="sr-only">{vista === 'pendientes' ? 'Solicitudes pendientes de laboratorio' : 'Resultados publicados de laboratorio'}</caption>
+          <caption className="sr-only">{vista === 'pendientes' ? 'Solicitudes pendientes de laboratorio' : 'Solicitudes finalizadas de laboratorio'}</caption>
           <thead>
             <tr><th>Solicitud / paciente</th><th>Estado</th><th>Estudios</th><th>Prioridad</th><th>Acción</th></tr>
           </thead>
@@ -58,15 +56,10 @@ export default function SolicitudesPanel({ onRecibirMuestra, onAbrirResultado })
               <span>Comprueba que el backend y la base estén activos e inténtalo de nuevo.</span>
             </td></tr>}
             {!cargando && !error && visibles.length === 0 && <tr><td className="lab-empty" colSpan="5">
-              <strong>{busqueda ? 'No hay resultados para esa búsqueda.' : vista === 'pendientes' ? 'No hay solicitudes pendientes.' : 'Todavía no hay resultados publicados.'}</strong>
-              <span>{busqueda ? 'Prueba con otro nombre o referencia.' : vista === 'pendientes' ? 'Las solicitudes aparecerán aquí cuando se registren.' : 'Los resultados aparecerán aquí después de su publicación.'}</span>
+              <strong>{busqueda ? 'No hay resultados para esa búsqueda.' : vista === 'pendientes' ? 'No hay solicitudes pendientes.' : 'Todavía no hay solicitudes finalizadas.'}</strong>
+              <span>{busqueda ? 'Prueba con otro nombre o referencia.' : vista === 'pendientes' ? 'Las solicitudes aparecerán aquí cuando se registren.' : 'Aparecerán aquí cuando todos sus estudios estén publicados o cerrados como no realizados.'}</span>
             </td></tr>}
-            {!cargando && !error && visibles.map((solicitud) => {
-              const abierta = solicitudAbierta === solicitud.id
-              return <SolicitudRow key={solicitud.id} solicitud={solicitud} abierta={abierta} vista={vista}
-                onToggle={() => setSolicitudAbierta(abierta ? null : solicitud.id)}
-                onRecibirMuestra={onRecibirMuestra} onAbrirResultado={onAbrirResultado} />
-            })}
+            {!cargando && !error && visibles.map((solicitud) => <SolicitudRow key={solicitud.id} solicitud={solicitud} />)}
           </tbody>
         </table>
       </div>

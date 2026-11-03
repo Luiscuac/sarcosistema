@@ -13,6 +13,7 @@ class ParametroResultado:
     orden: int
     seccion: str | None
     valor: str | None = None
+    opciones: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,6 +28,8 @@ class ResultadoEstudio:
     plantilla_configurada: bool
     observaciones: str | None
     parametros: tuple[ParametroResultado, ...]
+    responsable_analisis: str | None = None
+    responsable_publicacion: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

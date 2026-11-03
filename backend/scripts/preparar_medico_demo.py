@@ -28,8 +28,11 @@ async def preparar_medico_demo(db, password_hash: str) -> dict[str, str]:
     if revisiones is None:
         raise ValueError('Primero aplica las migraciones con alembic upgrade head.')
     version = (await db.execute(text('SELECT version_num FROM public.alembic_version'))).scalar_one_or_none()
-    if version != '20261027_0007':
-        raise ValueError('La base necesita la revisión 20261027_0007 antes de crear datos de prueba.')
+    if version not in {
+        '20261027_0007', '20261102_0008', '20261102_0009',
+        '20261102_0010', '20261103_0011',
+    }:
+        raise ValueError('La base necesita las migraciones del proyecto antes de crear datos de prueba.')
 
     for tabla, columna, identificador in (
         ('usuario', 'identificador_acceso', USUARIO_DEMO),

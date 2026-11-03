@@ -14,6 +14,8 @@ from app.laboratorio.domain.entities import (
     ResultadoEstudio,
     TomaMuestraNueva,
     MuestraSolicitudNueva,
+    IncidenciaNueva,
+    IncidenciaSolicitudNueva,
     ValorResultadoEntrada,
     BorradorResultado,
     PacienteNuevo,
@@ -32,6 +34,8 @@ from app.laboratorio.infrastructure.persistence.models import (
     DetalleValorResultado,
     VersionResultado,
     PlantillaExamenVersion,
+    OpcionParametro,
+    IncidenciaMuestra,
     Servicio,
     Solicitud,
     TipoEstudio,
@@ -61,6 +65,82 @@ class SqlAlchemyExamenRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
+    async def listar_solicitudes_paciente(self, paciente_id: int):
+        ids = (await self.db.execute(
+            select(Solicitud.id).where(Solicitud.paciente_id == paciente_id)
+            .order_by(Solicitud.id.desc()).limit(30)
+        )).scalars().all()
+        return [await self.obtener_solicitud(solicitud_id) for solicitud_id in ids]
+
+    async def obtener_solicitud(self, solicitud_id: int):
+        solicitud = await self.db.get(Solicitud, solicitud_id)
+        if solicitud is None:
+            return None
+        paciente = await self.db.get(Paciente, solicitud.paciente_id)
+        filas = (await self.db.execute(
+            select(EstudioSolicitado, TipoEstudio.nombre, TipoEstudio.categoria_laboratorio, TipoEstudio.codigo)
+            .join(TipoEstudio, TipoEstudio.id == EstudioSolicitado.tipo_estudio_id)
+            .where(EstudioSolicitado.solicitud_id == solicitud_id)
+            .order_by(EstudioSolicitado.id)
+        )).all()
+        ids = [fila[0].id for fila in filas]
+        incidencias = (await self.db.execute(
+            select(IncidenciaMuestra)
+            .where(IncidenciaMuestra.estudio_id.in_(ids))
+            .order_by(IncidenciaMuestra.fecha_hora, IncidenciaMuestra.id)
+        )).scalars().all() if ids else []
+        incidencias_por_estudio = {}
+        for incidencia in incidencias:
+            incidencias_por_estudio.setdefault(incidencia.estudio_id, []).append({
+                "motivo": incidencia.motivo,
+                "descripcion": incidencia.descripcion,
+                "responsable": incidencia.responsable,
+                "fecha_hora": incidencia.fecha_hora,
+            })
+        filas_muestra = (await self.db.execute(
+            select(Muestra, MuestraEstudio.estudio_id)
+            .join(MuestraEstudio, MuestraEstudio.muestra_id == Muestra.id)
+            .where(MuestraEstudio.estudio_id.in_(ids))
+            .order_by(Muestra.id, MuestraEstudio.estudio_id)
+        )).all() if ids else []
+        muestras = {}
+        for muestra, estudio_id in filas_muestra:
+            item = muestras.setdefault(muestra.id, {
+                "referencia": muestra.referencia_muestra,
+                "tipo_muestra": muestra.tipo_muestra,
+                "fecha_toma": muestra.fecha_toma_real,
+                "responsable_recepcion": muestra.responsable_recepcion,
+                "estudio_ids": [],
+            })
+            item["estudio_ids"].append(estudio_id)
+        return {
+            "id": solicitud.id,
+            "referencia": solicitud.referencia,
+            "paciente_nombre": paciente.nombre_completo,
+            "paciente_documento": paciente.numero_documento,
+            "fecha_solicitud": solicitud.fecha_solicitud,
+            "fecha_registro": solicitud.created_at,
+            "referencia_papel_formulario": solicitud.referencia_papel_formulario,
+            "procedencia": solicitud.procedencia,
+            "establecimiento_solicitante_nombre": solicitud.establecimiento_solicitante_nombre_snapshot,
+            "medico_solicitante_nombre": solicitud.medico_solicitante_nombre_snapshot,
+            "diagnostico_principal": solicitud.diagnostico_principal,
+            "prioridad": solicitud.prioridad,
+            "muestras": list(muestras.values()),
+            "estudios": [
+                {
+                    "estudio_id": estudio.id,
+                    "referencia_estudio": estudio.referencia,
+                    "tipo_estudio_nombre": nombre,
+                    "categoria_laboratorio": categoria,
+                    "tipo_estudio_codigo": codigo,
+                    "estado": estudio.estado,
+                    "incidencias": incidencias_por_estudio.get(estudio.id, []),
+                }
+                for estudio, nombre, categoria, codigo in filas
+            ],
+        }
+
     async def listar_catalogo(self) -> list[EstudioCatalogo]:
         version_activa = exists(
             select(PlantillaExamenVersion.id).where(
@@ -69,6 +149,7 @@ class SqlAlchemyExamenRepository:
                 PlantillaExamenVersion.estado == "activa",
             )
         )
+
         statement = (
             select(
                 TipoEstudio.id,
@@ -90,11 +171,66 @@ class SqlAlchemyExamenRepository:
         rows = (await self.db.execute(statement)).mappings().all()
         return [EstudioCatalogo(**row) for row in rows]
 
+    async def registrar_incidencia(self, incidencia: IncidenciaNueva, usuario_id: int):
+        estudio = (await self.db.execute(
+            select(EstudioSolicitado).where(EstudioSolicitado.id == incidencia.estudio_id)
+            .with_for_update()
+        )).scalar_one_or_none()
+        if estudio is None or estudio.estado != "pendiente_muestra":
+            raise ValueError("Solo se puede registrar una incidencia antes de recibir la muestra")
+        registro = IncidenciaMuestra(
+            estudio_id=incidencia.estudio_id,
+            motivo=incidencia.motivo,
+            descripcion=incidencia.descripcion,
+            responsable=incidencia.responsable,
+            fecha_hora=datetime.now(timezone.utc),
+            usuario_id=usuario_id,
+        )
+        self.db.add(registro)
+        estudio.estado = "no_realizado"
+        estudio.updated_by = usuario_id
+        estudio.updated_at = datetime.now(timezone.utc)
+        await self.db.flush()
+        return {"motivo": registro.motivo, "descripcion": registro.descripcion,
+                "responsable": registro.responsable, "fecha_hora": registro.fecha_hora}
+
+    async def registrar_incidencias_solicitud(self, incidencia: IncidenciaSolicitudNueva, usuario_id: int) -> int:
+        if not incidencia.estudio_ids or len(incidencia.estudio_ids) != len(set(incidencia.estudio_ids)):
+            raise ValueError("Selecciona estudios distintos para la incidencia")
+        estudios = (await self.db.execute(
+            select(EstudioSolicitado)
+            .join(Servicio, Servicio.id == EstudioSolicitado.servicio_id)
+            .where(EstudioSolicitado.id.in_(incidencia.estudio_ids), Servicio.codigo == "LAB")
+            .order_by(EstudioSolicitado.id)
+            .with_for_update(of=EstudioSolicitado)
+        )).scalars().all()
+        if len(estudios) != len(incidencia.estudio_ids) or any(
+            estudio.solicitud_id != incidencia.solicitud_id for estudio in estudios
+        ):
+            raise ValueError("Todos los estudios deben pertenecer a esta solicitud de laboratorio")
+        if any(estudio.estado != "pendiente_muestra" for estudio in estudios):
+            raise ValueError("Solo se puede registrar una incidencia antes de recibir la muestra")
+        fecha_hora = datetime.now(timezone.utc)
+        for estudio in estudios:
+            self.db.add(IncidenciaMuestra(
+                estudio_id=estudio.id,
+                motivo=incidencia.motivo,
+                descripcion=incidencia.descripcion,
+                responsable=incidencia.responsable,
+                fecha_hora=fecha_hora,
+                usuario_id=usuario_id,
+            ))
+            estudio.estado = "no_realizado"
+            estudio.updated_by = usuario_id
+            estudio.updated_at = fecha_hora
+        await self.db.flush()
+        return len(estudios)
+
     async def listar_pendientes(self) -> list[EstudioPendiente]:
         return await self._listar_estudios(("pendiente_muestra", "resultado_en_preparacion"))
 
     async def listar_publicados(self) -> list[EstudioPendiente]:
-        return await self._listar_estudios(("publicado",))
+        return await self._listar_estudios(("publicado", "no_realizado"))
 
     async def _listar_estudios(self, estados: tuple[str, ...]) -> list[EstudioPendiente]:
         prioridad_orden = case((Solicitud.prioridad == "urgente", 0), else_=1)
@@ -145,6 +281,7 @@ class SqlAlchemyExamenRepository:
                 Paciente.sexo,
                 Paciente.historia_clinica,
                 Paciente.codigo_externo,
+                Paciente.telefono,
             )
             .where(
                 Paciente.estado == "activo",
@@ -172,6 +309,7 @@ class SqlAlchemyExamenRepository:
             sin_documento=paciente.sin_documento,
             historia_clinica=paciente.historia_clinica,
             codigo_externo=paciente.codigo_externo,
+            telefono=paciente.telefono,
             nombre_completo=paciente.nombre_completo,
             fecha_nacimiento=paciente.fecha_nacimiento,
             sexo=paciente.sexo,
@@ -199,6 +337,7 @@ class SqlAlchemyExamenRepository:
             sexo=modelo.sexo,
             historia_clinica=modelo.historia_clinica,
             codigo_externo=modelo.codigo_externo,
+            telefono=modelo.telefono,
         )
 
     async def crear_solicitud(
@@ -271,6 +410,7 @@ class SqlAlchemyExamenRepository:
             referencia=referencia,
             paciente_id=solicitud.paciente_id,
             referencia_papel_formulario=solicitud.referencia_papel_formulario,
+            procedencia=solicitud.procedencia,
             fecha_solicitud=solicitud.fecha_solicitud,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
@@ -351,6 +491,7 @@ class SqlAlchemyExamenRepository:
                 fecha_toma=toma.fecha_toma,
                 hora_toma=toma.hora_toma,
                 hora_no_registrada=toma.hora_no_registrada,
+                responsable_recepcion=toma.responsable_recepcion,
             ),
             usuario_id,
         )
@@ -394,6 +535,7 @@ class SqlAlchemyExamenRepository:
             hora_no_registrada=toma.hora_no_registrada,
             fecha_hora_ingreso_sistema=datetime.now(timezone.utc),
             tipo_muestra=toma.tipo_muestra.strip(),
+            responsable_recepcion=toma.responsable_recepcion.strip(),
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
             created_by=usuario_id,
@@ -470,6 +612,16 @@ class SqlAlchemyExamenRepository:
                 .where(ParametroPlantilla.plantilla_version_id == version_plantilla.id)
                 .order_by(SeccionPlantilla.orden, ParametroPlantilla.orden)
             )).all()
+            opciones = (await self.db.execute(
+                select(OpcionParametro)
+                .join(ParametroPlantilla, ParametroPlantilla.id == OpcionParametro.parametro_id)
+                .where(ParametroPlantilla.plantilla_version_id == version_plantilla.id,
+                       OpcionParametro.activo.is_(True))
+                .order_by(OpcionParametro.parametro_id, OpcionParametro.orden)
+            )).scalars().all()
+            opciones_por_parametro = {}
+            for opcion in opciones:
+                opciones_por_parametro.setdefault(opcion.parametro_id, []).append(opcion.etiqueta)
             valores = {}
             if version is not None:
                 detalles = (await self.db.execute(
@@ -496,6 +648,7 @@ class SqlAlchemyExamenRepository:
                     orden=param.orden,
                     seccion=seccion,
                     valor=valores.get(param.id),
+                    opciones=tuple(opciones_por_parametro.get(param.id, ())),
                 )
                 for param, seccion in filas_parametros
             ]
@@ -510,6 +663,8 @@ class SqlAlchemyExamenRepository:
             numero_version=version.numero_version if version else None,
             plantilla_configurada=version_plantilla is not None and bool(parametros),
             observaciones=resultado.observaciones_generales if resultado else None,
+            responsable_analisis=resultado.responsable_analisis if resultado else None,
+            responsable_publicacion=version.responsable_publicacion if version else None,
             parametros=tuple(parametros),
         )
 
@@ -519,6 +674,7 @@ class SqlAlchemyExamenRepository:
         valores: tuple[ValorResultadoEntrada, ...],
         observaciones: str | None,
         usuario_id: int,
+        responsable_analisis: str,
     ) -> BorradorResultado:
         estudio = (await self.db.execute(
             select(EstudioSolicitado)
@@ -547,6 +703,7 @@ class SqlAlchemyExamenRepository:
                 estudio_id=estudio_id,
                 plantilla_version_id=plantilla.id,
                 observaciones_generales=observaciones,
+                responsable_analisis=responsable_analisis.strip(),
                 created_by=usuario_id,
                 updated_by=usuario_id,
                 created_at=datetime.now(timezone.utc),
@@ -575,6 +732,7 @@ class SqlAlchemyExamenRepository:
             if version.estado != "borrador":
                 raise ValueError("El resultado publicado no se puede sobrescribir")
             resultado.observaciones_generales = observaciones
+            resultado.responsable_analisis = responsable_analisis.strip()
             resultado.updated_by = usuario_id
             resultado.updated_at = datetime.now(timezone.utc)
             version.updated_by = usuario_id
@@ -605,6 +763,15 @@ class SqlAlchemyExamenRepository:
                 "valor_cualitativo": None,
             }
             if valor:
+                if parametro.tipo_entrada == "cualitativo":
+                    opciones = (await self.db.execute(
+                        select(OpcionParametro.etiqueta).where(
+                            OpcionParametro.parametro_id == parametro.id,
+                            OpcionParametro.activo.is_(True),
+                        )
+                    )).scalars().all()
+                    if opciones and valor not in opciones:
+                        raise ValueError(f"Selecciona una opción válida para {parametro.nombre}")
                 try:
                     if parametro.tipo_entrada == "entero":
                         campos["valor_entero"] = int(valor)
@@ -644,7 +811,7 @@ class SqlAlchemyExamenRepository:
         await self.db.flush()
         return BorradorResultado(estudio_id, version.estado, version.numero_version)
 
-    async def publicar_resultado(self, estudio_id: int, usuario_id: int) -> BorradorResultado:
+    async def publicar_resultado(self, estudio_id: int, usuario_id: int, responsable_publicacion: str) -> BorradorResultado:
         estudio = (await self.db.execute(
             select(EstudioSolicitado)
             .where(EstudioSolicitado.id == estudio_id)
@@ -657,6 +824,8 @@ class SqlAlchemyExamenRepository:
         )).scalar_one_or_none()
         if resultado is None:
             raise ValueError("Guarda primero el borrador del resultado")
+        if resultado.responsable_analisis != responsable_publicacion.strip():
+            raise ValueError("Guarda el nombre del profesional responsable antes de publicar")
         version = (await self.db.execute(
             select(VersionResultado)
             .where(VersionResultado.resultado_id == resultado.id)
@@ -680,6 +849,7 @@ class SqlAlchemyExamenRepository:
             raise ValueError("Faltan campos obligatorios: " + ", ".join(faltantes))
         version.estado = "publicado"
         version.usuario_publicacion_id = usuario_id
+        version.responsable_publicacion = responsable_publicacion.strip()
         version.fecha_hora_publicacion = datetime.now(timezone.utc)
         version.updated_by = usuario_id
         version.updated_at = datetime.now(timezone.utc)

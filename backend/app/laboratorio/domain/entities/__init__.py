@@ -1,7 +1,7 @@
 """Entidades de dominio del laboratorio, agrupadas por flujo."""
 
 from app.laboratorio.domain.entities.catalogo import EstudioCatalogo, EstudioPendiente
-from app.laboratorio.domain.entities.muestras import MuestraSolicitudNueva, TomaMuestraNueva
+from app.laboratorio.domain.entities.muestras import IncidenciaNueva, IncidenciaSolicitudNueva, MuestraSolicitudNueva, TomaMuestraNueva
 from app.laboratorio.domain.entities.pacientes import PacienteNuevo, PacienteResumen
 from app.laboratorio.domain.entities.resultados import (
     BorradorResultado,
@@ -21,4 +21,5 @@ __all__ = [
     "EstudioSolicitadoResumen", "MuestraSolicitudNueva", "PacienteNuevo",
     "PacienteResumen", "ParametroResultado", "ResultadoEstudio", "SolicitudCreada",
     "SolicitudNueva", "TomaMuestraNueva", "ValorResultadoEntrada",
+    "IncidenciaNueva", "IncidenciaSolicitudNueva",
 ]
