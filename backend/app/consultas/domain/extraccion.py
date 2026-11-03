@@ -17,6 +17,35 @@ CampoClinico = Literal[
 NUMERICOS = frozenset({'peso_kg', 'talla_cm', 'temperatura_c', 'frecuencia_cardiaca',
     'frecuencia_respiratoria', 'presion_sistolica', 'presion_diastolica', 'saturacion_oxigeno'})
 FIN_FRASE = re.compile(r'(?<!\.)[.!?\n](?!\.)(?!(?<=\d\.)\d)')
+ETIQUETAS_DICTADO = re.compile(
+    r'(?P<etiqueta>motivo(?:\s+de\s+consulta)?|s[ií]ntomas?|enfermedad\s+actual|'
+    r'antecedentes?|al\s+examen\s+f[ií]sico|examen\s+f[ií]sico|hallazgos|observaciones|'
+    r'evaluaci[oó]n\s+cl[ií]nica|diagn[oó]stico\s+principal|diagn[oó]sticos\s+secundarios|'
+    r'tratamiento|medicamentos|indicaciones|estudios\s+solicitados|referencias|recomendaciones|'
+    r'plan(?:\s+de\s+acci[oó]n)?|seguimiento|frecuencia\s+card[ií]aca|pulso|'
+    r'frecuencia\s+respiratoria|presi[oó]n\s+sist[oó]lica|sist[oó]lica|'
+    r'presi[oó]n\s+diast[oó]lica|diast[oó]lica|saturaci[oó]n(?:\s+de\s+ox[ií]geno)?|'
+    r'temperatura|peso|talla)\b\s*(?::|,)?',
+    re.IGNORECASE,
+)
+
+
+def segmentos_dictado_rotulado(texto: str) -> list[str]:
+    """Divide transcripciones con comas solo en rótulos clínicos explícitos."""
+    rotulos = []
+    for coincidencia in ETIQUETAS_DICTADO.finditer(texto):
+        prefijo = texto[:coincidencia.start('etiqueta')].rstrip()
+        if prefijo and prefijo[-1] not in ',;.!?\n':
+            continue
+        rotulos.append(coincidencia.start('etiqueta'))
+
+    segmentos = []
+    for indice, inicio in enumerate(rotulos):
+        fin = rotulos[indice + 1] if indice + 1 < len(rotulos) else len(texto)
+        segmento = texto[inicio:fin].strip(' \t,;')
+        if segmento:
+            segmentos.append(segmento)
+    return segmentos
 
 
 class Sugerencia(BaseModel):
@@ -44,7 +73,9 @@ def numero_respaldado(campo: str, valor: float, evidencia: str) -> bool:
     """Conversión limitada y verificable; lo no verificable se descarta, no se adivina."""
     if not math.isfinite(valor) or valor <= 0 or (campo == 'saturacion_oxigeno' and valor > 100):
         return False
-    texto = evidencia.lower().replace(',', '.')
+    # Normaliza solo comas decimales; conserva la coma después de un rótulo
+    # ("Presión diastólica, 80") para que también pueda validarse como separador.
+    texto = re.sub(r'(?<=\d),(?=\d)', '.', evidencia.lower())
     # La corrección explícita más reciente prevalece, conservando evidencia original.
     corregido = re.split(r'\b(?:perdón|perdon|corrijo|corrección|correccion)\b', texto)
     if len(corregido) > 1:
@@ -62,12 +93,13 @@ def numero_respaldado(campo: str, valor: float, evidencia: str) -> bool:
         numeros = re.findall(r'\d+(?:\.\d+)?', corregido[-1])
         return len(numeros) == 1 and float(numeros[0]) == valor
     numero = r'(\d+(?:\.\d+)?)'
+    separador_rotulo = r'\s*[:,]?\s*'
     patrones = {
-        'peso_kg': rf'(?:pesa|peso(?:\s+de)?)\s*:?\s*{numero}\s*(?:kilos?|kg|kilogramos?)',
-        'temperatura_c': rf'(?:temperatura(?:\s+de)?)\s*:?\s*{numero}',
-        'frecuencia_cardiaca': rf'(?:frecuencia card[ií]aca|pulso)\s*:?\s*{numero}',
-        'frecuencia_respiratoria': rf'(?:frecuencia respiratoria)\s*:?\s*{numero}',
-        'saturacion_oxigeno': rf'(?:saturaci[oó]n(?: de ox[ií]geno)?(?:\s+de)?)\s*:?\s*{numero}',
+        'peso_kg': rf'(?:pesa|peso(?:\s+de)?)\s*{separador_rotulo}{numero}\s*(?:kilos?|kg|kilogramos?)',
+        'temperatura_c': rf'(?:temperatura(?:\s+de)?)\s*{separador_rotulo}{numero}',
+        'frecuencia_cardiaca': rf'(?:frecuencia card[ií]aca|pulso)\s*{separador_rotulo}{numero}',
+        'frecuencia_respiratoria': rf'(?:frecuencia respiratoria)\s*{separador_rotulo}{numero}',
+        'saturacion_oxigeno': rf'(?:saturaci[oó]n(?: de ox[ií]geno)?(?:\s+de)?)\s*{separador_rotulo}{numero}',
     }
     if campo in ('presion_sistolica', 'presion_diastolica'):
         pares = re.findall(rf'(?:presi[oó]n(?: arterial)?(?:\s+de)?)[^\d]{{0,10}}{numero}\s*(?:sobre|/|con)\s*{numero}', texto)
@@ -75,16 +107,16 @@ def numero_respaldado(campo: str, valor: float, evidencia: str) -> bool:
             indice = 0 if campo == 'presion_sistolica' else 1
             return len(pares) == 1 and float(pares[0][indice]) == valor
         etiqueta = 'sist[oó]lica' if campo == 'presion_sistolica' else 'diast[oó]lica'
-        patron = rf'{etiqueta}\s*:?\s*{numero}'
+        patron = rf'{etiqueta}\s*{separador_rotulo}{numero}'
     elif campo == 'talla_cm':
         palabras = {'cincuenta': 50, 'sesenta': 60, 'setenta': 70, 'ochenta': 80, 'noventa': 90}
         verbal = re.search(r'\bun metro (cincuenta|sesenta|setenta|ochenta|noventa)\b', texto)
         if verbal:
             return valor == 100 + palabras[verbal[1]]
-        metros = re.search(rf'(?:mide|talla(?:\s+de)?)\s*:?\s*{numero}\s*(?:metros?|m)\b', texto)
+        metros = re.search(rf'(?:mide|talla(?:\s+de)?)\s*{separador_rotulo}{numero}\s*(?:metros?|m)\b', texto)
         if metros:
             return math.isclose(float(metros[1]) * 100, valor)
-        patron = rf'(?:mide|talla(?:\s+de)?)\s*:?\s*{numero}\s*(?:cm|cent[ií]metros?)'
+        patron = rf'(?:mide|talla(?:\s+de)?)\s*{separador_rotulo}{numero}\s*(?:cm|cent[ií]metros?)'
     else:
         patron = patrones.get(campo)
     coincidencias = re.findall(patron, texto) if patron else []
@@ -96,9 +128,12 @@ def mediciones_explicitas(texto: str) -> list[Sugerencia]:
     inicios = [0] + [m.end() for m in FIN_FRASE.finditer(texto)]
     if inicios[-1] != len(texto):
         inicios.append(len(texto))
+    frases = segmentos_dictado_rotulado(texto) + [
+        texto[inicio:fin].strip()
+        for inicio, fin in zip(inicios, inicios[1:])
+    ]
     encontradas = {}
-    for inicio, fin in zip(inicios, inicios[1:]):
-        frase = texto[inicio:fin].strip()
+    for frase in dict.fromkeys(frases):
         if not frase or len(frase) > 3000:
             continue
         numeros = {float(n.replace(',', '.')) for n in re.findall(r'\d+(?:[.,]\d+)?', frase)}
@@ -143,7 +178,9 @@ def validar_propuesta(salida: SalidaModelo, transcripcion: str) -> PropuestaClin
         izquierda = max((m.end() for m in limites if m.end() <= posicion), default=0)
         derecha = min((m.end() for m in limites if m.end() >= fin), default=len(transcripcion))
         contexto = transcripcion[izquierda:derecha]
-        if contexto.strip(' .!?\n\r\t') != item.evidencia.strip(' .!?\n\r\t'):
+        es_oracion_completa = contexto.strip(' .!?\n\r\t') == item.evidencia.strip(' .!?\n\r\t')
+        es_segmento_rotulado = item.evidencia in segmentos_dictado_rotulado(transcripcion)
+        if not es_oracion_completa and not es_segmento_rotulado:
             resultado.advertencias.append(f'{item.campo}: la evidencia omitía parte de la frase; revisa el texto completo.')
             continue
         ambigua = item.ambiguo or bool(re.search(
@@ -167,7 +204,10 @@ def validar_propuesta(salida: SalidaModelo, transcripcion: str) -> PropuestaClin
         posicion = transcripcion.index(item.evidencia)
         inicio = max(transcripcion.rfind('.', 0, posicion), transcripcion.rfind('\n', 0, posicion)) + 1
         prefijo = transcripcion[inicio:posicion]
-        if re.search(r'\b(?:niega|sin|no|posible|sospecha|descartar)\b', prefijo, re.I):
+        # En dictados rotulados puede haber campos previos con negaciones; no
+        # deben contaminar un segmento posterior ya delimitado y validado.
+        if not es_segmento_rotulado and re.search(
+                r'\b(?:niega|sin|no|posible|sospecha|descartar)\b', prefijo, re.I):
             resultado.advertencias.append(f'{item.campo}: evidencia recortada o contexto de negación; revisa el original.')
             continue
         resultado.campos.append(item.model_copy(update={'ambiguo': ambigua}))
