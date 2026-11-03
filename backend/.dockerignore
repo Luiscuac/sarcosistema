@@ -1,0 +1,10 @@
+.venv/
+venv/
+.env
+.models/
+.datasets/
+.radiologia-resultados/
+.pytest_cache/
+**/__pycache__/
+**/*.pyc
+**/*.egg-info/

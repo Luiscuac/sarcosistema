@@ -1,0 +1,5 @@
+# Opcionales para Fase 3. Instalar PyTorch CPU con requirements-radiologia-cpu.txt.
+transformers==4.57.6
+sentence-transformers==3.4.1
+huggingface-hub==0.36.2
+pgvector>=0.3,<1

@@ -1,6 +1,7 @@
 """Endpoints del modulo imagenes (Grupo B del backlog)."""
 from fastapi import APIRouter
+from app.imagenes.presentation.router import router as clinico_router
 
 router = APIRouter(prefix="/imagenes", tags=["imagenes"])
 
-# TODO: endpoints de subida/consulta de informes de imagenologia
+router.include_router(clinico_router)

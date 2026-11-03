@@ -3,6 +3,7 @@ Valida que existan las variables de entorno necesarias.
 Equivalente a env.validation.ts
 """
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field
 
 
 class Settings(BaseSettings):
@@ -20,6 +21,10 @@ class Settings(BaseSettings):
     ollama_url: str = 'http://127.0.0.1:11434'
     ollama_model: str = 'qwen2.5:3b'
     clinical_extractor_timeout_seconds: int = 180
+    radiology_ai_enabled: bool = False
+    radiology_storage_dir: str = '.storage/radiologia'
+    radiology_vision_min_free_mib: int = Field(default=4096,ge=2048)
+    radiology_score_threshold: float = Field(default=0.5,ge=0,le=1)
 
 
 settings = Settings()

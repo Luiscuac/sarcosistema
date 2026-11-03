@@ -74,6 +74,7 @@ class SolicitudNueva:
     diagnostico_principal: str | None
     prioridad: str
     clave_idempotencia: str
+    fecha_solicitud_explicita: bool = True
 
 
 @dataclass(frozen=True, slots=True)

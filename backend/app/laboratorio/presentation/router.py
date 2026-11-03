@@ -111,6 +111,7 @@ async def crear_solicitud(
         diagnostico_principal=data.diagnostico_principal,
         prioridad=data.prioridad,
         clave_idempotencia=str(data.clave_idempotencia),
+        fecha_solicitud_explicita='fecha_solicitud' in data.model_fields_set,
     )
     try:
         return await service.crear_solicitud(solicitud, usuario.id)

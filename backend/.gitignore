@@ -5,3 +5,6 @@ venv/
 .env
 .pytest_cache/
 *.egg-info/
+.models/
+.datasets/
+.radiologia-resultados/

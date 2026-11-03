@@ -17,6 +17,22 @@ CampoClinico = Literal[
 NUMERICOS = frozenset({'peso_kg', 'talla_cm', 'temperatura_c', 'frecuencia_cardiaca',
     'frecuencia_respiratoria', 'presion_sistolica', 'presion_diastolica', 'saturacion_oxigeno'})
 FIN_FRASE = re.compile(r'(?<!\.)[.!?\n](?!\.)(?!(?<=\d\.)\d)')
+ETIQUETAS_MEDICIONES = {
+    'peso_kg': r'\b(?:peso|pesa)\b', 'talla_cm': r'\b(?:talla|mide)\b',
+    'temperatura_c': r'\btemperatura\b',
+    'frecuencia_cardiaca': r'\b(?:frecuencia card[ií]aca|pulso)\b',
+    'frecuencia_respiratoria': r'\bfrecuencia respiratoria\b',
+    'presion_sistolica': r'\b(?:presi[oó]n|sist[oó]lica)\b',
+    'presion_diastolica': r'\b(?:presi[oó]n|diast[oó]lica)\b',
+    'saturacion_oxigeno': r'\bsaturaci[oó]n\b',
+}
+
+
+def contexto_medicion(campo: str, evidencia: str) -> str:
+    """No atribuir una negación/fecha de otro dato a la medición explícita."""
+    partes = re.split(r'(?<!\d),(?!\d)|;|\s+y\s+', evidencia, flags=re.I)
+    propias = [parte for parte in partes if re.search(ETIQUETAS_MEDICIONES[campo], parte, re.I)]
+    return propias[0] if len(propias) == 1 else evidencia
 
 
 class Sugerencia(BaseModel):
@@ -45,18 +61,15 @@ def numero_respaldado(campo: str, valor: float, evidencia: str) -> bool:
     if not math.isfinite(valor) or valor <= 0 or (campo == 'saturacion_oxigeno' and valor > 100):
         return False
     texto = evidencia.lower().replace(',', '.')
+    if campo == 'temperatura_c' and re.search(r'fahrenheit|[°º]\s*f\b|\d\s*f\b', contexto_medicion(campo, texto)):
+        return False
     # La corrección explícita más reciente prevalece, conservando evidencia original.
     corregido = re.split(r'\b(?:perdón|perdon|corrijo|corrección|correccion)\b', texto)
     if len(corregido) > 1:
-        etiquetas = {
-            'peso_kg': r'\b(?:peso|pesa)\b', 'talla_cm': r'\b(?:talla|mide)\b',
-            'temperatura_c': r'\btemperatura\b',
-            'frecuencia_cardiaca': r'\b(?:frecuencia card[ií]aca|pulso)\b',
-            'frecuencia_respiratoria': r'\bfrecuencia respiratoria\b',
-            'presion_sistolica': r'\bsist[oó]lica\b',
-            'presion_diastolica': r'\bdiast[oó]lica\b',
-            'saturacion_oxigeno': r'\bsaturaci[oó]n\b',
-        }
+        etiquetas = {**ETIQUETAS_MEDICIONES, 'presion_sistolica': r'\bsist[oó]lica\b',
+                     'presion_diastolica': r'\bdiast[oó]lica\b'}
+        if sum(bool(re.search(patron, texto)) for patron in etiquetas.values()) != 1:
+            return False
         if not re.search(etiquetas[campo], texto):
             return False
         numeros = re.findall(r'\d+(?:\.\d+)?', corregido[-1])
@@ -146,12 +159,13 @@ def validar_propuesta(salida: SalidaModelo, transcripcion: str) -> PropuestaClin
         if contexto.strip(' .!?\n\r\t') != item.evidencia.strip(' .!?\n\r\t'):
             resultado.advertencias.append(f'{item.campo}: la evidencia omitía parte de la frase; revisa el texto completo.')
             continue
+        contexto_ambiguedad = contexto_medicion(item.campo, item.evidencia) if item.campo in NUMERICOS else item.evidencia
         ambigua = item.ambiguo or bool(re.search(
-            r'\?|\b(?:pregunta|creo|quiz[aá]s?|aproximadamente|cerca de|no se entiende|inaudible|no estoy seguro)\b', item.evidencia, re.I))
+            r'\?|\b(?:pregunta|creo|quiz[aá]s?|aproximadamente|cerca de|no se entiende|inaudible|no estoy seguro)\b', contexto_ambiguedad, re.I))
         if item.campo in ('diagnostico_principal', 'diagnosticos_secundarios') and re.search(
                 r'\b(?:antecedentes?|hist[oó]rico|hace a[ñn]os)\b', item.evidencia, re.I):
             ambigua = True
-        if item.campo in NUMERICOS and re.search(r'\b(?:ayer|antes|hist[oó]ric[oa]|niega|negad[oa])\b', item.evidencia, re.I):
+        if item.campo in NUMERICOS and re.search(r'\b(?:ayer|antes|hist[oó]ric[oa]|niega|negad[oa])\b', contexto_ambiguedad, re.I):
             ambigua = True
         if item.campo in NUMERICOS:
             if isinstance(item.valor, str) or not numero_respaldado(item.campo, item.valor, item.evidencia):

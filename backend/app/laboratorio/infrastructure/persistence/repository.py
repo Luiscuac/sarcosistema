@@ -134,6 +134,11 @@ class SqlAlchemyExamenRepository:
         return [EstudioPendiente(**row) for row in rows]
 
     async def buscar_pacientes(self, termino: str) -> list[PacienteResumen]:
+        termino = termino.strip()
+        if not termino:
+            return []
+        # Escapar también el carácter de escape para buscar texto literal.
+        termino = termino.replace("/", "//").replace("%", "/%").replace("_", "/_")
         patron = f"%{termino}%"
         statement = (
             select(
@@ -149,11 +154,11 @@ class SqlAlchemyExamenRepository:
             .where(
                 Paciente.estado == "activo",
                 or_(
-                    Paciente.nombre_completo.ilike(patron),
-                    Paciente.numero_documento.ilike(patron),
-                    Paciente.codigo_paciente.ilike(patron),
-                    Paciente.historia_clinica.ilike(patron),
-                    Paciente.codigo_externo.ilike(patron),
+                    Paciente.nombre_completo.ilike(patron, escape="/"),
+                    Paciente.numero_documento.ilike(patron, escape="/"),
+                    Paciente.codigo_paciente.ilike(patron, escape="/"),
+                    Paciente.historia_clinica.ilike(patron, escape="/"),
+                    Paciente.codigo_externo.ilike(patron, escape="/"),
                 ),
             )
             .order_by(Paciente.nombre_completo, Paciente.id)
@@ -224,6 +229,15 @@ class SqlAlchemyExamenRepository:
             if (
                 existente.paciente_id != solicitud.paciente_id
                 or ids_existentes != tuple(sorted(solicitud.tipo_estudio_ids))
+                or existente.created_by != usuario_id
+                or (solicitud.fecha_solicitud_explicita and existente.fecha_solicitud != solicitud.fecha_solicitud)
+                or existente.prioridad != solicitud.prioridad
+                or existente.referencia_papel_formulario != solicitud.referencia_papel_formulario
+                or existente.establecimiento_solicitante_nombre_snapshot
+                != solicitud.establecimiento_solicitante_nombre
+                or existente.medico_solicitante_nombre_snapshot
+                != solicitud.medico_solicitante_nombre.strip()
+                or existente.diagnostico_principal != solicitud.diagnostico_principal
             ):
                 raise ValueError("La clave de envío ya se usó con otros datos")
             paciente = await self.db.get(Paciente, existente.paciente_id)

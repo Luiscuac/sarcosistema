@@ -17,6 +17,8 @@ services:
     env_file: ./backend/.env
     environment:
       WHISPER_MODEL_DIR: /app/.models/whisper
+      # Dentro del contenedor, localhost es el propio backend, no PostgreSQL.
+      DATABASE_URL: postgresql+asyncpg://hospital:hospital_dev_password@db:5432/hospital_sarcobamba
     depends_on:
       - db
     ports:

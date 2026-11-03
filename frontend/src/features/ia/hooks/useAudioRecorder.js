@@ -64,6 +64,7 @@ export default function useAudioRecorder() {
       const medidor = { context, origen, frame: 0 }
       let cuadros = 0
       const actualizar = () => {
+        if (medidorRef.current !== medidor || !montadoRef.current) return
         analyser.getByteTimeDomainData(muestras)
         const rms = Math.sqrt(muestras.reduce((suma, valor) => suma + (valor - 128) ** 2, 0) / muestras.length)
         if (cuadros % 6 === 0) setNivelMicrofono(Math.min(100, Math.round(rms * 3)))
@@ -134,9 +135,11 @@ export default function useAudioRecorder() {
       partesRef.current = []
       recorderRef.current = recorder
       recorder.ondataavailable = (event) => {
+        if (!montadoRef.current || solicitud !== solicitudRef.current) return
         if (event.data.size > 0) partesRef.current.push(event.data)
       }
       recorder.onerror = () => {
+        if (!montadoRef.current || solicitud !== solicitudRef.current) return
         detenerMedidor()
         setNivelMicrofono(0)
         stream.getTracks().forEach((pista) => pista.stop())
@@ -145,9 +148,10 @@ export default function useAudioRecorder() {
         setEstado('ready')
       }
       recorder.onstop = () => {
+        stream.getTracks().forEach((pista) => pista.stop())
+        if (!montadoRef.current || solicitud !== solicitudRef.current) return
         detenerMedidor()
         setNivelMicrofono(0)
-        stream.getTracks().forEach((pista) => pista.stop())
         streamRef.current = null
         const tipoAudio = recorder.mimeType || partesRef.current[0]?.type || 'audio/webm'
         const grabacion = new Blob(partesRef.current, { type: tipoAudio })
@@ -195,9 +199,12 @@ export default function useAudioRecorder() {
   function cancelarGrabacion() {
     solicitudRef.current += 1
     inicioPendienteRef.current = false
-    if (recorderRef.current?.state === 'recording') {
-      recorderRef.current.onstop = null
-      recorderRef.current.stop()
+    const recorder = recorderRef.current
+    if (recorder) {
+      recorder.onstop = null
+      recorder.ondataavailable = null
+      recorder.onerror = null
+      if (recorder.state === 'recording') recorder.stop()
     }
     detenerMedidor()
     streamRef.current?.getTracks().forEach((pista) => pista.stop())
@@ -212,9 +219,12 @@ export default function useAudioRecorder() {
     return () => {
     montadoRef.current = false
     solicitudRef.current += 1
-    if (recorderRef.current?.state === 'recording') {
-      recorderRef.current.onstop = null
-      recorderRef.current.stop()
+    const recorder = recorderRef.current
+    if (recorder) {
+      recorder.onstop = null
+      recorder.ondataavailable = null
+      recorder.onerror = null
+      if (recorder.state === 'recording') recorder.stop()
     }
     detenerMedidor()
     streamRef.current?.getTracks().forEach((pista) => pista.stop())

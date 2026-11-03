@@ -4,6 +4,7 @@ async (page) => {
   const fallos = []
   let modo = 'normal'
   let liberarRespuesta
+  let transcripciones = 0
   await page.unroute('http://localhost:8000/**')
   await page.addInitScript(() => {
     window.confirm = () => true
@@ -11,6 +12,7 @@ async (page) => {
   })
   await page.route('http://localhost:8000/**', async route => {
     const path = new URL(route.request().url()).pathname
+    if (path === '/ia/transcribir') { transcripciones++; return route.fulfill({ json: { texto: 'Síntomas: Tos.' } }) }
     if (path === '/accesos/yo') return route.fulfill({ json: { id: 7, identificador_acceso: 'medico_ficticio', rol: 'medico' } })
     if (path === '/consultas/extraer-datos-clinicos') {
       if (modo === 'error') return route.fulfill({ status: 503, json: { detail: 'Error ficticio de proveedor' } })
@@ -98,8 +100,39 @@ async (page) => {
     return window.__microfonoPrueba
   })
   if (mic.inicios !== 0 || mic.paradas !== 1) fallos.push('micrófono pendiente inicia tras salir o no libera pistas')
+
+  await page.goto('http://localhost:5173/consultas/pacientes/1/nueva')
+  await page.getByRole('heading', { name: 'Nueva consulta' }).waitFor()
+  await page.evaluate(() => {
+    navigator.mediaDevices.getUserMedia = async () => {
+      const track = { stop() {}, getSettings: () => ({}) }
+      return { getTracks: () => [track], getAudioTracks: () => [track] }
+    }
+    window.MediaRecorder = class {
+      static isTypeSupported() { return true }
+      constructor() { this.state = 'inactive'; this.mimeType = 'audio/webm' }
+      start() { this.state = 'recording' }
+      stop() {
+        this.state = 'inactive'
+        window.__entregarAudioTardio = () => {
+          this.ondataavailable?.({ data: new Blob(['audio-ficticio'], { type: 'audio/webm' }) })
+          this.onstop?.()
+        }
+      }
+    }
+  })
+  await page.getByRole('checkbox').check()
+  await page.getByRole('button', { name: 'Iniciar grabación', exact: true }).click()
+  await page.getByRole('button', { name: /^Detener grabación/ }).click()
+  await page.getByRole('button', { name: 'Cancelar propuestas y continuar manualmente' }).click()
+  const antes = transcripciones
+  await page.evaluate(async () => {
+    window.__entregarAudioTardio()
+    await new Promise(resolve => window.requestAnimationFrame(() => window.requestAnimationFrame(resolve)))
+  })
+  if (transcripciones !== antes) fallos.push('audio ya detenido se transcribe después de cancelar')
   await page.unroute('http://localhost:8000/**')
   await page.evaluate(() => sessionStorage.removeItem('token'))
   if (fallos.length) throw new Error(fallos.join('; '))
-  return { pruebas: 5, resultado: 'PASS', persistencia: 'ninguna; API ficticia controlada' }
+  return { pruebas: 6, resultado: 'PASS', persistencia: 'ninguna; API ficticia controlada' }
 }
