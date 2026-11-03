@@ -7,6 +7,7 @@ import { IdentidadPaciente } from './PacienteFicha.jsx'
 import { calcularImc, confirmarSalida, formularioAPayload, grupos } from '../utils/formulario.js'
 import AsistenteClinico from './AsistenteClinico.jsx'
 import { aplicarSugerencia, deshacerSugerencia } from '../utils/sugerencias.js'
+import { transportarConsultaDemo } from '../../ia/transporter/api/agenteLocalApi.js'
 
 const inicial = Object.fromEntries(grupos.flatMap(grupo => grupo.campos.map(([campo]) => [campo, ''])))
 
@@ -26,6 +27,9 @@ function FormularioPaciente({ id, usuario }) {
   const [revisionesIA, setRevisionesIA] = useState([])
   const [sucio, setSucio] = useState(false)
   const [error, setError] = useState('')
+  const [estadoTransporte, setEstadoTransporte] = useState('')
+  const [transportando, setTransportando] = useState(false)
+  const transporteEnCurso = useRef(false)
   const clave = useRef(crypto.randomUUID())
   const guardado = useRef(false)
   const envio = useRef(false)
@@ -101,6 +105,35 @@ function FormularioPaciente({ id, usuario }) {
     setOrigenIA(actual => ({ ...actual, [campo]: false }))
     setSucio(true)
     setError('')
+    setEstadoTransporte('')
+  }
+
+  async function transportar() {
+    if (transporteEnCurso.current || transportando || estadoIA.bloqueado) return
+    if (!formRef.current.motivo_consulta.trim() || !formRef.current.diagnostico_principal.trim()) {
+      setError('Completa el motivo de consulta y el diagnóstico principal antes de transportar.')
+      return
+    }
+    transporteEnCurso.current = true
+    setTransportando(true)
+    setError('')
+    setEstadoTransporte('Conectando con el cuaderno destino…')
+    try {
+      const resultado = await transportarConsultaDemo({
+        paciente_nombre: paciente.data.nombre_completo,
+        codigo_paciente: paciente.data.codigo_paciente,
+        historia_clinica: paciente.data.historia_clinica,
+        profesional: usuario.identificador_acceso,
+        datos: formRef.current,
+      })
+      setEstadoTransporte(`Consulta transportada para ${resultado.paciente}. El cuaderno destino la guardó.`)
+    } catch (errorAgente) {
+      setEstadoTransporte('')
+      setError(errorAgente.message || 'No se pudo transportar la consulta. Comprueba que el agente y el cuaderno demo estén abiertos.')
+    } finally {
+      transporteEnCurso.current = false
+      setTransportando(false)
+    }
   }
 
   function salir() {
@@ -138,8 +171,9 @@ function FormularioPaciente({ id, usuario }) {
         ? <input type="number" inputMode="decimal" step="any" min="0" max={campo === 'saturacion_oxigeno' ? '100' : undefined} value={form[campo]} onChange={e => cambiar(campo, e.target.value)} placeholder="No registrado" />
         : <textarea required={campo === 'motivo_consulta' || campo === 'diagnostico_principal'} rows={3} value={form[campo]} onChange={e => cambiar(campo, e.target.value)} />}</label>)}</div>{grupo.numerico && <p className="med-hint">IMC calculado: <strong>{imc ?? 'Pendiente'}</strong> · Deja vacías las mediciones no realizadas.</p>}</fieldset>)}
       {error && <p role="alert" className="med-error">{error}</p>}
+      {estadoTransporte && <p role="status" className="med-hint">{estadoTransporte}</p>}
       {estadoIA.bloqueado && <p className="med-hint">Revisa o rechaza las propuestas pendientes. La IA nunca guarda la consulta automáticamente.</p>}
-      <div className="med-form-actions"><button type="button" onClick={salir}>Volver a ficha</button><button className="primary-button" type="submit" disabled={mutation.isPending || estadoIA.bloqueado}>{mutation.isPending ? 'Guardando…' : 'Finalizar y guardar consulta'}</button></div>
+      <div className="med-form-actions"><button type="button" onClick={salir}>Volver a ficha</button><button type="button" onClick={transportar} disabled={transportando || mutation.isPending || estadoIA.bloqueado}>{transportando ? 'Transportando…' : 'Transportar a demo destino'}</button><button className="primary-button" type="submit" disabled={mutation.isPending || transportando || estadoIA.bloqueado}>{mutation.isPending ? 'Guardando…' : 'Finalizar y guardar consulta'}</button></div>
     </form>
   </>
 }
