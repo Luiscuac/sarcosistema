@@ -38,8 +38,11 @@ export function agruparPorCategoria(estudios) {
 }
 
 export function estadoSolicitud(estudios) {
+  const finalizados = estudios.every((estudio) => ['publicado', 'no_realizado'].includes(estudio.estado))
+  if (finalizados && estudios.some((estudio) => estudio.estado === 'no_realizado')) return 'Finalizada con incidencias'
   if (estudios.every((estudio) => estudio.estado === 'publicado')) return 'Publicado'
   if (estudios.every((estudio) => estudio.estado === 'pendiente_muestra')) return 'Pendiente de muestra'
+  if (estudios.some((estudio) => estudio.estado === 'no_realizado')) return 'Con incidencias'
   if (estudios.some((estudio) => estudio.estado === 'publicado')) return 'Parcialmente publicado'
   return 'En preparación'
 }

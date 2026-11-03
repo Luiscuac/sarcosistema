@@ -2,6 +2,10 @@ import { createBrowserRouter, createRoutesFromElements, Navigate, Route, RouterP
 import LoginPage from '../features/accesos/pages/LoginPage.jsx'
 import InicioPage from '../features/inicio/pages/InicioPage.jsx'
 import LaboratorioPage from '../features/laboratorio/pages/LaboratorioPage.jsx'
+import SolicitudDetallePage from '../features/laboratorio/pages/SolicitudDetallePage.jsx'
+import ResultadoEstudioPage from '../features/laboratorio/pages/ResultadoEstudioPage.jsx'
+import AreaResultadosPage from '../features/laboratorio/pages/AreaResultadosPage.jsx'
+import InformeSolicitudPage from '../features/laboratorio/pages/InformeSolicitudPage.jsx'
 import IaPage from '../features/ia/whisper/pages/IaPage.jsx'
 import ProtectedRoute from '../features/accesos/auth/ProtectedRoute.jsx'
 import TranscriptorPage from '../features/ia/transporter/pages/TranscriptorPage.jsx'
@@ -18,6 +22,26 @@ const router = createBrowserRouter(createRoutesFromElements(
         <Route path="/laboratorio" element={
           <ProtectedRoute rolesPermitidos={['laboratorio']}>
             {({ usuario, logout }) => <LaboratorioPage usuario={usuario} logout={logout} />}
+          </ProtectedRoute>
+        } />
+        <Route path="/laboratorio/solicitudes/:solicitudId" element={
+          <ProtectedRoute rolesPermitidos={['laboratorio']}>
+            {({ usuario, logout }) => <SolicitudDetallePage usuario={usuario} logout={logout} />}
+          </ProtectedRoute>
+        } />
+        <Route path="/laboratorio/solicitudes/:solicitudId/estudios/:estudioId/resultado" element={
+          <ProtectedRoute rolesPermitidos={['laboratorio']}>
+            {({ usuario, logout }) => <ResultadoEstudioPage usuario={usuario} logout={logout} />}
+          </ProtectedRoute>
+        } />
+        <Route path="/laboratorio/solicitudes/:solicitudId/areas/:areaCodigo/resultados" element={
+          <ProtectedRoute rolesPermitidos={['laboratorio']}>
+            {({ usuario, logout }) => <AreaResultadosPage usuario={usuario} logout={logout} />}
+          </ProtectedRoute>
+        } />
+        <Route path="/laboratorio/solicitudes/:solicitudId/informe" element={
+          <ProtectedRoute rolesPermitidos={['laboratorio']}>
+            {({ usuario, logout }) => <InformeSolicitudPage usuario={usuario} logout={logout} />}
           </ProtectedRoute>
         } />
         {[

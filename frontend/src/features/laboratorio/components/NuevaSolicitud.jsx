@@ -15,6 +15,7 @@ const pacienteVacio = {
   sin_documento: false,
   historia_clinica: '',
   codigo_externo: '',
+  telefono: '',
 }
 
 const gruposEstudios = [
@@ -44,6 +45,8 @@ export default function NuevaSolicitud({ onClose, onCreated }) {
   const [busquedaEstudio, setBusquedaEstudio] = useState('')
   const [datosSolicitud, setDatosSolicitud] = useState({
     referencia_papel_formulario: '',
+    fecha_solicitud: new Date().toLocaleDateString('en-CA'),
+    procedencia: 'este_centro',
     establecimiento_solicitante_nombre: '',
     medico_solicitante_nombre: '',
     diagnostico_principal: '',
@@ -106,6 +109,7 @@ export default function NuevaSolicitud({ onClose, onCreated }) {
     }
     crearSolicitudMutation.mutate({
       ...datosSolicitud,
+      fecha_solicitud: new Date(`${datosSolicitud.fecha_solicitud}T12:00:00`).toISOString(),
       paciente_id: paciente.id,
       tipo_estudio_ids: estudioIds,
       clave_idempotencia: claveIdempotencia.current,
@@ -136,6 +140,7 @@ export default function NuevaSolicitud({ onClose, onCreated }) {
       numero_documento: datosPaciente.sin_documento ? null : datosPaciente.numero_documento.trim(),
       historia_clinica: datosPaciente.historia_clinica.trim() || null,
       codigo_externo: datosPaciente.codigo_externo.trim() || null,
+      telefono: datosPaciente.telefono.trim() || null,
     })
   }
 

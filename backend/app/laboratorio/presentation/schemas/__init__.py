@@ -44,6 +44,7 @@ class CrearPacienteRequest(BaseModel):
     sin_documento: bool = False
     historia_clinica: str | None = Field(default=None, max_length=80)
     codigo_externo: str | None = Field(default=None, max_length=80)
+    telefono: str | None = Field(default=None, max_length=40)
 
     @model_validator(mode="after")
     def validar_documento(self):
@@ -58,6 +59,7 @@ class CrearPacienteRequest(BaseModel):
         self.codigo_externo = self.codigo_externo.strip() if self.codigo_externo else None
         self.historia_clinica = self.historia_clinica or None
         self.codigo_externo = self.codigo_externo or None
+        self.telefono = self.telefono.strip() or None if self.telefono else None
         return self
 
 
@@ -70,6 +72,7 @@ class PacienteResponse(BaseModel):
     sexo: str
     historia_clinica: str | None = None
     codigo_externo: str | None = None
+    telefono: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -84,6 +87,7 @@ class CrearSolicitudRequest(BaseModel):
     fecha_solicitud: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     referencia_papel_formulario: str | None = Field(default=None, max_length=100)
     establecimiento_solicitante_nombre: str | None = Field(default=None, max_length=200)
+    procedencia: Literal["este_centro", "otro_centro"] = "este_centro"
     medico_solicitante_nombre: str = Field(min_length=2, max_length=200)
     diagnostico_principal: str | None = Field(default=None, max_length=500)
     prioridad: Literal["urgente", "sin_prioridad"] = "sin_prioridad"
@@ -98,6 +102,14 @@ class CrearSolicitudRequest(BaseModel):
         self.medico_solicitante_nombre = self.medico_solicitante_nombre.strip()
         if len(self.medico_solicitante_nombre) < 2:
             raise ValueError("Registra el nombre del profesional solicitante")
+        self.establecimiento_solicitante_nombre = (
+            self.establecimiento_solicitante_nombre.strip()
+            if self.establecimiento_solicitante_nombre else None
+        )
+        if self.procedencia == "otro_centro" and not self.establecimiento_solicitante_nombre:
+            raise ValueError("Indica el nombre del otro centro")
+        if self.procedencia == "este_centro":
+            self.establecimiento_solicitante_nombre = None
         return self
 
 
@@ -120,7 +132,119 @@ class SolicitudCreadaResponse(BaseModel):
     prioridad: str
     estudios: list[EstudioSolicitadoResponse]
 
+
+class EstudioDetalleResponse(BaseModel):
+    estudio_id: int
+    referencia_estudio: str
+    tipo_estudio_nombre: str
+    categoria_laboratorio: str | None
+    estado: str
+    tipo_estudio_codigo: str | None = None
+    incidencias: list["IncidenciaResponse"] = Field(default_factory=list)
+
+
+class IncidenciaResponse(BaseModel):
+    motivo: str
+    descripcion: str
+    responsable: str
+    fecha_hora: datetime
+
+
+class MuestraDetalleResponse(BaseModel):
+    referencia: str
+    tipo_muestra: str | None
+    fecha_toma: date
+    responsable_recepcion: str | None
+    estudio_ids: list[int]
+
+
+class RegistrarIncidenciaRequest(BaseModel):
+    motivo: Literal["muestra_no_entregada", "toma_rechazada", "toma_no_realizada"]
+    descripcion: str = Field(min_length=3, max_length=1000)
+    responsable: str = Field(min_length=2, max_length=200)
+
+    @model_validator(mode="after")
+    def limpiar_textos(self):
+        self.descripcion = self.descripcion.strip()
+        self.responsable = self.responsable.strip()
+        if len(self.descripcion) < 3 or len(self.responsable) < 2:
+            raise ValueError("Indica el motivo y el responsable de la incidencia")
+        return self
+
+
+class RegistrarIncidenciasSolicitudRequest(RegistrarIncidenciaRequest):
+    estudio_ids: list[int] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def validar_estudios(self):
+        if any(estudio_id <= 0 for estudio_id in self.estudio_ids):
+            raise ValueError("Cada estudio debe tener un identificador válido")
+        if len(self.estudio_ids) != len(set(self.estudio_ids)):
+            raise ValueError("No repitas estudios en una incidencia")
+        return self
+
+
+class IncidenciasRegistradasResponse(BaseModel):
+    cantidad: int
+
+
+class SolicitudDetalleResponse(BaseModel):
+    id: int
+    referencia: str
+    paciente_nombre: str
+    paciente_documento: str | None
+    fecha_solicitud: datetime
+    fecha_registro: datetime | None
+    referencia_papel_formulario: str | None
+    procedencia: str
+    establecimiento_solicitante_nombre: str | None
+    medico_solicitante_nombre: str | None
+    diagnostico_principal: str | None
+    prioridad: str
+    estudios: list[EstudioDetalleResponse]
+    muestras: list[MuestraDetalleResponse] = Field(default_factory=list)
+
     model_config = ConfigDict(from_attributes=True)
+
+
+class ParametroInformeResponse(BaseModel):
+    nombre: str
+    seccion: str | None
+    valor: str
+    unidad: str | None
+    rango_referencia: str | None
+
+
+class ResultadoInformeResponse(BaseModel):
+    nombre: str
+    categoria: str | None
+    referencia: str
+    parametros: list[ParametroInformeResponse]
+    observaciones: str | None
+    responsable_publicacion: str | None
+
+
+class EstudioNoRealizadoInformeResponse(BaseModel):
+    nombre: str
+    categoria: str | None
+    referencia: str
+    motivo: str
+    descripcion: str
+    responsable: str
+    fecha_hora: datetime
+
+
+class InformeSolicitudResponse(BaseModel):
+    referencia: str
+    paciente_nombre: str
+    paciente_documento: str | None
+    fecha_solicitud: datetime
+    referencia_papel_formulario: str | None
+    procedencia: str
+    establecimiento_solicitante_nombre: str | None
+    medico_solicitante_nombre: str | None
+    resultados: list[ResultadoInformeResponse]
+    estudios_no_realizados: list[EstudioNoRealizadoInformeResponse] = Field(default_factory=list)
 
 
 class RecibirMuestraRequest(BaseModel):
@@ -128,6 +252,7 @@ class RecibirMuestraRequest(BaseModel):
     fecha_toma: date
     hora_toma: time | None = None
     hora_no_registrada: bool = False
+    responsable_recepcion: str = Field(min_length=2, max_length=200)
 
     @model_validator(mode="after")
     def validar_hora(self):
@@ -136,6 +261,9 @@ class RecibirMuestraRequest(BaseModel):
             raise ValueError("Indica el tipo de muestra recibido")
         if self.hora_no_registrada == (self.hora_toma is not None):
             raise ValueError("Registra una hora o marca que no fue registrada")
+        self.responsable_recepcion = self.responsable_recepcion.strip()
+        if len(self.responsable_recepcion) < 2:
+            raise ValueError("Indica quién tomó o recibió la muestra")
         return self
 
 
@@ -162,6 +290,7 @@ class ParametroResultadoResponse(BaseModel):
     orden: int
     seccion: str | None
     valor: str | None
+    opciones: list[str] = Field(default_factory=list)
 
 
 class ResultadoEstudioResponse(BaseModel):
@@ -174,6 +303,8 @@ class ResultadoEstudioResponse(BaseModel):
     numero_version: int | None
     plantilla_configurada: bool
     observaciones: str | None
+    responsable_analisis: str | None = None
+    responsable_publicacion: str | None = None
     parametros: list[ParametroResultadoResponse]
 
 
@@ -185,13 +316,70 @@ class ValorResultadoRequest(BaseModel):
 class GuardarBorradorRequest(BaseModel):
     valores: list[ValorResultadoRequest]
     observaciones: str | None = Field(default=None, max_length=4000)
+    responsable_analisis: str = Field(min_length=2, max_length=200)
 
     @model_validator(mode="after")
     def parametros_unicos(self):
         ids = [item.parametro_id for item in self.valores]
         if len(ids) != len(set(ids)):
             raise ValueError("No repitas parámetros en el resultado")
+        self.responsable_analisis = self.responsable_analisis.strip()
+        if len(self.responsable_analisis) < 2:
+            raise ValueError("Indica el profesional responsable del resultado")
         return self
+
+
+class PublicarResultadoRequest(BaseModel):
+    responsable_publicacion: str = Field(min_length=2, max_length=200)
+
+    @model_validator(mode="after")
+    def validar_responsable(self):
+        self.responsable_publicacion = self.responsable_publicacion.strip()
+        if len(self.responsable_publicacion) < 2:
+            raise ValueError("Indica quién revisó y autorizó el informe")
+        return self
+
+
+class EstudioBorradorAreaRequest(BaseModel):
+    estudio_id: int = Field(gt=0)
+    valores: list[ValorResultadoRequest]
+
+
+class GuardarBorradorAreaRequest(BaseModel):
+    estudios: list[EstudioBorradorAreaRequest] = Field(min_length=1)
+    observaciones: str | None = Field(default=None, max_length=4000)
+    responsable: str = Field(min_length=2, max_length=200)
+
+    @model_validator(mode="after")
+    def validar_area(self):
+        ids = [estudio.estudio_id for estudio in self.estudios]
+        if len(ids) != len(set(ids)):
+            raise ValueError("No repitas estudios en el borrador del área")
+        self.responsable = self.responsable.strip()
+        if len(self.responsable) < 2:
+            raise ValueError("Indica el profesional responsable del área")
+        return self
+
+
+class PublicarResultadosAreaRequest(BaseModel):
+    estudio_ids: list[int] = Field(min_length=1)
+    responsable: str = Field(min_length=2, max_length=200)
+
+    @model_validator(mode="after")
+    def validar_area(self):
+        if any(estudio_id <= 0 for estudio_id in self.estudio_ids):
+            raise ValueError("Cada estudio debe tener un identificador válido")
+        if len(self.estudio_ids) != len(set(self.estudio_ids)):
+            raise ValueError("No repitas estudios al publicar el área")
+        self.responsable = self.responsable.strip()
+        if len(self.responsable) < 2:
+            raise ValueError("Indica el profesional responsable del área")
+        return self
+
+
+class ResultadoAreaAccionResponse(BaseModel):
+    cantidad: int = Field(ge=1)
+    estado: Literal["borrador", "publicado"]
 
 
 class ResultadoAccionResponse(BaseModel):

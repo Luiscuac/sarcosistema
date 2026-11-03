@@ -13,6 +13,7 @@ class SolicitudNueva:
     diagnostico_principal: str | None
     prioridad: str
     clave_idempotencia: str
+    procedencia: str = "este_centro"
 
 
 @dataclass(frozen=True, slots=True)

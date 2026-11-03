@@ -21,7 +21,6 @@ export default function LoginForm({ error, enviando, onSubmit }) {
     <form className="auth-form" onSubmit={enviar}>
       <div className="auth-form-heading">
         <h2>Iniciar sesión</h2>
-        <p>Ingresa con tu cuenta personal para acceder a tus funciones.</p>
       </div>
       <LoginCredentialsFields
         credenciales={credenciales}
@@ -31,7 +30,6 @@ export default function LoginForm({ error, enviando, onSubmit }) {
       <button className="primary-button auth-submit" type="submit" disabled={enviando}>
         {enviando ? 'Ingresando…' : 'Ingresar'}
       </button>
-      <p className="auth-help">Si no tienes acceso, contacta al responsable del sistema.</p>
     </form>
   )
 }

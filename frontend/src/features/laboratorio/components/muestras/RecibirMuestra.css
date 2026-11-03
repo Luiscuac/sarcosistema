@@ -3,3 +3,11 @@
 .lab-sample-study-list legend { padding: 0 4px; color: var(--muted); font-size: 11px; font-weight: 600; }
 .lab-sample-study-list label { display: flex; align-items: center; gap: 9px; font-size: 12px; }
 .lab-sample-study-list input { accent-color: var(--brand); }
+.lab-sample-study-list > label { display: flex; align-items: center; gap: 10px; padding: 10px 0; }
+.lab-reception-modes { display: flex; gap: 8px; margin-bottom: 22px; flex-wrap: wrap; }
+.lab-reception-mode { padding: 9px 13px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: #334155; cursor: pointer; }
+.lab-reception-mode.is-active { border-color: var(--brand); color: var(--brand); background: #f1faf8; }
+.lab-reception-mode.is-incidence { color: #a33627; }
+.lab-reception-mode.is-incidence.is-active { border-color: #a33627; color: #a33627; background: #fff6f4; }
+.lab-incidence-submit { padding: 10px 16px; border: 1px solid #a33627; border-radius: 6px; background: #a33627; color: #fff; font-weight: 600; cursor: pointer; }
+.lab-incidence-submit:disabled { opacity: .55; cursor: not-allowed; }

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { useHistorial, usePaciente } from '../hooks/useConsultas.js'
+import { obtenerSolicitudesLaboratorio } from '../api/consultasApi.js'
 
 export function fecha(valor) { return valor ? new Date(`${valor.slice(0, 10)}T12:00:00`).toLocaleDateString('es-BO') : 'No registrada' }
 export function edad(nacimiento) {
@@ -26,11 +28,24 @@ export default function PacienteFicha({ id }) {
   const pagina = useHistorialPage(id)
   const paciente = usePaciente(id)
   const historial = useHistorial(id, pagina.pagina)
+  const laboratorio = useQuery({ queryKey: ['consultas', 'laboratorio', id], queryFn: () => obtenerSolicitudesLaboratorio(id) })
   if (paciente.isPending) return <p role="status">Cargando ficha del paciente…</p>
   if (paciente.isError) return <p role="alert">No se pudo cargar el paciente. Comprueba el acceso y vuelve a intentarlo.</p>
   return <>
     <div className="med-heading"><div><p className="med-eyebrow">FICHA CLÍNICA</p><h1>{paciente.data.nombre_completo}</h1></div><Link className="primary-button med-button-link" to={`/consultas/pacientes/${id}/nueva`}>+ Nueva consulta</Link></div>
     <IdentidadPaciente paciente={paciente.data} />
+    <section className="med-panel"><div className="med-panel-header"><h2>Solicitudes de laboratorio</h2><span>Incluye constancias de muestras pendientes</span></div>
+      {laboratorio.isPending && <p className="med-message">Cargando solicitudes de laboratorio…</p>}
+      {laboratorio.isError && <p role="alert" className="med-message">No se pudieron cargar las solicitudes de laboratorio.</p>}
+      {laboratorio.data?.length === 0 && <p className="med-message">Este paciente no tiene solicitudes de laboratorio.</p>}
+      {laboratorio.data?.map((solicitud) => <div className="med-message" key={solicitud.id}>
+        <strong>{solicitud.referencia}</strong> · {fecha(solicitud.fecha_solicitud)}
+        {solicitud.estudios.map((estudio) => <div key={estudio.estudio_id}>
+          {estudio.tipo_estudio_nombre} · {estudio.estado === 'pendiente_muestra' ? 'Pendiente de muestra' : estudio.estado === 'publicado' ? 'Publicado' : 'En preparación'}
+          {estudio.incidencias.map((incidencia, index) => <p key={index}>Constancia: {incidencia.motivo === 'muestra_no_entregada' ? 'Muestra no entregada' : incidencia.motivo === 'toma_rechazada' ? 'Toma rechazada' : 'Toma no realizada'} · {incidencia.descripcion} · {incidencia.responsable} · {new Date(incidencia.fecha_hora).toLocaleString('es-BO')}</p>)}
+        </div>)}
+      </div>)}
+    </section>
     <section className="med-panel"><div className="med-panel-header"><h2>Historial de consultas</h2><span>Más recientes primero</span></div>
       {historial.isPending && <p role="status" className="med-message">Cargando historial…</p>}
       {historial.isError && <p role="alert" className="med-message">No se pudo recuperar el historial.</p>}

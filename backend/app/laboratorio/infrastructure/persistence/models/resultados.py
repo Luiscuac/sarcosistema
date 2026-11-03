@@ -18,6 +18,7 @@ class ResultadoLaboratorio(Base):
         ForeignKey("plantilla_examen_version.id"), nullable=False
     )
     observaciones_generales: Mapped[str | None] = mapped_column(Text, nullable=True)
+    responsable_analisis: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_by: Mapped[int | None] = mapped_column(ForeignKey("usuario.id"), nullable=True)
@@ -39,6 +40,7 @@ class VersionResultado(Base):
     fecha_hora_publicacion: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    responsable_publicacion: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_by: Mapped[int | None] = mapped_column(ForeignKey("usuario.id"), nullable=True)

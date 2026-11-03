@@ -22,6 +22,7 @@ class Muestra(Base):
         DateTime(timezone=True), nullable=False
     )
     tipo_muestra: Mapped[str | None] = mapped_column(Text, nullable=True)
+    responsable_recepcion: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_by: Mapped[int | None] = mapped_column(ForeignKey("usuario.id"), nullable=True)

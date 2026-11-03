@@ -1,0 +1,22 @@
+.lab-detail-page { max-width: 1240px; width: 100%; }
+.lab-back-link { display: inline-block; margin-bottom: 24px; color: #0f766e; text-decoration: none; }
+.lab-back-link:hover { text-decoration: underline; }
+.lab-detail-card { background: #fff; border: 1px solid #e2e5ea; border-radius: 6px; padding: 24px; margin-top: 20px; }
+.lab-detail-card h2 { margin: 0 0 18px; font-size: 20px; }
+.lab-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 32px; margin: 0; }
+.lab-detail-grid dt { color: #617180; font-size: 13px; margin-bottom: 4px; }
+.lab-detail-grid dd { margin: 0; overflow-wrap: anywhere; }
+.lab-detail-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.lab-detail-heading p { margin: 0 0 16px; color: #617180; }
+.lab-report-access { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.lab-report-access h2 { margin-bottom: 6px; }
+.lab-report-access p { margin: 0; color: #617180; font-size: 13px; }
+.lab-report-link { display: inline-flex; align-items: center; flex: none; text-decoration: none; }
+.lab-detail-group { margin-top: 24px; }
+.lab-detail-group h3 { font-size: 16px; margin-bottom: 12px; }
+.lab-detail-group-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 12px; }
+.lab-detail-group-heading h3 { margin: 0; }
+.lab-request-study .lab-incidence-note { color: #8a4b16; font-size: 12px; max-width: 70ch; }
+.lab-study-link { flex: none; display: inline-block; padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px; color: var(--brand); font-size: 11px; font-weight: 600; text-decoration: none; }
+.lab-study-link:hover { border-color: var(--brand); background: #f7fbfa; }
+@media (max-width: 700px) { .lab-detail-grid { grid-template-columns: 1fr; } .lab-detail-heading, .lab-detail-group-heading, .lab-report-access { align-items: flex-start; flex-direction: column; } }
