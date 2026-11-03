@@ -6,6 +6,7 @@ from threading import Lock
 from faster_whisper import WhisperModel
 
 from app.ia.whisper.application.errors.transcription_error import ErrorTranscripcion
+from app.ia.whisper.infrastructure.transcription.prompt import PROMPT_TRANSCRIPCION
 
 
 class FasterWhisperService:
@@ -57,5 +58,6 @@ class FasterWhisperService:
             language="es",
             task="transcribe",
             vad_filter=filtrar_voz,
+            initial_prompt=PROMPT_TRANSCRIPCION,
         )
         return "".join(segmento.text for segmento in segmentos).strip()
