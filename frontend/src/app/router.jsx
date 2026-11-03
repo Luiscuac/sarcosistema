@@ -4,7 +4,6 @@ import InicioPage from '../features/inicio/pages/InicioPage.jsx'
 import LaboratorioPage from '../features/laboratorio/pages/LaboratorioPage.jsx'
 import IaPage from '../features/ia/whisper/pages/IaPage.jsx'
 import ProtectedRoute from '../features/accesos/auth/ProtectedRoute.jsx'
-import TranscriptorPage from '../features/ia/transporter/pages/TranscriptorPage.jsx'
 import ConsultasPage from '../features/consultas/pages/ConsultasPage.jsx'
 const router = createBrowserRouter(createRoutesFromElements(
   <>
@@ -36,9 +35,7 @@ const router = createBrowserRouter(createRoutesFromElements(
           </ProtectedRoute>
         } />
         <Route path="/transcriptor" element={
-          <ProtectedRoute>
-            {({ usuario, logout }) => <TranscriptorPage usuario={usuario} logout={logout} />}
-          </ProtectedRoute>
+          <Navigate to="/consultas" replace />
         } />
   </>
 ))

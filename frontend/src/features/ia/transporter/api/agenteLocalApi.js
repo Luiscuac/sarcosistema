@@ -12,7 +12,10 @@ async function solicitar(ruta, opciones = {}) {
   }
 
   const datos = await respuesta.json().catch(() => ({}))
-  if (!respuesta.ok) throw new Error(datos.detail || 'El agente local rechazó la operación.')
+  if (!respuesta.ok) {
+    const detalle = datos.detail
+    throw new Error(typeof detalle === 'string' ? detalle : JSON.stringify(detalle) || 'El agente local rechazó la operación.')
+  }
   return datos
 }
 
@@ -28,9 +31,27 @@ export function listarCamposDestino(handle) {
   return solicitar(`/v1/ventanas/${handle}/campos`)
 }
 
+export function listarBotonesGuardarConsulta(handle) {
+  return solicitar(`/v1/ventanas/${handle}/botones-guardar-consulta`)
+}
+
 export function rellenarCamposDestino(handle, campos) {
   return solicitar(`/v1/ventanas/${handle}/rellenar`, {
     method: 'POST',
     body: JSON.stringify({ campos }),
+  })
+}
+
+export function transportarConsultaDemo(consulta) {
+  return solicitar('/v1/demo/transportar-consulta', {
+    method: 'POST',
+    body: JSON.stringify(consulta),
+  })
+}
+
+export function guardarConsultaDestino(handle, nombreBoton) {
+  return solicitar(`/v1/ventanas/${handle}/guardar-consulta`, {
+    method: 'POST',
+    body: JSON.stringify({ nombre_boton: nombreBoton }),
   })
 }
