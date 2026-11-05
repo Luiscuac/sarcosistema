@@ -68,6 +68,19 @@
 .med-ai-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 12px 0; }
 .med-assistant button { padding: 8px 11px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--brand); font-size: 12px; }
 .med-assistant button:disabled { opacity: .5; }
+.med-dictation-example { margin: 14px 0; padding: 12px 14px; border: 1px solid var(--line); border-radius: 6px; background: #fafcfb; font-size: 12px; }
+.med-dictation-example summary { cursor: pointer; color: var(--brand); font-weight: 600; }
+.med-dictation-example p { margin: 12px 0 6px; color: var(--ink); line-height: 1.6; }
+.med-microphone-picker { display: grid; grid-template-columns: minmax(180px, 1fr) auto; align-items: end; gap: 8px 12px; max-width: 620px; margin: 16px 0; }
+.med-microphone-picker label { grid-column: 1 / -1; color: #53606b; font-size: 11px; font-weight: 600; }
+.med-microphone-picker select { min-width: 0; min-height: 36px; padding: 0 9px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--ink); font: inherit; font-size: 12px; }
+.med-microphone-picker > .med-hint { align-self: center; }
+.med-input-level { display: flex; align-items: center; gap: 10px; max-width: 620px; margin: 12px 0; color: #53606b; font-size: 11px; }
+.med-live-dot { width: 9px; height: 9px; flex: 0 0 auto; border-radius: 50%; background: #c13f3f; box-shadow: 0 0 0 4px #f8e7e7; animation: med-pulse 1.4s ease-out infinite; }
+.med-input-track { width: min(30%, 160px); height: 8px; overflow: hidden; border-radius: 99px; background: #e8efed; }
+.med-input-track > span { display: block; height: 100%; border-radius: inherit; background: var(--brand); transition: width 100ms linear; }
+.med-input-level time { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--ink); }
+@keyframes med-pulse { 50% { box-shadow: 0 0 0 7px #f8e7e700; } }
 .med-ai-actions > span { color: var(--muted); font-size: 11px; }
 .med-assistant details { padding: 12px 0; border-top: 1px solid var(--line); font-size: 12px; }
 .med-assistant summary { cursor: pointer; color: var(--brand); font-weight: 600; }
@@ -84,4 +97,4 @@
 .med-ai-badge { color: var(--brand); font-size: 10px; font-weight: 400; }
 .med-field-from-ai :is(input,textarea) { border-color: var(--brand); background: #f7fbfa; }
 @media(max-width:900px) { .med-page { grid-template-columns: 190px minmax(0,1fr); } .med-content { padding: 28px 24px; } .med-table { min-width: 780px; } }
-@media(max-width:700px) { .med-page { grid-template-columns: 1fr; } .med-sidebar { min-height: auto; } .med-sidebar-heading { height: 58px; } .med-sidebar nav { display: flex; padding: 8px; } .med-signout { min-height: 40px; } .med-topbar { min-height: 58px; padding: 10px 20px; } .med-session { display: none; } .med-content { padding: 26px 20px; } .med-heading { flex-wrap: wrap; } .med-patient dl, .med-fields, .med-detail dl { grid-template-columns: 1fr; } }
+@media(max-width:700px) { .med-page { grid-template-columns: 1fr; } .med-sidebar { min-height: auto; } .med-sidebar-heading { height: 58px; } .med-sidebar nav { display: flex; padding: 8px; } .med-signout { min-height: 40px; } .med-topbar { min-height: 58px; padding: 10px 20px; } .med-session { display: none; } .med-content { padding: 26px 20px; } .med-heading { flex-wrap: wrap; } .med-patient dl, .med-fields, .med-detail dl { grid-template-columns: 1fr; } .med-microphone-picker { grid-template-columns: 1fr; } .med-microphone-picker label { grid-column: auto; } }

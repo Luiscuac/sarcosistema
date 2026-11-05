@@ -167,11 +167,22 @@ export default function AsistenteClinico({ pacienteId, valores, onAplicar, onDes
   return <section className="med-panel med-assistant" aria-label="Dictado y propuestas clínicas">
     <div className="med-panel-header"><div><h2>Dictado asistido · revisión obligatoria</h2><p className="med-hint">Whisper transcribe; el modelo local propone. No diagnostica ni guarda por ti.</p></div></div>
     <label className="med-consent"><input type="checkbox" checked={autorizado} disabled={ocupado} onChange={e => setAutorizado(e.target.checked)} />Confirmo la autorización y el consentimiento correspondientes para grabar esta atención.</label>
+    <details className="med-dictation-example"><summary>Texto de ejemplo para probar el dictado</summary><p>Motivo de consulta: dolor estomacal desde hace tres días. Síntomas: dolor de cabeza y náuseas. Temperatura: 37 grados Celsius. Niega vómitos y diarrea. No ha tomado medicamentos para estos síntomas.</p><span className="med-hint">Lee los datos con claridad; revisa la transcripción y las propuestas antes de aplicarlas.</span></details>
+    <div className="med-microphone-picker">
+      <label htmlFor="med-microphone-select">Micrófono de entrada</label>
+      {recorder.microfonos.length > 0
+        ? <select id="med-microphone-select" value={recorder.microfonoId} disabled={ocupado} onChange={e => recorder.setMicrofonoId(e.target.value)}>
+          {recorder.microfonos.map((microfono, indice) => <option key={microfono.deviceId || indice} value={microfono.deviceId}>{microfono.label || `Micrófono ${indice + 1}`}</option>)}
+        </select>
+        : <span className="med-hint">Se usará el micrófono predeterminado del navegador.</span>}
+      <button type="button" disabled={ocupado || recorder.buscandoMicrofonos} onClick={recorder.buscarMicrofonos}>{recorder.buscandoMicrofonos ? 'Buscando micrófonos…' : 'Buscar micrófonos'}</button>
+    </div>
     <div className="med-ai-actions">
       {recorder.estado === 'recording' ? <button type="button" onClick={recorder.detenerGrabacion}>Detener grabación · {recorder.tiempo}</button> : <button type="button" disabled={!autorizado || ocupado} onClick={iniciar}>Iniciar grabación</button>}
       {(ocupado || pendientes) && <button type="button" onClick={cancelar}>Cancelar propuestas y continuar manualmente</button>}
       <span role="status">{recorder.estado === 'requesting' ? 'Esperando permiso de micrófono…' : recorder.estado === 'recording' ? 'Grabando audio' : fase === 'transcribiendo' ? 'Procesando transcripción…' : fase === 'analizando' ? 'Analizando información clínica…' : fase === 'revision' ? 'Propuesta lista para revisar' : fase === 'error' ? 'Error de procesamiento' : 'Sin grabación activa'}</span>
     </div>
+    {recorder.estado === 'recording' && <div className="med-input-level" role="status" aria-label={recorder.nivelMicrofono > 4 ? 'Señal de micrófono detectada' : 'No se detecta señal de micrófono'}><span className="med-live-dot" /><span className="med-input-track"><span style={{ width: `${recorder.nivelMicrofono}%` }} /></span><span>{recorder.nivelMicrofono > 4 ? 'Se está escuchando' : 'Habla para comprobar el micrófono'}</span><time>{recorder.tiempo}</time></div>}
     {(error || recorder.error) && <p className="med-error" role="alert">{error || recorder.error}</p>}
     {original && <details open><summary>Transcripción original de Whisper</summary><p className="med-transcript">{original}</p></details>}
     <details><summary>Revisar texto y volver a procesar</summary><label className="med-ai-text">Texto para análisis (no cambia el original)<textarea rows={4} maxLength={12000} value={texto} disabled={ocupado} onChange={e => setTexto(e.target.value)} /></label><button type="button" disabled={ocupado || texto.trim().length < 2} onClick={reprocesar}>Analizar texto</button></details>

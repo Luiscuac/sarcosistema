@@ -1,16 +1,8 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { useHistorial, usePaciente } from '../hooks/useConsultas.js'
+import { useHistorial, usePaginaHistorial, usePaciente } from '../hooks/useConsultas.js'
 import { obtenerSolicitudesLaboratorio } from '../api/consultasApi.js'
-
-export function fecha(valor) { return valor ? new Date(`${valor.slice(0, 10)}T12:00:00`).toLocaleDateString('es-BO') : 'No registrada' }
-export function edad(nacimiento) {
-  if (!nacimiento) return 'No registrada'
-  const hoy = new Date()
-  const nacio = new Date(`${nacimiento.slice(0, 10)}T12:00:00`)
-  return `${hoy.getFullYear() - nacio.getFullYear() - (hoy.getMonth() < nacio.getMonth() || (hoy.getMonth() === nacio.getMonth() && hoy.getDate() < nacio.getDate()) ? 1 : 0)} años`
-}
+import { edad, fecha } from '../utils/paciente.js'
 
 export function IdentidadPaciente({ paciente }) {
   return <div className="med-patient">
@@ -25,7 +17,7 @@ export function IdentidadPaciente({ paciente }) {
 }
 
 export default function PacienteFicha({ id }) {
-  const pagina = useHistorialPage(id)
+  const pagina = usePaginaHistorial(id)
   const paciente = usePaciente(id)
   const historial = useHistorial(id, pagina.pagina)
   const laboratorio = useQuery({ queryKey: ['consultas', 'laboratorio', id], queryFn: () => obtenerSolicitudesLaboratorio(id) })
@@ -53,10 +45,4 @@ export default function PacienteFicha({ id }) {
       {historial.data && <div className="med-pagination"><button disabled={pagina.pagina === 1} onClick={() => pagina.setPagina(x => x - 1)}>Anterior</button><span>Página {pagina.pagina} · {historial.data.total} consultas</span><button disabled={pagina.pagina * historial.data.limite >= historial.data.total} onClick={() => pagina.setPagina(x => x + 1)}>Siguiente</button></div>}
     </section>
   </>
-}
-
-function useHistorialPage(id) {
-  const [pagina, setPagina] = useState(1)
-  useEffect(() => { setPagina(1) }, [id])
-  return { pagina, setPagina }
 }

@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
 import { useConsulta } from '../hooks/useConsultas.js'
-import { fecha, IdentidadPaciente } from './PacienteFicha.jsx'
+import { IdentidadPaciente } from './PacienteFicha.jsx'
 import { calcularImc, grupos } from '../utils/formulario.js'
+import { fecha } from '../utils/paciente.js'
 
 function DetalleContenido({ consulta }) {
   const imc = calcularImc(consulta.peso_kg ?? '', consulta.talla_cm ?? '')
