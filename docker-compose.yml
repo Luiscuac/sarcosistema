@@ -17,12 +17,15 @@ services:
     env_file: ./backend/.env
     environment:
       WHISPER_MODEL_DIR: /app/.models/whisper
+      IMAGENES_STORAGE_DIR: /app/storage/imagenes
     depends_on:
       - db
     ports:
       - "8000:8000"
     volumes:
       - whisper_models:/app/.models/whisper
+      # Archivos clinicos de examenes complementarios (fuera de la base).
+      - storage_imagenes:/app/storage/imagenes
   # Ollama puede añadirse más adelante si se aprueba la asistencia de redacción.
   # ollama:
   #   image: ollama/ollama:latest
@@ -34,3 +37,4 @@ services:
 volumes:
   db_data:
   whisper_models:
+  storage_imagenes:

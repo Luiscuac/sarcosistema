@@ -6,7 +6,7 @@ import ConsultaFormulario from '../components/ConsultaFormulario.jsx'
 import BusquedaPacientes from './BusquedaPacientes.jsx'
 
 function contenidoDeVista(vista, pacienteId, consultaId, usuario) {
-  if (vista === 'ficha') return <PacienteFicha id={pacienteId} />
+  if (vista === 'ficha') return <PacienteFicha id={pacienteId} usuario={usuario} />
   if (vista === 'nueva') return <ConsultaFormulario id={pacienteId} usuario={usuario} />
   if (vista === 'detalle') return <ConsultaDetalle id={consultaId} />
   return <BusquedaPacientes />

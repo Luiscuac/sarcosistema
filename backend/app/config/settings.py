@@ -21,5 +21,18 @@ class Settings(BaseSettings):
     ollama_model: str = 'qwen2.5:3b'
     clinical_extractor_timeout_seconds: int = 180
 
+    # Examenes complementarios de imagen: solo imagen hoy, abierto a video/audio.
+    imagenes_tipos_permitidos: str = (
+        'image/jpeg,image/png,image/webp,image/gif,image/tiff,application/pdf,application/dicom'
+    )
+    imagenes_max_mb: int = 15
+    imagenes_dicom_max_mb: int = 100
+    imagenes_max_archivos: int = 10
+    imagenes_storage_dir: str = 'storage/imagenes'
+
+    @property
+    def imagenes_tipos_lista(self) -> tuple[str, ...]:
+        return tuple(t.strip() for t in self.imagenes_tipos_permitidos.split(',') if t.strip())
+
 
 settings = Settings()

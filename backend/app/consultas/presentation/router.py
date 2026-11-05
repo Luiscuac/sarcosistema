@@ -16,12 +16,24 @@ from app.consultas.application.use_cases.extraer_datos_clinicos import ExtraerDa
 from app.consultas.application.ports.extractor_clinico import ErrorExtractor
 from app.consultas.infrastructure.ia.ollama import OllamaExtractor
 from app.config.settings import settings
+from app.imagenes.application.use_cases.solicitar_ecografia import SolicitarEcografia
+from app.imagenes.domain.errors import SolicitudInvalida
+from app.imagenes.infrastructure.persistence.repository import RepositorioImagenSql
+from app.imagenes.presentation.schemas import (
+    EstudioPublicadoResponse,
+    SolicitudEcografiaRequest,
+    SolicitudEcografiaResponse,
+)
 
 router = APIRouter(prefix='/consultas', tags=['consultas'], dependencies=[Depends(requiere_rol('medico'))])
 
 
 def get_repository(db: AsyncSession = Depends(get_db)) -> SqlAlchemyConsultaRepository:
     return SqlAlchemyConsultaRepository(db)
+
+
+def get_repositorio_imagen(db: AsyncSession = Depends(get_db)) -> RepositorioImagenSql:
+    return RepositorioImagenSql(db)
 
 
 @lru_cache
@@ -74,11 +86,41 @@ async def historial(
     paciente_id: int, pagina: int = Query(default=1, ge=1),
     limite: int = Query(default=20, ge=1, le=30),
     repo: SqlAlchemyConsultaRepository = Depends(get_repository),
+    repo_imagen: RepositorioImagenSql = Depends(get_repositorio_imagen),
 ):
     resultado = await ConsultarHistorial(repo).ejecutar(paciente_id, pagina, limite)
     if resultado is None:
         raise HTTPException(404, 'Paciente no encontrado.')
+    # Examenes complementarios del paciente: solo los estudios publicados.
+    resultado['estudios_imagen'] = [
+        EstudioPublicadoResponse.model_validate(estudio)
+        for estudio in await repo_imagen.listar_publicados_paciente(paciente_id)
+    ]
     return resultado
+
+
+@router.post('/estudios-imagen', status_code=201, response_model=SolicitudEcografiaResponse)
+async def solicitar_ecografia(
+    datos: SolicitudEcografiaRequest,
+    usuario: Usuario = Depends(usuario_actual),
+    repo_imagen: RepositorioImagenSql = Depends(get_repositorio_imagen),
+):
+    try:
+        datos.validar_estudios()
+        solicitud_id = await SolicitarEcografia(repo_imagen).ejecutar(
+            datos.modelo_solicitud(), usuario.id
+        )
+    except (SolicitudInvalida, ValueError) as exc:
+        raise HTTPException(422, str(exc)) from None
+    return SolicitudEcografiaResponse(solicitud_id=solicitud_id, estudios=datos.tipo_estudio_ids)
+
+
+@router.get('/catalogo-imagenes')
+async def catalogo_imagenes(
+    repo_imagen: RepositorioImagenSql = Depends(get_repositorio_imagen),
+):
+    """Estudios de imagen que el medico puede solicitar."""
+    return await repo_imagen.listar_catalogo_imagen()
 
 
 @router.get('/{consulta_id}')

@@ -9,6 +9,7 @@ import InformeSolicitudPage from '../features/laboratorio/pages/InformeSolicitud
 import IaPage from '../features/ia/whisper/pages/IaPage.jsx'
 import ProtectedRoute from '../features/accesos/auth/ProtectedRoute.jsx'
 import ConsultasPage from '../features/consultas/pages/ConsultasPage.jsx'
+import ImagenesPage from '../features/imagenes/pages/ImagenesPage.jsx'
 const router = createBrowserRouter(createRoutesFromElements(
   <>
         <Route path="/" element={<Navigate to="/inicio" replace />} />
@@ -60,6 +61,11 @@ const router = createBrowserRouter(createRoutesFromElements(
         } />
         <Route path="/transcriptor" element={
           <Navigate to="/consultas" replace />
+        } />
+        <Route path="/imagenes" element={
+          <ProtectedRoute rolesPermitidos={['imagenes']}>
+            {({ usuario, logout }) => <ImagenesPage usuario={usuario} logout={logout} />}
+          </ProtectedRoute>
         } />
   </>
 ))

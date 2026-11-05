@@ -3,6 +3,8 @@
 .vscode/
 .idea/
 /backend/.models/
+/backend/storage/
+/usuarios.txt
 /.tmp_docs/
 /frontend/package-lock-main-local.json
 /transportador/.venv/

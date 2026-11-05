@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useHistorial, usePaginaHistorial, usePaciente } from '../hooks/useConsultas.js'
 import { obtenerSolicitudesLaboratorio } from '../api/consultasApi.js'
 import { edad, fecha } from '../utils/paciente.js'
+import SolicitarEcografia from './SolicitarEcografia.jsx'
+import ExamenesComplementarios from './ExamenesComplementarios.jsx'
 
 export function IdentidadPaciente({ paciente }) {
   return <div className="med-patient">
@@ -16,7 +18,7 @@ export function IdentidadPaciente({ paciente }) {
   </div>
 }
 
-export default function PacienteFicha({ id }) {
+export default function PacienteFicha({ id, usuario }) {
   const pagina = usePaginaHistorial(id)
   const paciente = usePaciente(id)
   const historial = useHistorial(id, pagina.pagina)
@@ -24,7 +26,7 @@ export default function PacienteFicha({ id }) {
   if (paciente.isPending) return <p role="status">Cargando ficha del paciente…</p>
   if (paciente.isError) return <p role="alert">No se pudo cargar el paciente. Comprueba el acceso y vuelve a intentarlo.</p>
   return <>
-    <div className="med-heading"><div><p className="med-eyebrow">FICHA CLÍNICA</p><h1>{paciente.data.nombre_completo}</h1></div><Link className="primary-button med-button-link" to={`/consultas/pacientes/${id}/nueva`}>+ Nueva consulta</Link></div>
+    <div className="med-heading"><div><p className="med-eyebrow">FICHA CLÍNICA</p><h1>{paciente.data.nombre_completo}</h1></div><div className="med-heading-actions"><Link className="primary-button med-button-link" to={`/consultas/pacientes/${id}/nueva`}>+ Nueva consulta</Link><SolicitarEcografia pacienteId={id} usuario={usuario} /></div></div>
     <IdentidadPaciente paciente={paciente.data} />
     <section className="med-panel"><div className="med-panel-header"><h2>Solicitudes de laboratorio</h2><span>Incluye constancias de muestras pendientes</span></div>
       {laboratorio.isPending && <p className="med-message">Cargando solicitudes de laboratorio…</p>}
@@ -38,6 +40,7 @@ export default function PacienteFicha({ id }) {
         </div>)}
       </div>)}
     </section>
+    <ExamenesComplementarios estudios={historial.data?.estudios_imagen} />
     <section className="med-panel"><div className="med-panel-header"><h2>Historial de consultas</h2><span>Más recientes primero</span></div>
       {historial.isPending && <p role="status" className="med-message">Cargando historial…</p>}
       {historial.isError && <p role="alert" className="med-message">No se pudo recuperar el historial.</p>}
