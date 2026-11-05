@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { buscarPacientes, crearPaciente, crearSolicitud, listarEstudiosCatalogo } from '../api/laboratorioApi.js'
+import { buscarMedicos, buscarPacientes, crearPaciente, crearSolicitud, listarEstudiosCatalogo } from '../api/laboratorioApi.js'
 import DatosPedido from './nueva-solicitud/DatosPedido.jsx'
 import EstudiosSolicitados from './nueva-solicitud/EstudiosSolicitados.jsx'
 import PacienteSolicitud from './nueva-solicitud/PacienteSolicitud.jsx'
@@ -49,6 +49,7 @@ export default function NuevaSolicitud({ onClose, onCreated }) {
     procedencia: 'este_centro',
     establecimiento_solicitante_nombre: '',
     medico_solicitante_nombre: '',
+    medico_solicitante_id: null,
     diagnostico_principal: '',
     prioridad: 'sin_prioridad',
   })
@@ -62,6 +63,12 @@ export default function NuevaSolicitud({ onClose, onCreated }) {
     queryKey: ['laboratorio', 'pacientes', termino],
     queryFn: () => buscarPacientes(termino.trim()),
     enabled: termino.trim().length >= 2 && !nuevoPaciente,
+  })
+  const medicosQuery = useQuery({
+    queryKey: ['laboratorio', 'medicos', datosSolicitud.medico_solicitante_nombre],
+    queryFn: () => buscarMedicos(datosSolicitud.medico_solicitante_nombre.trim()),
+    enabled: datosSolicitud.procedencia === 'este_centro' && !datosSolicitud.medico_solicitante_id
+      && datosSolicitud.medico_solicitante_nombre.trim().length >= 2,
   })
   const crearPacienteMutation = useMutation({
     mutationFn: crearPaciente,
@@ -85,7 +92,10 @@ export default function NuevaSolicitud({ onClose, onCreated }) {
     onError: (error) => setErrorLocal(mensajeDeError(error, 'No se pudo registrar la solicitud.')),
   })
 
-  const cambiarSolicitud = (campo, valor) => setDatosSolicitud((actual) => ({ ...actual, [campo]: valor }))
+  const cambiarSolicitud = (campo, valor) => setDatosSolicitud((actual) => ({
+    ...actual, [campo]: valor,
+    ...(campo === 'procedencia' || campo === 'medico_solicitante_nombre' ? { medico_solicitante_id: null } : {}),
+  }))
   const cambiarPaciente = (campo, valor) => setDatosPaciente((actual) => {
     if (campo === 'sin_documento' && valor) {
       return { ...actual, sin_documento: true, tipo_documento: '', numero_documento: '' }
@@ -105,6 +115,10 @@ export default function NuevaSolicitud({ onClose, onCreated }) {
     }
     if (!estudioIds.length) {
       setErrorLocal('Selecciona al menos un estudio.')
+      return
+    }
+    if (datosSolicitud.procedencia === 'este_centro' && !datosSolicitud.medico_solicitante_id) {
+      setErrorLocal('Selecciona un médico de Sarcobamba de la lista.')
       return
     }
     crearSolicitudMutation.mutate({
@@ -177,7 +191,10 @@ export default function NuevaSolicitud({ onClose, onCreated }) {
               onCancelCreate={() => setNuevoPaciente(false)} onPacienteChange={cambiarPaciente}
               onCreatePaciente={crearPacienteAhora}
             />
-            <DatosPedido datos={datosSolicitud} onChange={cambiarSolicitud} />
+            <DatosPedido datos={datosSolicitud} onChange={cambiarSolicitud} medicosQuery={medicosQuery}
+              onSeleccionarMedico={(medico) => setDatosSolicitud((actual) => ({
+                ...actual, medico_solicitante_id: medico.id, medico_solicitante_nombre: medico.nombre,
+              }))} />
             <EstudiosSolicitados
               cargando={catalogoQuery.isLoading} error={catalogoQuery.isError} catalogo={catalogoQuery.data ?? []}
               busqueda={busquedaEstudio} onBusquedaChange={setBusquedaEstudio}

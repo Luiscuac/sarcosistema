@@ -37,6 +37,7 @@ from app.laboratorio.presentation.schemas import (
     GuardarBorradorAreaRequest,
     PublicarResultadosAreaRequest,
     ResultadoAreaAccionResponse,
+    MedicoSolicitanteResponse,
 )
 
 router = APIRouter(
@@ -59,9 +60,33 @@ def get_service(db: AsyncSession = Depends(get_db)) -> LaboratorioService:
 @router_medico.get("/pacientes/{paciente_id}/solicitudes", response_model=list[SolicitudDetalleResponse])
 async def solicitudes_del_paciente(
     paciente_id: int,
+    usuario: Usuario = Depends(usuario_actual),
     service: LaboratorioService = Depends(get_service),
 ):
-    return await service.listar_solicitudes_paciente(paciente_id)
+    return await service.listar_solicitudes_paciente(paciente_id, usuario.id)
+
+
+@router_medico.get("/medicos/solicitudes/{solicitud_id}/informe", response_model=InformeSolicitudResponse)
+async def obtener_informe_medico(
+    solicitud_id: int,
+    usuario: Usuario = Depends(usuario_actual),
+    service: LaboratorioService = Depends(get_service),
+):
+    try:
+        informe = await service.obtener_informe_medico(solicitud_id, usuario.id)
+    except ValueError as error:
+        raise HTTPException(status_code=409, detail=str(error)) from None
+    if informe is None:
+        raise HTTPException(status_code=404, detail="El informe no está disponible")
+    return informe
+
+
+@router.get("/medicos", response_model=list[MedicoSolicitanteResponse])
+async def listar_medicos(
+    termino: str = Query(min_length=2, max_length=100),
+    service: LaboratorioService = Depends(get_service),
+):
+    return await service.listar_medicos(termino)
 
 
 @router.get("/catalogo/estudios", response_model=list[EstudioCatalogoResponse])
@@ -135,6 +160,7 @@ async def crear_solicitud(
         establecimiento_solicitante_nombre=data.establecimiento_solicitante_nombre,
         procedencia=data.procedencia,
         medico_solicitante_nombre=data.medico_solicitante_nombre,
+        medico_solicitante_id=data.medico_solicitante_id,
         diagnostico_principal=data.diagnostico_principal,
         prioridad=data.prioridad,
         clave_idempotencia=str(data.clave_idempotencia),

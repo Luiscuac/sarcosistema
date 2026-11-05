@@ -33,6 +33,28 @@
 .med-table a, .med-link-button { color: var(--brand); font-size: 11px; font-weight: 600; }
 .med-badge { border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; font-size: 10px; }
 .med-message { padding: 28px 22px; margin: 0; color: var(--muted); font-size: 12px; }
+.med-lab-request { border-top: 1px solid var(--line); }
+.med-lab-request-row { display: grid; grid-template-columns: minmax(0,1fr) auto auto; align-items: center; gap: 24px; padding: 16px 22px 10px; }
+.med-lab-request-identity { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.med-lab-request-identity strong { color: var(--ink); font-size: 13px; overflow-wrap: anywhere; }
+.med-lab-request-identity span { color: var(--muted); font-size: 12px; }
+.med-lab-status { color: #795500; background: #fff9e9; border: 1px solid #eed9a4; border-radius: 6px; padding: 5px 9px; font-size: 11px; white-space: nowrap; }
+.med-lab-status-ready { color: #176057; background: #eef8f6; border-color: #c9e4df; }
+.med-lab-report-button { display: inline-flex; justify-content: center; align-items: center; min-width: 112px; min-height: 36px; padding: 7px 13px; border: 1px solid var(--brand); border-radius: 6px; background: var(--brand); color: #fff; font: inherit; font-size: 12px; font-weight: 600; text-decoration: none; cursor: pointer; }
+.med-lab-report-button:hover:not(:disabled) { background: #0b625c; }
+.med-lab-report-button:visited { color: #fff; }
+.med-lab-report-button:disabled { background: #f4f6f8; color: #8c98a3; border-color: var(--line); cursor: not-allowed; }
+.med-lab-request-details { padding: 0 22px 14px; font-size: 12px; }
+.med-lab-request-details summary { display: inline-block; color: var(--brand); font-weight: 600; cursor: pointer; list-style: none; }
+.med-lab-request-details summary::after { content: ' ▾'; }
+.med-lab-request-details[open] summary::after { content: ' ▴'; }
+.med-lab-request-details ul { padding: 10px 0 0; margin: 0; list-style: none; }
+.med-lab-request-details li { padding: 9px 0; border-top: 1px solid var(--line); }
+.med-lab-request-details li > div { display: flex; justify-content: space-between; gap: 16px; }
+.med-lab-request-details li strong { font-weight: 500; }
+.med-lab-request-details li span, .med-lab-request-details li p { color: var(--muted); }
+.med-lab-request-details li p { margin: 6px 0 0; }
+@media (max-width: 620px) { .med-lab-request-row { grid-template-columns: minmax(0,1fr) auto; gap: 10px; } .med-lab-status { justify-self: end; } .med-lab-report-button { grid-column: 1 / -1; justify-self: stretch; } }
 .med-pagination { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 14px 22px; font-size: 11px; color: var(--muted); }
 .med-pagination button, .med-form-actions > button:not(.primary-button), .med-link-button { border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--brand); padding: 8px 11px; font: inherit; font-size: 11px; text-decoration: none; }
 .med-pagination button:disabled { opacity: .5; }
@@ -44,7 +66,6 @@
 .med-patient dt, .med-detail dt { color: var(--muted); font-size: 11px; }
 .med-patient dd { margin: 5px 0 0; font-size: 12px; }
 .med-button-link { display: inline-flex; align-items: center; text-decoration: none; white-space: nowrap; }
-.med-metadata { display: flex; flex-wrap: wrap; gap: 12px 22px; padding: 16px 0; color: #53606b; font-size: 11px; }
 .med-form { padding: 0 24px 20px; }
 .med-form fieldset { border: 0; border-bottom: 1px solid var(--line); margin: 0; padding: 22px 0; min-width: 0; }
 .med-form legend { padding: 22px 0 0; font-size: 14px; font-weight: 600; }
@@ -63,15 +84,37 @@
 .med-page :is(input,textarea,a,button):focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 .med-assistant { padding: 0 22px 20px; }
 .med-assistant .med-panel-header { padding-inline: 0; }
-.med-consent { display: flex; align-items: flex-start; gap: 8px; color: #53606b; font-size: 12px; line-height: 1.5; }
+.med-capture { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; position: relative; }
+.med-capture-card { display: flex; flex-direction: column; min-width: 0; padding: 20px; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+.med-capture-heading h3 { margin: 0 0 5px; color: var(--ink); font-size: 15px; font-weight: 600; }
+.med-capture-heading p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.med-consent { display: flex; align-items: flex-start; gap: 8px; margin-top: 18px; color: #53606b; font-size: 12px; line-height: 1.5; }
 .med-consent input { accent-color: var(--brand); }
 .med-ai-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 12px 0; }
 .med-assistant button { padding: 8px 11px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--brand); font-size: 12px; }
 .med-assistant button:disabled { opacity: .5; }
+.med-assistant .med-record-button { display: flex; flex-direction: column; align-items: center; justify-content: center; align-self: center; gap: 7px; width: 170px; min-height: 170px; margin: 22px 0 2px; border: 2px solid var(--brand); border-radius: 50%; background: #f1f8f7; color: var(--brand); font-size: 14px; font-weight: 600; text-align: center; cursor: pointer; }
+.med-record-button svg { width: 36px; height: 36px; }
+.med-record-button time { font-size: 12px; font-variant-numeric: tabular-nums; }
+.med-assistant .med-record-button--active { border-color: #b42318; background: #fff5f4; color: #b42318; }
+.med-record-button:disabled { cursor: not-allowed; }
+.med-capture-text .med-ai-text { margin: 22px 0 6px; font-size: 12px; font-weight: 600; }
+.med-capture-text textarea { flex: 1; min-height: 170px; width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--ink); font: inherit; font-size: 13px; line-height: 1.5; resize: vertical; }
+.med-capture-text textarea:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.med-assistant .med-analyze-button { align-self: flex-start; margin-top: 12px; padding: 10px 16px; background: var(--brand); border-color: var(--brand); color: #fff; font-size: 13px; font-weight: 600; }
+.med-capture-text > .med-hint { margin-top: 10px; }
+.med-processing { position: absolute; z-index: 2; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; border: 1px solid var(--line); border-radius: 6px; background: #f7f8fa; text-align: center; }
+.med-processing-spinner { width: 42px; height: 42px; margin-bottom: 18px; border: 3px solid #d8e8e5; border-top-color: var(--brand); border-radius: 50%; animation: med-spin .8s linear infinite; }
+.med-processing strong { color: var(--ink); font-size: 17px; }
+.med-processing p { color: var(--muted); font-size: 13px; }
+.med-processing button { margin-top: 8px; }
+@keyframes med-spin { to { transform: rotate(360deg); } }
+.med-process-result { margin: 16px 0 0; color: var(--brand); font-size: 13px; font-weight: 600; }
+.med-cancel-proposals { margin-top: 14px; }
 .med-dictation-example { margin: 14px 0; padding: 12px 14px; border: 1px solid var(--line); border-radius: 6px; background: #fafcfb; font-size: 12px; }
 .med-dictation-example summary { cursor: pointer; color: var(--brand); font-weight: 600; }
 .med-dictation-example p { margin: 12px 0 6px; color: var(--ink); line-height: 1.6; }
-.med-microphone-picker { display: grid; grid-template-columns: minmax(180px, 1fr) auto; align-items: end; gap: 8px 12px; max-width: 620px; margin: 16px 0; }
+.med-microphone-picker { display: grid; grid-template-columns: minmax(140px, 1fr) auto; align-items: end; gap: 8px 12px; margin-top: auto; padding-top: 18px; }
 .med-microphone-picker label { grid-column: 1 / -1; color: #53606b; font-size: 11px; font-weight: 600; }
 .med-microphone-picker select { min-width: 0; min-height: 36px; padding: 0 9px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--ink); font: inherit; font-size: 12px; }
 .med-microphone-picker > .med-hint { align-self: center; }
@@ -81,6 +124,7 @@
 .med-input-track > span { display: block; height: 100%; border-radius: inherit; background: var(--brand); transition: width 100ms linear; }
 .med-input-level time { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--ink); }
 @keyframes med-pulse { 50% { box-shadow: 0 0 0 7px #f8e7e700; } }
+@media (prefers-reduced-motion: reduce) { .med-processing-spinner, .med-live-dot { animation-duration: 2s; } }
 .med-ai-actions > span { color: var(--muted); font-size: 11px; }
 .med-assistant details { padding: 12px 0; border-top: 1px solid var(--line); font-size: 12px; }
 .med-assistant summary { cursor: pointer; color: var(--brand); font-weight: 600; }
@@ -89,12 +133,13 @@
 .med-ai-text :is(textarea,input) { width: 100%; padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px; color: var(--ink); background: #fff; font: inherit; font-size: 12px; resize: vertical; }
 .med-ai-warning { padding: 10px; background: #fffaf0; border: 1px solid #ead8a2; border-radius: 6px; color: #825b08; font-size: 11px; }
 .med-suggestion { margin: 12px 0; padding: 14px; border: 1px solid var(--line); border-left: 3px solid var(--brand); border-radius: 6px; }
-.med-suggestion--rechazada { opacity: .65; border-left-color: var(--line); }
-.med-suggestion--aceptada { background: #f7fbfa; }
+.med-assistant-history { margin-top: 14px; }
+.med-assistant-history-list { display: grid; gap: 8px; margin-top: 12px; }
+.med-assistant-history-list > div { display: flex; justify-content: space-between; align-items: center; gap: 12px; color: var(--ink); }
 .med-ai-title { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; }
 .med-ai-title span { color: var(--muted); font-size: 11px; }
 .med-suggestion blockquote { margin: 10px 0; padding: 8px 12px; border-left: 2px solid var(--line); color: var(--muted); font-size: 11px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .med-ai-badge { color: var(--brand); font-size: 10px; font-weight: 400; }
 .med-field-from-ai :is(input,textarea) { border-color: var(--brand); background: #f7fbfa; }
 @media(max-width:900px) { .med-page { grid-template-columns: 190px minmax(0,1fr); } .med-content { padding: 28px 24px; } .med-table { min-width: 780px; } }
-@media(max-width:700px) { .med-page { grid-template-columns: 1fr; } .med-sidebar { min-height: auto; } .med-sidebar-heading { height: 58px; } .med-sidebar nav { display: flex; padding: 8px; } .med-signout { min-height: 40px; } .med-topbar { min-height: 58px; padding: 10px 20px; } .med-session { display: none; } .med-content { padding: 26px 20px; } .med-heading { flex-wrap: wrap; } .med-patient dl, .med-fields, .med-detail dl { grid-template-columns: 1fr; } .med-microphone-picker { grid-template-columns: 1fr; } .med-microphone-picker label { grid-column: auto; } }
+@media(max-width:700px) { .med-page { grid-template-columns: 1fr; } .med-sidebar { min-height: auto; } .med-sidebar-heading { height: 58px; } .med-sidebar nav { display: flex; padding: 8px; } .med-signout { min-height: 40px; } .med-topbar { min-height: 58px; padding: 10px 20px; } .med-session { display: none; } .med-content { padding: 26px 20px; } .med-heading { flex-wrap: wrap; } .med-patient dl, .med-fields, .med-detail dl { grid-template-columns: 1fr; } .med-capture { grid-template-columns: 1fr; } .med-microphone-picker { grid-template-columns: 1fr; } .med-microphone-picker label { grid-column: auto; } }

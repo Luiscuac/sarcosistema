@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import { obtenerInformeSolicitud } from '../api/laboratorioApi.js'
+import { obtenerInformeLaboratorio } from '../../consultas/api/consultasApi.js'
 import LaboratorioTopbar from '../components/LaboratorioTopbar.jsx'
 import './laboratorio.css'
 import './informe-solicitud.css'
@@ -32,11 +33,11 @@ function seccionesDe(parametros) {
   return [...secciones]
 }
 
-export default function InformeSolicitudPage({ usuario, logout }) {
+export default function InformeSolicitudPage({ usuario, logout, modoMedico = false, pacienteId }) {
   const { solicitudId } = useParams()
   const { data: informe, isLoading, isError, error } = useQuery({
-    queryKey: ['laboratorio', 'informe', solicitudId],
-    queryFn: () => obtenerInformeSolicitud(solicitudId),
+    queryKey: ['laboratorio', 'informe', solicitudId, modoMedico],
+    queryFn: () => modoMedico ? obtenerInformeLaboratorio(solicitudId) : obtenerInformeSolicitud(solicitudId),
   })
   const categoriasConObservaciones = new Set()
   const ultimoEstudioPorCategoria = new Map()
@@ -50,18 +51,15 @@ export default function InformeSolicitudPage({ usuario, logout }) {
     }
   })
 
-  return <main className="lab-page">
-    <div className="lab-main">
-      <LaboratorioTopbar usuario={usuario} onLogout={logout} />
-      <section className="lab-content lab-report-page">
+  const contenido = <>
         <div className="lab-report-controls">
-          <Link className="lab-back-link" to={`/laboratorio/solicitudes/${solicitudId}`}>← Volver a la solicitud</Link>
+          <Link className="lab-back-link" to={modoMedico ? `/consultas/pacientes/${pacienteId}` : `/laboratorio/solicitudes/${solicitudId}`}>← Volver a {modoMedico ? 'la ficha' : 'la solicitud'}</Link>
           {informe && <button className="primary-button" type="button" onClick={() => window.print()}>Imprimir o guardar PDF</button>}
         </div>
         {isLoading && <p>Cargando informe…</p>}
         {isError && <p role="alert" className="lab-report-error">{error?.response?.status === 409
           ? 'El informe final estará disponible cuando todos los estudios estén publicados o cerrados como no realizados.'
-          : error?.response?.status === 404 ? 'La solicitud no existe.' : 'No se pudo cargar el informe.'}</p>}
+          : error?.response?.status === 404 ? 'El informe no está disponible.' : 'No se pudo cargar el informe.'}</p>}
         {informe && <article className="lab-report-document">
           <header className="lab-report-header">
             <div><p className="lab-report-institution">SarcoSistema · Laboratorio</p><h1>Informe de resultados de laboratorio</h1></div>
@@ -108,7 +106,12 @@ export default function InformeSolicitudPage({ usuario, logout }) {
             </table>
           </section>}
         </article>}
-      </section>
+  </>
+  if (modoMedico) return <section className="lab-report-page">{contenido}</section>
+  return <main className="lab-page">
+    <div className="lab-main">
+      <LaboratorioTopbar usuario={usuario} onLogout={logout} />
+      <section className="lab-content lab-report-page">{contenido}</section>
     </div>
   </main>
 }

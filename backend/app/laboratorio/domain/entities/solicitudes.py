@@ -14,6 +14,7 @@ class SolicitudNueva:
     prioridad: str
     clave_idempotencia: str
     procedencia: str = "este_centro"
+    medico_solicitante_id: int | None = None
 
 
 @dataclass(frozen=True, slots=True)

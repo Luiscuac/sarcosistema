@@ -47,6 +47,7 @@ const router = createBrowserRouter(createRoutesFromElements(
           ['/consultas', 'busqueda'],
           ['/consultas/pacientes/:pacienteId', 'ficha'],
           ['/consultas/pacientes/:pacienteId/nueva', 'nueva'],
+          ['/consultas/pacientes/:pacienteId/laboratorio/:solicitudId/informe', 'informe_laboratorio'],
           ['/consultas/:consultaId', 'detalle'],
         ].map(([path, vista]) => <Route key={path} path={path} element={
           <ProtectedRoute rolesPermitidos={['medico']}>

@@ -158,5 +158,5 @@ def _solicitud(tipo_estudio_ids=(1,), medico_solicitante_nombre="Dra. Ficticia")
         fecha_solicitud=datetime(2026, 10, 22, 10, 0, tzinfo=timezone.utc),
         referencia_papel_formulario=None, establecimiento_solicitante_nombre=None,
         medico_solicitante_nombre=medico_solicitante_nombre, diagnostico_principal=None,
-        prioridad="sin_prioridad", clave_idempotencia="clave",
+        prioridad="sin_prioridad", clave_idempotencia="clave", medico_solicitante_id=1,
     )
