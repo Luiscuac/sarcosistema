@@ -40,6 +40,11 @@ export async function obtenerInformeSolicitud(solicitudId) {
   return data
 }
 
+export async function buscarMedicos(termino) {
+  const { data } = await httpClient.get('/laboratorio/medicos', { params: { termino } })
+  return data
+}
+
 export async function recibirMuestraSolicitud(solicitudId, muestra) {
   const { data } = await httpClient.post(`/laboratorio/solicitudes/${solicitudId}/muestras`, muestra)
   return data

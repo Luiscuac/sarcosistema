@@ -162,9 +162,8 @@ function FormularioPaciente({ id, usuario }) {
   if (paciente.isError) return <p role="alert">No se pudo cargar el paciente. No registres la consulta hasta confirmar su identidad.</p>
   const imc = calcularImc(form.peso_kg, form.talla_cm)
   return <>
-    <div className="med-heading"><div><p className="med-eyebrow">CONSULTA EXTERNA · SOAP</p><h1>Nueva consulta</h1><p>Confirma al paciente antes de ingresar información clínica.</p></div></div>
+    <div className="med-heading"><div><p className="med-eyebrow">CONSULTA EXTERNA · SOAP</p><h1>Nueva consulta</h1></div></div>
     <IdentidadPaciente paciente={paciente.data} />
-    <div className="med-metadata"><span>Profesional: <strong>{usuario.identificador_acceso}</strong></span><span>Fecha y número de consulta asignados al guardar</span></div>
     <AsistenteClinico key={id} pacienteId={id} valores={form} onAplicar={aplicarIA} onDeshacer={deshacerIA} onEstado={setEstadoIA} onRevision={registrarRevisionIA} />
     <form onSubmit={enviar} className="med-panel med-form">
       {grupos.map((grupo, indice) => <fieldset key={grupo.titulo}><legend>{indice ? grupo.titulo : 'Signos vitales y antropometría'}</legend><div className="med-fields">{grupo.campos.map(([campo, etiqueta]) => <label key={campo} className={origenIA[campo] ? 'med-field-from-ai' : undefined}>{etiqueta}{origenIA[campo] && <span className="med-ai-badge">Propuesta IA aceptada · editable</span>}{grupo.numerico

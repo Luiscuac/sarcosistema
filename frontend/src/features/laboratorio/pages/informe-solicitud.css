@@ -34,8 +34,8 @@
 @media (max-width: 700px) { .lab-report-document { padding: 22px 16px; } .lab-report-meta { grid-template-columns: 1fr; } .lab-report-header { flex-direction: column; } .lab-report-section { overflow-x: auto; } .lab-report-section table { min-width: 560px; } }
 @media print {
   @page { size: A4; margin: 15mm; }
-  body, .lab-page, .lab-main, .lab-content { display: block !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important; background: #fff !important; }
-  .lab-topbar, .lab-report-controls { display: none !important; }
+  body, .lab-page, .lab-main, .lab-content, .med-page, .med-main, .med-content { display: block !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important; background: #fff !important; }
+  .lab-topbar, .med-topbar, .med-sidebar, .lab-report-controls { display: none !important; }
   .lab-report-document { padding: 0; border: 0; border-radius: 0; }
   .lab-report-study { break-inside: auto; }
   .lab-report-study-title, .lab-report-section h3, .lab-report-section tr { break-inside: avoid; }

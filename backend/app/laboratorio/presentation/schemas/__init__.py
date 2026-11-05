@@ -81,6 +81,11 @@ class PacienteCreadoResponse(PacienteResponse):
     pass
 
 
+class MedicoSolicitanteResponse(BaseModel):
+    id: int
+    nombre: str
+
+
 class CrearSolicitudRequest(BaseModel):
     paciente_id: int = Field(gt=0)
     tipo_estudio_ids: list[int] = Field(min_length=1, max_length=30)
@@ -89,6 +94,7 @@ class CrearSolicitudRequest(BaseModel):
     establecimiento_solicitante_nombre: str | None = Field(default=None, max_length=200)
     procedencia: Literal["este_centro", "otro_centro"] = "este_centro"
     medico_solicitante_nombre: str = Field(min_length=2, max_length=200)
+    medico_solicitante_id: int | None = Field(default=None, gt=0)
     diagnostico_principal: str | None = Field(default=None, max_length=500)
     prioridad: Literal["urgente", "sin_prioridad"] = "sin_prioridad"
     clave_idempotencia: UUID
@@ -110,6 +116,10 @@ class CrearSolicitudRequest(BaseModel):
             raise ValueError("Indica el nombre del otro centro")
         if self.procedencia == "este_centro":
             self.establecimiento_solicitante_nombre = None
+            if self.medico_solicitante_id is None:
+                raise ValueError("Selecciona un médico registrado de Sarcobamba")
+        elif self.medico_solicitante_id is not None:
+            raise ValueError("Para otro centro escribe el nombre del profesional")
         return self
 
 

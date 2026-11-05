@@ -1,6 +1,7 @@
 """Contrato extractivo: propuestas, no decisiones clínicas ni contenido definitivo."""
 import math
 import re
+import unicodedata
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr
@@ -19,15 +20,60 @@ NUMERICOS = frozenset({'peso_kg', 'talla_cm', 'temperatura_c', 'frecuencia_cardi
 FIN_FRASE = re.compile(r'(?<!\.)[.!?\n](?!\.)(?!(?<=\d\.)\d)')
 ETIQUETAS_DICTADO = re.compile(
     r'(?P<etiqueta>motivo(?:\s+de\s+consulta)?|s[ií]ntomas?|enfermedad\s+actual|'
-    r'antecedentes?|al\s+examen\s+f[ií]sico|examen\s+f[ií]sico|hallazgos|observaciones|'
-    r'evaluaci[oó]n\s+cl[ií]nica|diagn[oó]stico\s+principal|diagn[oó]sticos\s+secundarios|'
-    r'tratamiento|medicamentos|indicaciones|estudios\s+solicitados|referencias|recomendaciones|'
+    r'antecedentes?(?:\s+relevantes)?|al\s+examen\s+f[ií]sico|examen\s+f[ií]sico|'
+    r'hallazgos(?:\s+cl[ií]nicos)?|observaciones|'
+    r'evaluaci[oó]n\s+cl[ií]nica|diagn[oó]stico\s+principal|diagn[oó]sticos?\s+secundarios?|'
+    r'tratamiento|medicamentos(?:\s+indicados)?|indicaciones(?:\s+m[eé]dicas)?|'
+    r'estudios(?:\s+complementarios)?\s+solicitados|'
+    r'referencias(?:\s+y\s+contrarreferencias)?|recomendaciones|'
     r'plan(?:\s+de\s+acci[oó]n)?|seguimiento|frecuencia\s+card[ií]aca|pulso|'
     r'frecuencia\s+respiratoria|presi[oó]n\s+sist[oó]lica|sist[oó]lica|'
     r'presi[oó]n\s+diast[oó]lica|diast[oó]lica|saturaci[oó]n(?:\s+de\s+ox[ií]geno)?|'
     r'temperatura|peso|talla)\b\s*(?::|,)?',
     re.IGNORECASE,
 )
+
+ROTULOS_CAMPOS = {
+    'motivo de consulta': 'motivo_consulta', 'motivo': 'motivo_consulta',
+    'sintomas': 'sintomas', 'sintoma': 'sintomas',
+    'enfermedad actual': 'enfermedad_actual', 'antecedentes': 'antecedentes',
+    'antecedente': 'antecedentes', 'antecedentes relevantes': 'antecedentes',
+    'antecedente relevante': 'antecedentes', 'al examen fisico': 'examen_fisico',
+    'examen fisico': 'examen_fisico', 'hallazgos': 'hallazgos',
+    'hallazgos clinicos': 'hallazgos',
+    'observaciones': 'observaciones', 'evaluacion clinica': 'evaluacion_clinica',
+    'diagnostico principal': 'diagnostico_principal',
+    'diagnostico secundario': 'diagnosticos_secundarios',
+    'diagnosticos secundarios': 'diagnosticos_secundarios',
+    'tratamiento': 'tratamiento', 'medicamentos': 'medicamentos',
+    'medicamentos indicados': 'medicamentos',
+    'indicaciones': 'indicaciones', 'indicaciones medicas': 'indicaciones',
+    'estudios solicitados': 'estudios_solicitados',
+    'estudios complementarios solicitados': 'estudios_solicitados',
+    'referencias': 'referencias', 'referencias y contrarreferencias': 'referencias',
+    'recomendaciones': 'recomendaciones',
+    'plan': 'plan_seguimiento', 'plan de accion': 'plan_seguimiento',
+    'seguimiento': 'plan_seguimiento',
+}
+
+
+def campo_de_rotulo(segmento: str) -> str | None:
+    coincidencia = ETIQUETAS_DICTADO.match(segmento)
+    if not coincidencia:
+        return None
+    rotulo = unicodedata.normalize('NFD', coincidencia.group('etiqueta').lower())
+    rotulo = ''.join(letra for letra in rotulo if unicodedata.category(letra) != 'Mn')
+    return ROTULOS_CAMPOS.get(' '.join(rotulo.split()))
+
+
+def valor_textual(campo: str, evidencia: str) -> str:
+    """Quita solo un rótulo explícito y, en síntomas, separa lo negado."""
+    valor = evidencia
+    if campo_de_rotulo(evidencia) == campo:
+        valor = evidencia[ETIQUETAS_DICTADO.match(evidencia).end():].lstrip(' \t,;:.')
+    if campo == 'sintomas':
+        valor = re.split(r'\s*[,;.]?\s*\b(?:niega|no presenta)\b', valor, maxsplit=1, flags=re.I)[0]
+    return valor.strip(' \t,;')
 
 
 def segmentos_dictado_rotulado(texto: str) -> list[str]:
@@ -123,6 +169,41 @@ def numero_respaldado(campo: str, valor: float, evidencia: str) -> bool:
     return len(coincidencias) == 1 and float(coincidencias[0]) == valor
 
 
+ROTULOS_MEDICION = {
+    'peso_kg': r'\b(?:peso|pesa)\b', 'talla_cm': r'\b(?:talla|mide)\b',
+    'temperatura_c': r'\btemperatura\b',
+    'frecuencia_cardiaca': r'\b(?:frecuencia card[ií]aca|pulso)\b',
+    'frecuencia_respiratoria': r'\bfrecuencia respiratoria\b',
+    'presion_sistolica': r'\b(?:presi[oó]n(?: arterial)?|sist[oó]lica)\b',
+    'presion_diastolica': r'\b(?:presi[oó]n(?: arterial)?|diast[oó]lica)\b',
+    'saturacion_oxigeno': r'\bsaturaci[oó]n(?: de ox[ií]geno)?\b',
+}
+
+
+def evidencia_medicion(campo: str, valor: float, frase: str) -> str:
+    """Cita la medición, sin arrastrar la cláusula siguiente del dictado."""
+    if re.search(r'\b(?:perd[oó]n|corrijo|correcci[oó]n|creo|quiz[aá]s?|'
+                 r'aproximadamente|cerca de|ayer|antes|no se entiende|inaudible)\b', frase, re.I):
+        return frase
+    rotulo = ROTULOS_MEDICION[campo]
+    for coincidencia in re.finditer(rotulo, frase, re.I):
+        resto = frase[coincidencia.start():]
+        numeros = list(re.finditer(r'\d+(?:[.,]\d+)?', resto))
+        if not numeros:
+            continue
+        # El primer número debe estar junto al rótulo; en presión 120/80
+        # se necesitan ambos valores para verificar sistólica y diastólica.
+        if numeros[0].start() > 24:
+            continue
+        es_par = (campo.startswith('presion_') and len(numeros) > 1
+                  and re.fullmatch(r'\s*(?:sobre|/|con)\s*', resto[numeros[0].end():numeros[1].start()], re.I))
+        fin = numeros[1].end() if es_par else numeros[0].end()
+        candidato = resto[:fin].strip(' \t,;')
+        if numero_respaldado(campo, valor, candidato):
+            return candidato
+    return frase
+
+
 def mediciones_explicitas(texto: str) -> list[Sugerencia]:
     """Complemento determinista del LLM, SOLO para medidas explícitas verificables."""
     inicios = [0] + [m.end() for m in FIN_FRASE.finditer(texto)]
@@ -141,11 +222,13 @@ def mediciones_explicitas(texto: str) -> list[Sugerencia]:
         for campo in NUMERICOS:
             valores = [n for n in candidatos if numero_respaldado(campo, n, frase)]
             if len(valores) == 1:
-                encontradas.setdefault(campo, []).append(Sugerencia(campo=campo, valor=valores[0], evidencia=frase))
+                evidencia = evidencia_medicion(campo, valores[0], frase)
+                encontradas.setdefault(campo, []).append(Sugerencia(campo=campo, valor=valores[0], evidencia=evidencia))
     salida = []
     for items in encontradas.values():
         distintos = {item.valor for item in items}
-        salida.append(items[0].model_copy(update={'ambiguo': len(distintos) > 1}))
+        mas_precisa = min(items, key=lambda item: len(item.evidencia))
+        salida.append(mas_precisa.model_copy(update={'ambiguo': len(distintos) > 1}))
     return salida
 
 
@@ -160,6 +243,7 @@ def validar_propuesta(salida: SalidaModelo, transcripcion: str) -> PropuestaClin
     campos_medidos = {item.campo for item in medidas}
     # Resolver tipos/unidades mediante comprobación explícita, no por estimación del modelo.
     candidatos = [item for item in salida.campos if item.campo not in campos_medidos] + medidas
+    segmentos = segmentos_dictado_rotulado(transcripcion)
     vistos = set()
     for item in candidatos:
         if (item.campo == 'motivo_consulta'
@@ -167,10 +251,22 @@ def validar_propuesta(salida: SalidaModelo, transcripcion: str) -> PropuestaClin
                 and re.search(r'\bniega\b', item.evidencia, re.I)
                 and not re.search(r'\b(?:motivo|consulta por|viene por)\b', item.evidencia, re.I)):
             item = item.model_copy(update={'campo': 'sintomas'})
-        if item.campo in vistos or item.evidencia not in transcripcion:
-            resultado.advertencias.append(f'{item.campo}: evidencia ausente o propuesta repetida; no se aplicó.')
+        evidencia_propuesta = item.evidencia
+        if evidencia_propuesta not in transcripcion:
+            resultado.advertencias.append(f'{item.campo}: evidencia ausente; no se aplicó.')
             continue
-        vistos.add(item.campo)
+        if item.campo in vistos:
+            indice = next(i for i, aceptada in enumerate(resultado.campos) if aceptada.campo == item.campo)
+            aceptada = resultado.campos[indice]
+            if evidencia_propuesta not in aceptada.evidencia:
+                resultado.campos[indice] = aceptada.model_copy(update={'ambiguo': True})
+                resultado.advertencias.append(f'{item.campo}: el modelo propuso citas distintas; revisa el original.')
+            continue
+        if item.campo not in NUMERICOS:
+            rotulados = [segmento for segmento in segmentos
+                         if campo_de_rotulo(segmento) == item.campo and evidencia_propuesta in segmento]
+            if len(rotulados) == 1:
+                item = item.model_copy(update={'evidencia': rotulados[0]})
         # No confiar en citas recortadas que omitan negación, dosis o una corrección posterior.
         posicion = transcripcion.index(item.evidencia)
         fin = posicion + len(item.evidencia)
@@ -179,14 +275,21 @@ def validar_propuesta(salida: SalidaModelo, transcripcion: str) -> PropuestaClin
         derecha = min((m.end() for m in limites if m.end() >= fin), default=len(transcripcion))
         contexto = transcripcion[izquierda:derecha]
         es_oracion_completa = contexto.strip(' .!?\n\r\t') == item.evidencia.strip(' .!?\n\r\t')
-        es_segmento_rotulado = item.evidencia in segmentos_dictado_rotulado(transcripcion)
-        if not es_oracion_completa and not es_segmento_rotulado:
+        es_segmento_rotulado = item.evidencia in segmentos
+        es_medicion_verificable = (item.campo in NUMERICOS and not isinstance(item.valor, str)
+                                  and numero_respaldado(item.campo, item.valor, item.evidencia)
+                                  and not re.search(r'\b(?:perd[oó]n|corrijo|correcci[oó]n)\b',
+                                                    contexto[fin - izquierda:], re.I))
+        if not es_oracion_completa and not es_segmento_rotulado and not es_medicion_verificable:
             resultado.advertencias.append(f'{item.campo}: la evidencia omitía parte de la frase; revisa el texto completo.')
             continue
         ambigua = item.ambiguo or bool(re.search(
             r'\?|\b(?:pregunta|creo|quiz[aá]s?|aproximadamente|cerca de|no se entiende|inaudible|no estoy seguro)\b', item.evidencia, re.I))
         if item.campo in ('diagnostico_principal', 'diagnosticos_secundarios') and re.search(
                 r'\b(?:antecedentes?|hist[oó]rico|hace a[ñn]os)\b', item.evidencia, re.I):
+            ambigua = True
+        if item.campo in ('diagnostico_principal', 'diagnosticos_secundarios') and re.search(
+                r'\b(?:niega|descarta|descartado|descartada)\b', item.evidencia, re.I):
             ambigua = True
         if item.campo in NUMERICOS and re.search(r'\b(?:ayer|antes|hist[oó]ric[oa]|niega|negad[oa])\b', item.evidencia, re.I):
             ambigua = True
@@ -198,9 +301,15 @@ def validar_propuesta(salida: SalidaModelo, transcripcion: str) -> PropuestaClin
                     continue
                 resultado.advertencias.append(f'{item.campo}: medición o unidad no verificable; introdúcela manualmente.')
                 continue
-        elif not isinstance(item.valor, str) or item.valor != item.evidencia:
+        elif not isinstance(item.valor, str) or item.valor != evidencia_propuesta:
             resultado.advertencias.append(f'{item.campo}: el texto no era literal; revisa el original.')
             continue
+        else:
+            valor = valor_textual(item.campo, item.evidencia)
+            if not valor:
+                resultado.advertencias.append(f'{item.campo}: no hay un valor afirmado para proponer; revisa el original.')
+                continue
+            item = item.model_copy(update={'valor': valor})
         posicion = transcripcion.index(item.evidencia)
         inicio = max(transcripcion.rfind('.', 0, posicion), transcripcion.rfind('\n', 0, posicion)) + 1
         prefijo = transcripcion[inicio:posicion]
@@ -211,6 +320,8 @@ def validar_propuesta(salida: SalidaModelo, transcripcion: str) -> PropuestaClin
             resultado.advertencias.append(f'{item.campo}: evidencia recortada o contexto de negación; revisa el original.')
             continue
         resultado.campos.append(item.model_copy(update={'ambiguo': ambigua}))
+        vistos.add(item.campo)
     if any(item.ambiguo for item in resultado.campos):
         resultado.advertencias.append('Hay información ambigua. Revisa y resuelve esos campos manualmente.')
+    resultado.advertencias = list(dict.fromkeys(resultado.advertencias))
     return resultado

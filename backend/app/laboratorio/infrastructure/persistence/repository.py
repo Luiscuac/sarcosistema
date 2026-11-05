@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 from uuid import uuid4
 
-from sqlalchemy import case, exists, or_, select
+from sqlalchemy import case, exists, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.laboratorio.domain.entities import (
@@ -65,9 +65,44 @@ class SqlAlchemyExamenRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def listar_solicitudes_paciente(self, paciente_id: int):
+    async def listar_medicos(self, termino: str):
+        filas = (await self.db.execute(text("""
+            SELECT m.id, t.nombre_completo AS nombre
+            FROM public.medico m
+            JOIN public.trabajador t ON t.id = m.trabajador_id
+            JOIN public.usuario u ON u.trabajador_id = t.id
+            JOIN public.rol r ON r.id = u.rol_id
+            WHERE m.activo AND t.estado = 'activo'
+              AND u.estado = 'activo' AND r.activo AND r.codigo = 'medico'
+              AND strpos(lower(t.nombre_completo), lower(:termino)) > 0
+            ORDER BY t.nombre_completo, m.id LIMIT 20
+        """), {"termino": termino})).mappings().all()
+        return [dict(fila) for fila in filas]
+
+    async def _medico_de_usuario(self, usuario_id: int) -> int | None:
+        return (await self.db.execute(text("""
+            SELECT m.id FROM public.medico m
+            JOIN public.usuario u ON u.trabajador_id = m.trabajador_id
+            JOIN public.trabajador t ON t.id = m.trabajador_id
+            WHERE u.id = :usuario_id AND u.estado = 'activo'
+              AND t.estado = 'activo' AND m.activo
+        """), {"usuario_id": usuario_id})).scalar_one_or_none()
+
+    async def obtener_solicitud_medico(self, solicitud_id: int, usuario_id: int):
+        medico_id = await self._medico_de_usuario(usuario_id)
+        if medico_id is None:
+            return None
+        autorizado = (await self.db.execute(
+            select(Solicitud.id).where(Solicitud.id == solicitud_id, Solicitud.medico_solicitante_id == medico_id)
+        )).scalar_one_or_none()
+        return await self.obtener_solicitud(solicitud_id) if autorizado is not None else None
+
+    async def listar_solicitudes_paciente(self, paciente_id: int, usuario_id: int):
+        medico_id = await self._medico_de_usuario(usuario_id)
+        if medico_id is None:
+            return []
         ids = (await self.db.execute(
-            select(Solicitud.id).where(Solicitud.paciente_id == paciente_id)
+            select(Solicitud.id).where(Solicitud.paciente_id == paciente_id, Solicitud.medico_solicitante_id == medico_id)
             .order_by(Solicitud.id.desc()).limit(30)
         )).scalars().all()
         return [await self.obtener_solicitud(solicitud_id) for solicitud_id in ids]
@@ -363,6 +398,8 @@ class SqlAlchemyExamenRepository:
             if (
                 existente.paciente_id != solicitud.paciente_id
                 or ids_existentes != tuple(sorted(solicitud.tipo_estudio_ids))
+                or existente.medico_solicitante_id != solicitud.medico_solicitante_id
+                or existente.medico_solicitante_nombre_snapshot != solicitud.medico_solicitante_nombre.strip()
             ):
                 raise ValueError("La clave de envío ya se usó con otros datos")
             paciente = await self.db.get(Paciente, existente.paciente_id)
@@ -405,6 +442,20 @@ class SqlAlchemyExamenRepository:
             raise ValueError("Uno o más estudios no están disponibles en el catálogo del laboratorio")
         tipos_por_id = {tipo.id: tipo for tipo in tipos}
 
+        medico_nombre = solicitud.medico_solicitante_nombre.strip()
+        if solicitud.procedencia == "este_centro":
+            medico = (await self.db.execute(text("""
+                SELECT t.nombre_completo FROM public.medico m
+                JOIN public.trabajador t ON t.id = m.trabajador_id
+                JOIN public.usuario u ON u.trabajador_id = t.id
+                JOIN public.rol r ON r.id = u.rol_id
+                WHERE m.id = :medico_id AND m.activo AND t.estado = 'activo'
+                  AND u.estado = 'activo' AND r.activo AND r.codigo = 'medico'
+            """), {"medico_id": solicitud.medico_solicitante_id})).scalar_one_or_none()
+            if medico is None:
+                raise ValueError("Selecciona un médico activo de Sarcobamba")
+            medico_nombre = medico
+
         referencia = f"SOL-{solicitud.fecha_solicitud:%y%m%d}-{uuid4().hex[:6].upper()}"
         modelo = Solicitud(
             referencia=referencia,
@@ -415,7 +466,8 @@ class SqlAlchemyExamenRepository:
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
             establecimiento_solicitante_nombre_snapshot=solicitud.establecimiento_solicitante_nombre,
-            medico_solicitante_nombre_snapshot=solicitud.medico_solicitante_nombre.strip(),
+            medico_solicitante_id=solicitud.medico_solicitante_id,
+            medico_solicitante_nombre_snapshot=medico_nombre,
             diagnostico_principal=solicitud.diagnostico_principal,
             prioridad=solicitud.prioridad,
             clave_idempotencia=solicitud.clave_idempotencia,

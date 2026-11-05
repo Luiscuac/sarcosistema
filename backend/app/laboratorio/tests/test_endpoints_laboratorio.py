@@ -103,9 +103,14 @@ def servicio():
         async def obtener_informe(self, solicitud_id):
             raise ValueError("El informe final estará disponible cuando todos los estudios estén publicados")
 
-        async def listar_solicitudes_paciente(self, paciente_id):
+        async def listar_solicitudes_paciente(self, paciente_id, usuario_id):
             self.recibido["paciente_id_medico"] = paciente_id
+            self.recibido["usuario_id_medico"] = usuario_id
             return [await self.obtener_solicitud(9)]
+
+        async def obtener_informe_medico(self, solicitud_id, usuario_id):
+            self.recibido["usuario_id_informe"] = usuario_id
+            return None
 
         async def registrar_incidencia(self, incidencia, usuario_id):
             self.recibido["incidencia"] = incidencia
@@ -370,6 +375,50 @@ async def test_medico_puede_ver_constancias_en_la_ficha_del_paciente(client, usu
     assert respuesta.json()[0]["paciente_nombre"] == "Paciente ficticio"
     assert respuesta.json()[0]["estudios"][0]["incidencias"][0]["motivo"] == "toma_rechazada"
     assert servicio.recibido["paciente_id_medico"] == 1
+    assert servicio.recibido["usuario_id_medico"] == medico.id
+
+
+@pytest.mark.asyncio
+async def test_informe_medico_requiere_ser_solicitante(client, usuarios, servicio, medico):
+    ruta = "/laboratorio/medicos/solicitudes/9/informe"
+    assert (await client.get(ruta)).status_code == 404
+
+    async def informe_permitido(solicitud_id, usuario_id):
+        assert solicitud_id == 9
+        assert usuario_id == medico.id
+        return {
+            "referencia": "SOL-9", "paciente_nombre": "Paciente ficticio",
+            "paciente_documento": None, "fecha_solicitud": datetime(2026, 11, 2, tzinfo=timezone.utc),
+            "referencia_papel_formulario": None, "procedencia": "este_centro",
+            "establecimiento_solicitante_nombre": None, "medico_solicitante_nombre": "Dra. Ficticia",
+            "resultados": [], "estudios_no_realizados": [],
+        }
+
+    servicio.obtener_informe_medico = informe_permitido
+    respuesta = await client.get(ruta)
+    assert respuesta.status_code == 200
+    assert respuesta.json()["referencia"] == "SOL-9"
+
+
+@pytest.mark.asyncio
+async def test_informe_medico_no_se_expone_a_otra_cuenta(client, usuarios, servicio, medico):
+    ruta = "/laboratorio/medicos/solicitudes/9/informe"
+    assert (await client.get(ruta)).status_code == 404
+    assert servicio.recibido["usuario_id_informe"] == medico.id
+
+    medico.rol = "laboratorio"
+    assert (await client.get(ruta)).status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_sarcobamba_exige_medico_seleccionado(client, usuarios, servicio):
+    headers = await _sesion(client, usuarios)
+    respuesta = await client.post("/laboratorio/solicitudes", headers=headers, json={
+        "paciente_id": 1, "tipo_estudio_ids": [1],
+        "medico_solicitante_nombre": "Dra. Ficticia", "clave_idempotencia": str(uuid4()),
+    })
+    assert respuesta.status_code == 422
+    assert "médico registrado" in respuesta.text
 
 
 @pytest.mark.asyncio
@@ -407,7 +456,8 @@ async def test_solicitud_duplicada_devuelve_409_recargar(client, usuarios, servi
     headers = await _sesion(client, usuarios)
     respuesta = await client.post("/laboratorio/solicitudes", headers=headers, json={
         "paciente_id": 1, "tipo_estudio_ids": [1],
-        "medico_solicitante_nombre": "Dra. Ficticia", "clave_idempotencia": str(uuid4()),
+        "medico_solicitante_nombre": "Dra. Ficticia", "medico_solicitante_id": 1,
+        "clave_idempotencia": str(uuid4()),
     })
     assert respuesta.status_code == 409
     assert "recibió duplicada" in respuesta.json()["detail"]

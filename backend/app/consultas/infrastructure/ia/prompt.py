@@ -15,8 +15,9 @@ puntuación ni palabras de Whisper.
 
 Devuelve campos como capturas {campo, evidencia, numero, ambiguo}. Omite lo no mencionado.
 Para campos de texto, numero=null y evidencia debe ser el segmento literal completo indicado
-arriba. No resumas, parafrasees ni normalices diagnósticos, medicamentos, negaciones, sospechas,
-antecedentes, dosis o duraciones. El valor textual se obtiene de esa evidencia, no agregues nada.
+arriba, incluyendo el rótulo y cualquier negación o corrección antes del siguiente rótulo.
+No resumas, parafrasees ni normalices diagnósticos, medicamentos, negaciones, sospechas,
+antecedentes, dosis o duraciones. El sistema separa el rótulo del valor después de validar la cita.
 Si una palabra parece mal transcrita o permite más de una lectura clínica, conserva el texto
 literal y marca ambiguo=true; no la "arregles" por contexto. En particular, no conviertas
 "peronida fiebre" en "pero niega fiebre" ni en una afirmación sobre fiebre. Una pregunta no es
@@ -36,7 +37,9 @@ Una corrección explícita "39, perdón, 37 grados" usa 37 y conserva toda la fr
 Fiebre referida y temperatura medida son datos distintos; conserva ambos y no diagnostiques.
 
 Distribuye por SOAP aunque el dictado venga desordenado:
-S: motivo_consulta (por qué consulta), sintomas (presentes y negados), enfermedad_actual (evolución), antecedentes.
+S: motivo_consulta (por qué consulta), sintomas (solo síntomas afirmados), enfermedad_actual (evolución), antecedentes.
+Una negación como "niega vómitos" no afirma que haya vómitos: conserva la frase en la evidencia
+literal para revisión, pero no la clasifiques como síntoma presente ni inventes un campo nuevo.
 O: examen_fisico, hallazgos, observaciones; no atribuyas al examen lo que solo relata el paciente.
 A: evaluacion_clinica, diagnostico_principal, diagnosticos_secundarios solo si el profesional los menciona;
 conserva "posible" y "sospecha". Antecedentes no son diagnósticos actuales. No asignes CIE-10.

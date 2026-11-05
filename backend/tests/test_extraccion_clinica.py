@@ -21,7 +21,8 @@ def test_incompleto_solo_propone_motivo_sin_inventar_otros_campos():
 def test_negaciones_y_sospechas_se_conservan_literales():
     texto = 'El paciente presenta dolor abdominal, niega fiebre y vómitos.'
     resultado = validar_propuesta(propuesta('sintomas', texto, texto), texto)
-    assert resultado.campos[0].valor == texto
+    assert resultado.campos[0].valor == 'El paciente presenta dolor abdominal'
+    assert resultado.campos[0].evidencia == texto
     inventada = validar_propuesta(propuesta('sintomas', 'presenta fiebre', texto), texto)
     assert inventada.campos == []
     assert inventada.advertencias
@@ -30,7 +31,117 @@ def test_negaciones_y_sospechas_se_conservan_literales():
 def test_relato_de_sintomas_con_negacion_no_se_pierde_en_motivo():
     texto = 'El paciente presenta dolor abdominal, niega fiebre y vómitos.'
     salida = validar_propuesta(propuesta('motivo_consulta', texto, texto), texto)
-    assert any(item.campo == 'sintomas' and item.valor == texto for item in salida.campos)
+    assert any(item.campo == 'sintomas' and item.valor == 'El paciente presenta dolor abdominal' for item in salida.campos)
+
+
+def test_rotulos_dictados_se_quitan_del_valor_y_la_evidencia_permanece_literal():
+    texto = ('Motivo de consulta, dolor abdominal, desde hace tres días, '
+             'síntomas, náuseas y dolor de cabeza, niega vómitos y diarrea. '
+             'Enfermedad actual, el dolor aparece después de comer. '
+             'Diagnóstico principal, dolor abdominal.')
+    salida = SalidaModelo(campos=[
+        {'campo': 'motivo_consulta', 'valor': 'Motivo de consulta, dolor abdominal',
+         'evidencia': 'Motivo de consulta, dolor abdominal'},
+        {'campo': 'sintomas', 'valor': 'síntomas, náuseas y dolor de cabeza',
+         'evidencia': 'síntomas, náuseas y dolor de cabeza'},
+        {'campo': 'enfermedad_actual', 'valor': 'Enfermedad actual, el dolor aparece después de comer.',
+         'evidencia': 'Enfermedad actual, el dolor aparece después de comer.'},
+        {'campo': 'diagnostico_principal', 'valor': 'Diagnóstico principal, dolor abdominal.',
+         'evidencia': 'Diagnóstico principal, dolor abdominal.'},
+    ])
+    resultado = validar_propuesta(salida, texto)
+    campos = {item.campo: item for item in resultado.campos}
+    assert campos['motivo_consulta'].valor == 'dolor abdominal, desde hace tres días'
+    assert campos['sintomas'].valor == 'náuseas y dolor de cabeza'
+    assert 'niega vómitos y diarrea' in campos['sintomas'].evidencia
+    assert campos['enfermedad_actual'].valor == 'el dolor aparece después de comer.'
+    assert campos['diagnostico_principal'].valor == 'dolor abdominal.'
+
+
+def test_pausa_tras_rotulo_no_deja_punto_al_inicio_del_valor():
+    texto = 'Motivo de consulta. Dolor abdominal desde hace tres días.'
+    resultado = validar_propuesta(propuesta('motivo_consulta', texto, texto), texto)
+    assert resultado.campos[0].valor == 'Dolor abdominal desde hace tres días.'
+
+
+def test_citas_duplicadas_no_generan_ruido_y_citas_distintas_se_marcan_ambiguas():
+    texto = ('Diagnóstico principal. Dolor abdominal. '
+             'Diagnóstico principal. Gastritis.')
+    primera = 'Diagnóstico principal. Dolor abdominal.'
+    segunda = 'Diagnóstico principal. Gastritis.'
+    repetida = validar_propuesta(SalidaModelo(campos=[
+        {'campo': 'diagnostico_principal', 'valor': primera, 'evidencia': primera},
+        {'campo': 'diagnostico_principal', 'valor': primera, 'evidencia': primera},
+    ]), texto)
+    assert repetida.campos[0].ambiguo is False
+    assert not repetida.advertencias
+    distintas = validar_propuesta(SalidaModelo(campos=[
+        {'campo': 'diagnostico_principal', 'valor': primera, 'evidencia': primera},
+        {'campo': 'diagnostico_principal', 'valor': segunda, 'evidencia': segunda},
+    ]), texto)
+    assert distintas.campos[0].ambiguo is True
+    assert any('citas distintas' in aviso for aviso in distintas.advertencias)
+
+
+def test_negacion_sin_sintomas_afirmados_no_propone_sintomas():
+    texto = 'Síntomas, niega fiebre y tos. Diagnóstico principal, control.'
+    salida = validar_propuesta(propuesta('sintomas', 'Síntomas, niega fiebre y tos.',
+                                       'Síntomas, niega fiebre y tos.'), texto)
+    assert not any(item.campo == 'sintomas' for item in salida.campos)
+
+
+def test_propuesta_invalida_no_impide_una_cita_posterior_valida():
+    texto = 'Diagnóstico principal, dolor abdominal.'
+    salida = SalidaModelo(campos=[
+        {'campo': 'diagnostico_principal', 'valor': 'diagnóstico inventado',
+         'evidencia': 'diagnóstico inventado'},
+        {'campo': 'diagnostico_principal', 'valor': texto, 'evidencia': texto},
+    ])
+    resultado = validar_propuesta(salida, texto)
+    assert [(item.campo, item.valor) for item in resultado.campos] == [
+        ('diagnostico_principal', 'dolor abdominal.')]
+
+
+def test_medicion_no_arrastra_negacion_posterior_al_valor():
+    texto = 'Temperatura 37 grados Celsius, niega vómitos y diarrea. Peso 55 kilos.'
+    resultado = validar_propuesta(SalidaModelo(), texto)
+    campos = {item.campo: item for item in resultado.campos}
+    assert campos['temperatura_c'].valor == 37
+    assert campos['temperatura_c'].ambiguo is False
+    assert 'niega' not in campos['temperatura_c'].evidencia.lower()
+    assert campos['peso_kg'].valor == 55
+
+
+@pytest.mark.parametrize('texto,motivo,sintomas', [
+    ('Motivo de consulta: tos desde ayer. Síntomas: congestión, niega fiebre.',
+     'tos desde ayer.', 'congestión'),
+    ('Motivo de consulta, dolor abdominal, desde hace tres días, '
+     'síntomas, náuseas y dolor de cabeza, niega, vómitos y diarrea.',
+     'dolor abdominal, desde hace tres días', 'náuseas y dolor de cabeza'),
+])
+def test_rotulos_y_negaciones_con_distinta_puntuacion(texto, motivo, sintomas):
+    segmentos = texto.split('Síntomas:' if 'Síntomas:' in texto else 'síntomas,')
+    cita_motivo = segmentos[0].strip(' ,')
+    cita_sintomas = texto[texto.lower().index('síntomas'):]
+    salida = SalidaModelo(campos=[
+        {'campo': 'motivo_consulta', 'valor': cita_motivo, 'evidencia': cita_motivo},
+        {'campo': 'sintomas', 'valor': cita_sintomas, 'evidencia': cita_sintomas},
+    ])
+    campos = {item.campo: item for item in validar_propuesta(salida, texto).campos}
+    assert campos['motivo_consulta'].valor == motivo
+    assert campos['sintomas'].valor == sintomas
+    assert 'niega' in campos['sintomas'].evidencia.lower()
+
+
+def test_transcripcion_erronea_no_se_corrige_por_inferencia():
+    texto = ('Antecedentes, el AQUIA conocida, peso 55 kg, '
+             'frecuencia cardiaca, 60° latidos por minuto, atiración de oxígeno 98.')
+    salida = validar_propuesta(propuesta('antecedentes', 'Antecedentes, el AQUIA conocida',
+                                       'Antecedentes, el AQUIA conocida'), texto)
+    campos = {item.campo: item for item in salida.campos}
+    assert campos['antecedentes'].valor == 'el AQUIA conocida'
+    assert campos['frecuencia_cardiaca'].valor == 60
+    assert 'saturacion_oxigeno' not in campos
 
 
 def test_punto_tras_numero_cierra_frase_pero_decimal_no():

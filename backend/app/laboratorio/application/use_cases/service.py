@@ -20,8 +20,16 @@ class LaboratorioService:
     def __init__(self, repository: ExamenRepository):
         self.repository = repository
 
-    async def listar_solicitudes_paciente(self, paciente_id: int):
-        return await self.repository.listar_solicitudes_paciente(paciente_id)
+    async def listar_solicitudes_paciente(self, paciente_id: int, usuario_id: int):
+        return await self.repository.listar_solicitudes_paciente(paciente_id, usuario_id)
+
+    async def listar_medicos(self, termino: str):
+        return await self.repository.listar_medicos(termino.strip())
+
+    async def obtener_informe_medico(self, solicitud_id: int, usuario_id: int):
+        if await self.repository.obtener_solicitud_medico(solicitud_id, usuario_id) is None:
+            return None
+        return await self.obtener_informe(solicitud_id)
 
     async def obtener_solicitud(self, solicitud_id: int):
         return await self.repository.obtener_solicitud(solicitud_id)
@@ -130,6 +138,10 @@ class LaboratorioService:
             raise ValueError("Registra el nombre del profesional solicitante")
         if solicitud.procedencia == "otro_centro" and not (solicitud.establecimiento_solicitante_nombre or "").strip():
             raise ValueError("Indica el nombre del otro centro")
+        if solicitud.procedencia == "este_centro" and solicitud.medico_solicitante_id is None:
+            raise ValueError("Selecciona un médico registrado de Sarcobamba")
+        if solicitud.procedencia == "otro_centro" and solicitud.medico_solicitante_id is not None:
+            raise ValueError("El médico de otro centro se registra por nombre")
         return await self.repository.crear_solicitud(solicitud, usuario_id)
 
     async def recibir_muestra(self, toma: TomaMuestraNueva, usuario_id: int) -> str:
