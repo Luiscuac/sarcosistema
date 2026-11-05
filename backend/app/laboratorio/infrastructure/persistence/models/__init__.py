@@ -34,6 +34,10 @@ from app.laboratorio.infrastructure.persistence.models.auditoria import (
     AuditoriaAccion,
 )
 from app.laboratorio.infrastructure.persistence.models.incidencias import IncidenciaMuestra
+from app.laboratorio.infrastructure.persistence.models.imagenes import (
+    ArchivoImagen,
+    InformeImagen,
+)
 
 __all__ = [
     "Servicio",
@@ -53,4 +57,6 @@ __all__ = [
     "DetalleValorResultado",
     "AuditoriaAccion",
     "IncidenciaMuestra",
+    "InformeImagen",
+    "ArchivoImagen",
 ]

@@ -30,7 +30,7 @@ async def preparar_medico_demo(db, password_hash: str) -> dict[str, str]:
     version = (await db.execute(text('SELECT version_num FROM public.alembic_version'))).scalar_one_or_none()
     if version not in {
         '20261027_0007', '20261102_0008', '20261102_0009',
-        '20261102_0010', '20261103_0011',
+        '20261102_0010', '20261103_0011', '20261104_0012',
     }:
         raise ValueError('La base necesita las migraciones del proyecto antes de crear datos de prueba.')
 
