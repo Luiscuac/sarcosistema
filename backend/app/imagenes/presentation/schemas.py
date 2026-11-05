@@ -1,8 +1,8 @@
-"""Esquemas HTTP del modulo de examenes complementarios de imagen."""
+"""Esquemas HTTP del modulo de imagen (ecografia clinica y asistencia RAG)."""
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.imagenes.domain.errors import SolicitudInvalida
 
@@ -16,7 +16,7 @@ class SolicitudEcografiaRequest(BaseModel):
 
     def validar_estudios(self) -> None:
         if any(tipo_id <= 0 for tipo_id in self.tipo_estudio_ids):
-            raise SolicitudInvalida('Cada estudio debe tener un identificador válido')
+            raise SolicitudInvalida('Cada estudio debe tener un identificador vÃ¡lido')
         if len(self.tipo_estudio_ids) != len(set(self.tipo_estudio_ids)):
             raise SolicitudInvalida('No repitas el mismo estudio en una solicitud')
 
@@ -106,3 +106,22 @@ class EstudioPublicadoResponse(BaseModel):
 class SolicitudEcografiaResponse(BaseModel):
     solicitud_id: int
     estudios: list[int]
+class AnalisisNuevo(BaseModel):
+    confirmar_torax_frontal: Literal[True]
+    proyeccion: Literal['PA','AP','frontal_no_especificada']
+    clave: str = Field(min_length=1,max_length=100)
+
+
+class RevisionNueva(BaseModel):
+    version: int = Field(ge=0)
+    decision: Literal['aceptada_como_propuesta','corregida','rechazada']
+    motivo: str = Field(default='',max_length=2000)
+    correccion: str | None = Field(default=None,max_length=4000)
+
+    @model_validator(mode='after')
+    def datos_obligatorios(self):
+        if self.decision != 'aceptada_como_propuesta' and not self.motivo.strip():
+            raise ValueError('Se requiere motivo para corregir o rechazar.')
+        if self.decision == 'corregida' and not (self.correccion or '').strip():
+            raise ValueError('Se requiere el texto de correcciÃ³n.')
+        return self

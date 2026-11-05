@@ -32,9 +32,8 @@ from app.imagenes.presentation.schemas import (
     ResultadoAccionResponse,
 )
 
-router = APIRouter(
-    prefix='/imagenes', tags=['imagenes'], dependencies=[Depends(requiere_rol('imagenes'))],
-)
+# El prefijo /imagenes lo aplica app.imagenes.router (composición única del módulo).
+router = APIRouter(tags=['imagenes'], dependencies=[Depends(requiere_rol('imagenes'))])
 
 
 def get_repositorio(db: AsyncSession = Depends(get_db)) -> RepositorioImagenSql:

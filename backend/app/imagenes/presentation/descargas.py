@@ -10,14 +10,15 @@ from app.imagenes.domain.errors import ArchivoNoEncontrado, EstudioNoEncontrado
 from app.imagenes.infrastructure.persistence.repository import RepositorioImagenSql
 from app.imagenes.infrastructure.storage.almacen_local import AlmacenLocal
 
-router = APIRouter(prefix='/imagenes/archivos', tags=['imagenes'])
+# El prefijo /imagenes lo aplica app.imagenes.router (composición única del módulo).
+router = APIRouter(tags=['imagenes'])
 
 
 def get_repositorio(db: AsyncSession = Depends(get_db)) -> RepositorioImagenSql:
     return RepositorioImagenSql(db)
 
 
-@router.get('/{archivo_id}')
+@router.get('/archivos/{archivo_id}')
 async def descargar_archivo(
     archivo_id: int,
     usuario: Usuario = Depends(usuario_actual),

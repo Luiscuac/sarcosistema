@@ -47,7 +47,11 @@ class OllamaExtractor:
                             data.extend(chunk)
                             if len(data) > 128000:
                                 raise ValueError('Respuesta excesiva')
-            contenido = json.loads(data)['message']['content'].strip()
+            payload = json.loads(data)
+            if (not isinstance(payload, dict) or not isinstance(payload.get('message'), dict)
+                    or not isinstance(payload['message'].get('content'), str)):
+                raise ValueError('Contrato de respuesta no válido')
+            contenido = payload['message']['content'].strip()
             # Recuperación controlada solo del envoltorio Markdown; no reparar contenido clínico.
             if contenido.startswith('```json\n') and contenido.endswith('```'):
                 contenido = contenido[8:-3].strip()

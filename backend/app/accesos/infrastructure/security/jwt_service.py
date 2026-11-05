@@ -22,7 +22,14 @@ class JwtTokenService:
 
     def obtener_sujeto(self, token: str) -> str:
         try:
-            payload = jwt.decode(token, self.secret_key, algorithms=[ALGORITHM])
+            payload = jwt.decode(
+                token,
+                self.secret_key,
+                algorithms=[ALGORITHM],
+                options={"require": ["exp", "sub"]},
+            )
+            if not isinstance(payload["sub"], str):
+                raise jwt.InvalidTokenError("El sujeto debe ser un string")
             return payload["sub"]
         except (jwt.PyJWTError, KeyError, TypeError) as exc:
             raise ValueError("Token inválido") from exc

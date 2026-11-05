@@ -28,7 +28,9 @@ def presentar_consulta(row):
     if row is None:
         return None
     resultado = dict(row)
-    clinicos = resultado.pop('datos_clinicos_jsonb', None) or {}
+    clinicos = resultado.pop('datos_clinicos_jsonb', None)
+    if clinicos is None:
+        clinicos = {}
     if 'paciente_nombre' in resultado:
         resultado['paciente'] = {
             'id': resultado['paciente_id'],
@@ -41,7 +43,13 @@ def presentar_consulta(row):
             'sexo': resultado.pop('paciente_sexo', None),
         }
     if isinstance(clinicos, str):
-        clinicos = json.loads(clinicos)
+        try:
+            clinicos = json.loads(clinicos)
+        except ValueError:
+            clinicos = None
+    if not isinstance(clinicos, dict):
+        resultado['datos_clinicos_incompatibles'] = True
+        clinicos = {}
     resultado['diagnostico_principal'] = None
     resultado.update({campo: valor for campo, valor in clinicos.items() if campo in CLINICOS})
     return resultado

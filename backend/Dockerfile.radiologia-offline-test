@@ -1,0 +1,14 @@
+# Contenedor de VERIFICACIÓN, no un servicio nuevo de SarcoSistema.
+# La construcción es preparación online; ejecutar luego con --network none.
+FROM python:3.12-slim
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 && rm -rf /var/lib/apt/lists/*
+COPY requirements-radiologia-cpu.txt requirements-radiologia.txt ./
+RUN pip install --no-cache-dir -r requirements-radiologia-cpu.txt \
+    && pip install --no-cache-dir -r requirements-radiologia.txt pytest==8.3.3
+# Solo módulo visual y CLI: no importar aplicación, DB, Whisper o LLM.
+COPY app/imagenes ./app/imagenes
+COPY scripts/analizar_radiografia.py ./scripts/analizar_radiografia.py
+ENV HOME=/tmp PYTHONDONTWRITEBYTECODE=1 OMP_NUM_THREADS=4 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=4
+USER 10001:10001
+CMD ["python", "-m", "scripts.analizar_radiografia", "/samples/NIH-RX-001.png", "--model-dir", "/models", "--confirmar-torax-frontal", "--proyeccion", "PA", "--min-free-mib", "1024"]

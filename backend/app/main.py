@@ -9,11 +9,9 @@ from sqlalchemy import text
 from app.config.database import engine
 
 from app.accesos.presentation.routes.router import router as accesos_router
-from app.ia.router import router as ia_router
-from app.imagenes.presentation.descargas import router as imagenes_descargas_router
-from app.imagenes.presentation.router import router as imagenes_router
-
 from app.consultas.presentation.router import router as consultas_router
+from app.ia.router import router as ia_router
+from app.imagenes.router import router as imagenes_router
 from app.laboratorio.presentation.routes.router import router as laboratorio_router
 from app.laboratorio.presentation.routes.router import router_medico as laboratorio_medico_router
 from app.shared.exceptions import registrar_manejadores_de_error
@@ -34,7 +32,6 @@ app.include_router(laboratorio_router)
 app.include_router(laboratorio_medico_router)
 app.include_router(consultas_router)
 app.include_router(imagenes_router)
-app.include_router(imagenes_descargas_router)
 app.include_router(accesos_router)
 app.include_router(ia_router)
 

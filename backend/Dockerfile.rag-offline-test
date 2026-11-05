@@ -1,0 +1,12 @@
+# Preparación online; ejecución posterior en red --internal sin salida externa.
+FROM sarcosistema-vision-offline:fase2
+USER root
+COPY requirements-rag.txt ./
+RUN pip install --no-cache-dir -r requirements-rag.txt sqlalchemy==2.0.36 asyncpg==0.30.0 pydantic-settings==2.6.1 alembic==1.14.0 pytest-asyncio==0.24.0
+COPY app/imagenes ./app/imagenes
+COPY app/config ./app/config
+COPY scripts/consultar_rag_torax.py ./scripts/consultar_rag_torax.py
+COPY alembic/versions/20261103_0008_rag_torax.py /app/migration_rag.py
+ENV HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 HF_HUB_DISABLE_TELEMETRY=1 TOKENIZERS_PARALLELISM=false
+USER 10001:10001
+CMD ["python", "-m", "pytest", "-p", "no:cacheprovider", "-q", "-s", "app/imagenes/tests/test_rag_offline_real.py"]

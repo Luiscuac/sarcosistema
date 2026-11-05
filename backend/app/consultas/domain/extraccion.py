@@ -94,6 +94,25 @@ def segmentos_dictado_rotulado(texto: str) -> list[str]:
     return segmentos
 
 
+ETIQUETAS_MEDICIONES = {
+    'peso_kg': r'\b(?:peso|pesa)\b', 'talla_cm': r'\b(?:talla|mide)\b',
+    'temperatura_c': r'\btemperatura\b',
+    'frecuencia_cardiaca': r'\b(?:frecuencia card[ií]aca|pulso)\b',
+    'frecuencia_respiratoria': r'\bfrecuencia respiratoria\b',
+    'presion_sistolica': r'\b(?:presi[oó]n|sist[oó]lica)\b',
+    'presion_diastolica': r'\b(?:presi[oó]n|diast[oó]lica)\b',
+    'saturacion_oxigeno': r'\bsaturaci[oó]n\b',
+}
+
+
+def contexto_medicion(campo: str, evidencia: str) -> str:
+    """No atribuir una negación/fecha de otro dato a la medición explícita."""
+    partes = re.split(r'(?<!\d),(?!\d)|;|\s+y\s+', evidencia, flags=re.I)
+    propias = [parte for parte in partes if re.search(ETIQUETAS_MEDICIONES[campo], parte, re.I)]
+    return propias[0] if len(propias) == 1 else evidencia
+
+
+
 class Sugerencia(BaseModel):
     model_config = ConfigDict(extra='forbid')
     campo: CampoClinico
@@ -122,6 +141,8 @@ def numero_respaldado(campo: str, valor: float, evidencia: str) -> bool:
     # Normaliza solo comas decimales; conserva la coma después de un rótulo
     # ("Presión diastólica, 80") para que también pueda validarse como separador.
     texto = re.sub(r'(?<=\d),(?=\d)', '.', evidencia.lower())
+    if campo == 'temperatura_c' and re.search(r'fahrenheit|[°º]\s*f\b|\d\s*f\b', contexto_medicion(campo, texto)):
+        return False
     # La corrección explícita más reciente prevalece, conservando evidencia original.
     corregido = re.split(r'\b(?:perdón|perdon|corrijo|corrección|correccion)\b', texto)
     if len(corregido) > 1:
@@ -134,6 +155,9 @@ def numero_respaldado(campo: str, valor: float, evidencia: str) -> bool:
             'presion_diastolica': r'\bdiast[oó]lica\b',
             'saturacion_oxigeno': r'\bsaturaci[oó]n\b',
         }
+        # Una correccion no puede decidir entre dos mediciones de la misma frase.
+        if sum(bool(re.search(patron, texto)) for patron in etiquetas.values()) != 1:
+            return False
         if not re.search(etiquetas[campo], texto):
             return False
         numeros = re.findall(r'\d+(?:\.\d+)?', corregido[-1])
@@ -262,11 +286,29 @@ def validar_propuesta(salida: SalidaModelo, transcripcion: str) -> PropuestaClin
                 resultado.campos[indice] = aceptada.model_copy(update={'ambiguo': True})
                 resultado.advertencias.append(f'{item.campo}: el modelo propuso citas distintas; revisa el original.')
             continue
-        if item.campo not in NUMERICOS:
-            rotulados = [segmento for segmento in segmentos
-                         if campo_de_rotulo(segmento) == item.campo and evidencia_propuesta in segmento]
-            if len(rotulados) == 1:
-                item = item.model_copy(update={'evidencia': rotulados[0]})
+        # Tambien las mediciones: una cita recortada ('temperatura 36.5') no debe
+        # descartarse por una negacion que vive en otro segmento del dictado.
+        rotulados = [segmento for segmento in segmentos
+                     if campo_de_rotulo(segmento) == item.campo and evidencia_propuesta in segmento]
+        if not rotulados and item.campo in NUMERICOS:
+            etiqueta = ROTULOS_MEDICION.get(item.campo)
+            if etiqueta:
+                rotulados = [segmento for segmento in segmentos
+                             if re.match(etiqueta, segmento.strip(), re.I)
+                             and evidencia_propuesta in segmento]
+        if len(rotulados) == 1:
+            segmento = rotulados[0]
+            if segmento != evidencia_propuesta:
+                # El segmento del dictado puede arrastrar clausulas ajenas
+                # ("... grados Celsius, niega vomitos"); se citra solo la propia.
+                etiqueta = ROTULOS_MEDICION.get(item.campo)
+                partes = re.split(r'(?<!\d),(?!\d)|;|\s+y\s+', segmento, flags=re.I)
+                if etiqueta:
+                    propias = [parte.strip() for parte in partes
+                               if re.search(r'\d', parte) and re.match(etiqueta, parte.strip(), re.I)]
+                    if len(propias) == 1:
+                        segmento = propias[0]
+            item = item.model_copy(update={'evidencia': segmento})
         # No confiar en citas recortadas que omitan negación, dosis o una corrección posterior.
         posicion = transcripcion.index(item.evidencia)
         fin = posicion + len(item.evidencia)
@@ -291,7 +333,8 @@ def validar_propuesta(salida: SalidaModelo, transcripcion: str) -> PropuestaClin
         if item.campo in ('diagnostico_principal', 'diagnosticos_secundarios') and re.search(
                 r'\b(?:niega|descarta|descartado|descartada)\b', item.evidencia, re.I):
             ambigua = True
-        if item.campo in NUMERICOS and re.search(r'\b(?:ayer|antes|hist[oó]ric[oa]|niega|negad[oa])\b', item.evidencia, re.I):
+        contexto_ambiguedad = (contexto_medicion(item.campo, item.evidencia) if item.campo in NUMERICOS else item.evidencia)
+        if item.campo in NUMERICOS and re.search(r'\b(?:ayer|antes|hist[oó]ric[oa]|niega|negad[oa])\b', contexto_ambiguedad, re.I):
             ambigua = True
         if item.campo in NUMERICOS:
             if isinstance(item.valor, str) or not numero_respaldado(item.campo, item.valor, item.evidencia):

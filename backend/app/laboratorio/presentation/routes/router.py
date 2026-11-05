@@ -152,6 +152,7 @@ async def crear_solicitud(
     usuario: Usuario = Depends(usuario_actual),
     service: LaboratorioService = Depends(get_service),
 ):
+    enviados = data.model_dump(exclude_unset=True)
     solicitud = SolicitudNueva(
         paciente_id=data.paciente_id,
         tipo_estudio_ids=tuple(data.tipo_estudio_ids),
@@ -164,6 +165,7 @@ async def crear_solicitud(
         diagnostico_principal=data.diagnostico_principal,
         prioridad=data.prioridad,
         clave_idempotencia=str(data.clave_idempotencia),
+        fecha_solicitud_explicita='fecha_solicitud' in enviados,
     )
     try:
         return await service.crear_solicitud(solicitud, usuario.id)

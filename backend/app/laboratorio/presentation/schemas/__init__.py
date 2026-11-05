@@ -48,10 +48,14 @@ class CrearPacienteRequest(BaseModel):
 
     @model_validator(mode="after")
     def validar_documento(self):
+        self.tipo_documento = (self.tipo_documento or "").strip() or None
+        self.numero_documento = (self.numero_documento or "").strip() or None
         if not self.sin_documento and not (self.tipo_documento and self.numero_documento):
             raise ValueError("Ingresa el documento o marca que la persona no tiene documento")
         if self.sin_documento and self.numero_documento:
             raise ValueError("Una persona marcada sin documento no puede tener número de documento")
+        if self.fecha_nacimiento > date.today():
+            raise ValueError("La fecha de nacimiento no puede ser futura")
         self.nombre_completo = self.nombre_completo.strip()
         if len(self.nombre_completo) < 2:
             raise ValueError("El nombre debe tener al menos dos caracteres")

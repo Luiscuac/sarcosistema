@@ -13,7 +13,7 @@ from app.imagenes.domain.entities import (
     EstudioImagenPendiente,
     InformeImagen,
 )
-from app.imagenes.presentation.router import get_repositorio
+from app.imagenes.presentation.router_clinico import get_repositorio
 from app.main import app
 
 PNG_MINIMO = (
@@ -26,7 +26,7 @@ PNG_MINIMO = (
 @pytest.fixture
 def repositorio_imagen(monkeypatch, tmp_path):
     import app.imagenes.presentation.descargas as descargas
-    import app.imagenes.presentation.router as rutas
+    import app.imagenes.presentation.router_clinico as rutas
     from app.imagenes.infrastructure.storage.almacen_local import AlmacenLocal
 
     class Doble:

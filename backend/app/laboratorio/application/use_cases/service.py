@@ -1,3 +1,6 @@
+from dataclasses import replace
+from datetime import date
+
 from app.laboratorio.application.ports.examen_repository import ExamenRepository
 from app.laboratorio.domain.entities import (
     EstudioCatalogo,
@@ -105,11 +108,21 @@ class LaboratorioService:
         return await self.repository.listar_publicados()
 
     async def buscar_pacientes(self, termino: str) -> list[PacienteResumen]:
-        return await self.repository.buscar_pacientes(termino.strip())
+        termino = termino.strip()
+        if not termino:
+            return []
+        return await self.repository.buscar_pacientes(termino)
 
     async def crear_paciente(
         self, paciente: PacienteNuevo, usuario_id: int
     ) -> PacienteResumen:
+        if paciente.fecha_nacimiento > date.today():
+            raise ValueError("La fecha de nacimiento no puede ser futura")
+        paciente = replace(
+            paciente,
+            tipo_documento=(paciente.tipo_documento or "").strip() or None,
+            numero_documento=(paciente.numero_documento or "").strip() or None,
+        )
         if paciente.sin_documento:
             paciente = PacienteNuevo(
                 nombre_completo=paciente.nombre_completo.strip(),

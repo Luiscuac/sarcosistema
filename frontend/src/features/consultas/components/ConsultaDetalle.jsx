@@ -7,6 +7,7 @@ import { fecha } from '../utils/paciente.js'
 function DetalleContenido({ consulta }) {
   const imc = calcularImc(consulta.peso_kg ?? '', consulta.talla_cm ?? '')
   return <>
+    {consulta.datos_clinicos_incompatibles && <p role="alert" className="med-error">Los datos clínicos históricos tienen un formato no compatible. Se conservó el registro original; solicita revisión antes de interpretarlo.</p>}
     <div className="med-metadata"><span>Atención: <strong>{new Date(consulta.fecha_hora_inicio).toLocaleString('es-BO')}</strong></span><span>Médico: <strong>{consulta.medico_nombre}</strong></span><span>Consulta N.º {consulta.id} · {consulta.estado}</span></div>
     <section className="med-panel med-detail">{grupos.map((grupo) => <div className="med-detail-section" key={grupo.titulo}><h2>{grupo.titulo}</h2><dl>{grupo.campos.map(([campo, etiqueta]) => <div key={campo}><dt>{etiqueta.replace(' *', '')}</dt><dd>{consulta[campo] ?? 'No registrado'}</dd></div>)}{grupo.numerico && <div><dt>IMC calculado</dt><dd>{imc ?? 'No registrado'}</dd></div>}</dl></div>)}</section>
   </>

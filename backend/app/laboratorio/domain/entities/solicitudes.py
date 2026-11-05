@@ -15,6 +15,8 @@ class SolicitudNueva:
     clave_idempotencia: str
     procedencia: str = "este_centro"
     medico_solicitante_id: int | None = None
+    # Fecha informada por el cliente: si es False, el reintento conserva la original.
+    fecha_solicitud_explicita: bool = False
 
 
 @dataclass(frozen=True, slots=True)

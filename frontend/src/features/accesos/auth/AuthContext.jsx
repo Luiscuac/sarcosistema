@@ -1,18 +1,21 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useCallback, useContext, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { actualizarSesion } from './sesion.js'
 
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
+  const queryClient = useQueryClient()
   const [token, setToken] = useState(() => sessionStorage.getItem('token'))
 
-  const login = (accessToken) => {
-    sessionStorage.setItem('token', accessToken)
+  const login = useCallback((accessToken) => {
+    actualizarSesion(queryClient, sessionStorage, accessToken)
     setToken(accessToken)
-  }
-  const logout = () => {
-    sessionStorage.removeItem('token')
+  }, [queryClient])
+  const logout = useCallback(() => {
+    actualizarSesion(queryClient, sessionStorage, null)
     setToken(null)
-  }
+  }, [queryClient])
 
   return (
     <AuthContext.Provider value={{ token, login, logout }}>
