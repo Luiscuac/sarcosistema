@@ -5,6 +5,7 @@ import { obtenerSolicitudesLaboratorio } from '../api/consultasApi.js'
 import { edad, fecha } from '../utils/paciente.js'
 import SolicitarEcografia from './SolicitarEcografia.jsx'
 import ExamenesComplementarios from './ExamenesComplementarios.jsx'
+import RegistrosPublicados from '../../enfermeria/components/RegistrosPublicados.jsx'
 
 export function IdentidadPaciente({ paciente }) {
   return <div className="med-patient">
@@ -59,6 +60,7 @@ export default function PacienteFicha({ id, usuario }) {
   return <>
     <div className="med-heading"><div><p className="med-eyebrow">FICHA CLÍNICA</p><h1>{paciente.data.nombre_completo}</h1></div><div className="med-heading-actions"><Link className="primary-button med-button-link" to={`/consultas/pacientes/${id}/nueva`}>+ Nueva consulta</Link><SolicitarEcografia pacienteId={id} usuario={usuario} /></div></div>
     <IdentidadPaciente paciente={paciente.data} />
+    <RegistrosPublicados pacienteId={id} />
     <section className="med-panel"><div className="med-panel-header"><h2>Solicitudes de laboratorio</h2></div>
       {laboratorio.isPending && <p className="med-message">Cargando solicitudes de laboratorio…</p>}
       {laboratorio.isError && <p role="alert" className="med-message">No se pudieron cargar las solicitudes de laboratorio.</p>}

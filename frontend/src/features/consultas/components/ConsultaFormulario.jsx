@@ -8,6 +8,7 @@ import { calcularImc, confirmarSalida, formularioAPayload, grupos } from '../uti
 import AsistenteClinico from './AsistenteClinico.jsx'
 import { aplicarSugerencia, deshacerSugerencia } from '../utils/sugerencias.js'
 import { transportarConsultaDemo } from '../../ia/transporter/api/agenteLocalApi.js'
+import RegistrosPublicados from '../../enfermeria/components/RegistrosPublicados.jsx'
 
 const inicial = Object.fromEntries(grupos.flatMap(grupo => grupo.campos.map(([campo]) => [campo, ''])))
 
@@ -164,6 +165,7 @@ function FormularioPaciente({ id, usuario }) {
   return <>
     <div className="med-heading"><div><p className="med-eyebrow">CONSULTA EXTERNA · SOAP</p><h1>Nueva consulta</h1></div></div>
     <IdentidadPaciente paciente={paciente.data} />
+    <RegistrosPublicados pacienteId={id} />
     <AsistenteClinico key={id} pacienteId={id} valores={form} onAplicar={aplicarIA} onDeshacer={deshacerIA} onEstado={setEstadoIA} onRevision={registrarRevisionIA} />
     <form onSubmit={enviar} className="med-panel med-form">
       {grupos.map((grupo, indice) => <fieldset key={grupo.titulo}><legend>{indice ? grupo.titulo : 'Signos vitales y antropometría'}</legend><div className="med-fields">{grupo.campos.map(([campo, etiqueta]) => <label key={campo} className={origenIA[campo] ? 'med-field-from-ai' : undefined}>{etiqueta}{origenIA[campo] && <span className="med-ai-badge">Propuesta IA aceptada · editable</span>}{grupo.numerico

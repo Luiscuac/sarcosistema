@@ -195,7 +195,6 @@ $btnGuardar.Add_Click({
     $consultas.Add([pscustomobject]$registro)
     Actualizar-Historial
     $lblEstado.Text = "Consulta guardada en el demo para $($p.Nombre), con fecha $($registro.Fecha)."
-    [void][System.Windows.Forms.MessageBox]::Show('Consulta guardada en el historial local del demo.', 'Guardado')
     $tabs.SelectedTab = $tabFicha
 })
 $btnCancelar.Add_Click({ foreach ($campo in $campos) { $entradas[$campo.Id].Clear() }; $lblEstado.Text = '' })

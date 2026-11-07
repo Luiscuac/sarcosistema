@@ -124,6 +124,7 @@ class Sugerencia(BaseModel):
 class SalidaModelo(BaseModel):
     model_config = ConfigDict(extra='forbid')
     campos: list[Sugerencia] = Field(default_factory=list, max_length=24)
+    campos_sin_sentido: list[CampoClinico] = Field(default_factory=list, max_length=24)
     multiples_pacientes: bool = False
     identidad_incierta: bool = False
 
@@ -266,8 +267,24 @@ def validar_propuesta(salida: SalidaModelo, transcripcion: str) -> PropuestaClin
     medidas = mediciones_explicitas(transcripcion)
     campos_medidos = {item.campo for item in medidas}
     # Resolver tipos/unidades mediante comprobación explícita, no por estimación del modelo.
-    candidatos = [item for item in salida.campos if item.campo not in campos_medidos] + medidas
     segmentos = segmentos_dictado_rotulado(transcripcion)
+    campos_modelo = {item.campo for item in salida.campos}
+    # Recupera campos narrativos con rótulos SOAP inequívocos aunque el modelo
+    # omita una propuesta. El valor sale solo del segmento literal delimitado
+    # por rótulos; no se infiere ni se completa contenido clínico.
+    recuperables = tuple(dict.fromkeys(ROTULOS_CAMPOS.values()))
+    campos_sin_sentido = set(salida.campos_sin_sentido)
+    recuperadas = []
+    for campo in recuperables:
+        if campo in campos_modelo or campo in campos_sin_sentido:
+            continue
+        rotuladas = [segmento for segmento in segmentos if campo_de_rotulo(segmento) == campo]
+        if len(rotuladas) == 1:
+            evidencia = rotuladas[0]
+            recuperadas.append(Sugerencia(campo=campo, valor=evidencia, evidencia=evidencia))
+    candidatos = [item for item in salida.campos
+                  if item.campo not in campos_medidos and item.campo not in campos_sin_sentido]
+    candidatos += medidas + recuperadas
     vistos = set()
     for item in candidatos:
         if (item.campo == 'motivo_consulta'

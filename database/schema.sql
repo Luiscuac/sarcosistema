@@ -2187,6 +2187,7 @@ INSERT INTO public.rol OVERRIDING SYSTEM VALUE VALUES (6, 'estadistica', 'Estad�
 INSERT INTO public.rol OVERRIDING SYSTEM VALUE VALUES (7, 'accesos', 'Responsable de Accesos', 'Rol para responsables de accesos', true);
 INSERT INTO public.rol OVERRIDING SYSTEM VALUE VALUES (8, 'direccion', 'Dirección', 'Rol para directores', true);
 INSERT INTO public.rol OVERRIDING SYSTEM VALUE VALUES (9, 'administracion', 'Administración', 'Rol para personal administrativo', true);
+INSERT INTO public.rol OVERRIDING SYSTEM VALUE VALUES (10, 'enfermeria', 'Enfermería', 'Rol para personal de enfermería', true);
 
 
 --

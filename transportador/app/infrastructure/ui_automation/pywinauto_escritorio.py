@@ -1,4 +1,6 @@
 import unicodedata
+import ctypes
+from ctypes import wintypes
 from typing import Any
 
 from pywinauto import Desktop
@@ -17,27 +19,50 @@ class PywinautoEscritorio:
     """Adaptador de infraestructura para Windows UI Automation."""
 
     def listar_ventanas_visibles(self) -> list[VentanaVisible]:
-        try:
-            ventanas = Desktop(backend="uia").windows(
-                visible_only=True, top_level_only=True
-            )
-        except Exception as error:
-            raise FalloUIA("No se pudieron inspeccionar las ventanas de Windows.") from error
-
         resultado = []
-        for ventana in ventanas:
-            try:
-                titulo = ventana.window_text().strip()
-                if titulo:
-                    try:
-                        proceso_id = ventana.process_id()
-                    except Exception:
-                        proceso_id = 0
-                    resultado.append(
-                        VentanaVisible(ventana.handle, titulo[:500], proceso_id)
-                    )
-            except Exception:
-                continue
+        user32 = ctypes.WinDLL("user32", use_last_error=True)
+        callback_type = ctypes.WINFUNCTYPE(
+            wintypes.BOOL, wintypes.HWND, wintypes.LPARAM
+        )
+        enum_windows = user32.EnumWindows
+        enum_windows.argtypes = [callback_type, wintypes.LPARAM]
+        enum_windows.restype = wintypes.BOOL
+        get_window_text_length = user32.GetWindowTextLengthW
+        get_window_text_length.argtypes = [wintypes.HWND]
+        get_window_text_length.restype = ctypes.c_int
+        get_window_text = user32.GetWindowTextW
+        get_window_text.argtypes = [wintypes.HWND, wintypes.LPWSTR, ctypes.c_int]
+        get_window_text.restype = ctypes.c_int
+        is_window_visible = user32.IsWindowVisible
+        is_window_visible.argtypes = [wintypes.HWND]
+        is_window_visible.restype = wintypes.BOOL
+        get_window_thread_process_id = user32.GetWindowThreadProcessId
+        get_window_thread_process_id.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.DWORD)]
+        get_window_thread_process_id.restype = wintypes.DWORD
+
+        @callback_type
+        def recopilar(handle, _parametro):
+            if not is_window_visible(handle):
+                return True
+            longitud = get_window_text_length(handle)
+            if longitud <= 0:
+                return True
+            titulo = ctypes.create_unicode_buffer(min(longitud + 1, 501))
+            get_window_text(handle, titulo, len(titulo))
+            texto = titulo.value.strip()
+            if texto:
+                proceso_id = wintypes.DWORD()
+                get_window_thread_process_id(handle, ctypes.byref(proceso_id))
+                resultado.append(VentanaVisible(handle, texto[:500], proceso_id.value))
+            return True
+
+        try:
+            enumeracion_completa = enum_windows(recopilar, 0)
+            codigo_error = ctypes.get_last_error()
+            if not enumeracion_completa and codigo_error:
+                raise ctypes.WinError(codigo_error)
+        except Exception as error:
+            raise FalloUIA("No se pudieron enumerar las ventanas visibles de Windows.") from error
         return resultado
 
     def obtener_ventana_visible(self, handle: int) -> VentanaVisible:

@@ -31,6 +31,7 @@ backend/app/
     infrastructure/   # consultas SQL, JWT y hash de contraseñas
     presentation/     # endpoints y dependencias HTTP
   consultas/           # pacientes, historial, formulario SOAP y propuestas IA
+  enfermeria/          # admisión, signos vitales, borradores y publicación al médico
   ia/                  # router común, whisper y transcriptor de prueba
   imagenes/            # módulo en construcción
   shared/             # utilidades verdaderamente transversales
@@ -43,6 +44,7 @@ frontend/src/
     inicio/            # páginas de inicio
     laboratorio/       # API, hooks, páginas y componentes de laboratorio
     consultas/         # ficha, historial, formulario y revisión de propuestas IA
+    enfermeria/        # búsqueda de pacientes y registro/publicación de admisión
     ia/                # grabación y transcripción reutilizables
   shared/              # cliente HTTP, UI y utilidades compartidas
 
@@ -110,7 +112,7 @@ Para una base nueva, Docker Compose monta `database/schema.sql` como inicializac
 python -m alembic upgrade head
 ```
 
-La revisión inicial comprueba que el esquema base ya existe; las siguientes revisiones agregan cambios sin recrearlo. Actualmente hay siete revisiones y la cabecera es `20261027_0007`. Nunca vuelvas a ejecutar `schema.sql` sobre una base existente ni borres el volumen para resolver una conexión. Las instrucciones de laboratorio están en `docs/laboratorio/migraciones.md`.
+La revisión inicial comprueba que el esquema base ya existe; las siguientes revisiones agregan cambios sin recrearlo. Aplica siempre `alembic upgrade head`; la migración de enfermería es `20261107_0013`. Nunca vuelvas a ejecutar `schema.sql` sobre una base existente ni borres el volumen para resolver una conexión. Las instrucciones de laboratorio están en `docs/laboratorio/migraciones.md`.
 
 Con el entorno activo y desde `backend`, verifica el esquema. Si necesitas una cuenta ficticia de Laboratorio, créala mediante el preparador:
 
@@ -198,6 +200,10 @@ Mantén el pin `av>=15,<17` de `requirements.txt`: PyAV 19 no es compatible con 
 El rol `medico` accede a `/consultas`: búsqueda de pacientes, historial, registro SOAP y detalle en lectura. El panel de dictado reutiliza Whisper y propone campos mediante Ollama **local**; requiere revisión campo a campo y nunca guarda automáticamente. El formulario manual sigue disponible si el modelo falla. Configuración, privacidad, pruebas reales y limitaciones: [`docs/consultas/autocompletado-ia.md`](docs/consultas/autocompletado-ia.md). Preparación del módulo manual: [`docs/consultas/uso-y-migracion.md`](docs/consultas/uso-y-migracion.md).
 
 El extractor viene deshabilitado en `.env.example`. Habilitarlo requiere configurar Ollama local y descargar el modelo aprobado; iniciar PostgreSQL o uvicorn no inicia Ollama. El agente `transportador/` es independiente y tampoco lo inicia este flujo.
+
+### Enfermería
+
+El rol `enfermeria` puede buscar pacientes y guardar registros de admisión como borradores. Tras revisarlos y publicarlos, quedan visibles en la ficha y el formulario de consulta del médico; los borradores no se exponen al médico. Se registran motivo y síntomas referidos, observaciones de enfermería, signos vitales y escala de dolor, junto con autoría y fechas. Flujo y preparación de una cuenta ficticia: [`docs/enfermeria/flujo.md`](docs/enfermeria/flujo.md).
 
 ### Visión de tórax experimental — Fase 2
 

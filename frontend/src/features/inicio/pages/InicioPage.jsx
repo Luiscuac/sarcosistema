@@ -13,6 +13,8 @@ export default function InicioPage({ usuario, logout }) {
           <Link className="inicio-link" to="/consultas">Entrar a consulta médica</Link>
         ) : usuario.rol === 'laboratorio' ? (
           <Link className="inicio-link" to="/laboratorio">Entrar a laboratorio</Link>
+        ) : usuario.rol === 'enfermeria' ? (
+          <Link className="inicio-link" to="/enfermeria">Entrar a enfermeria</Link>
         ) : usuario.rol === 'imagenes' ? (
           <Link className="inicio-link" to="/imagenes">Entrar a radiología (ecografías)</Link>
         ) : (

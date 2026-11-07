@@ -1,0 +1,60 @@
+.enf-page { min-height: 100vh; background: var(--surface); color: var(--ink); }
+.enf-topbar { min-height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 0 30px; border-bottom: 1px solid var(--line); background: #fff; }
+.enf-topbar > strong { font-size: 15px; }
+.enf-topbar > div { display: flex; align-items: center; gap: 16px; font-size: 12px; }
+.enf-topbar a { color: var(--brand); font-weight: 600; }
+.enf-topbar button, .enf-actions button:not(.primary-button) { padding: 9px 12px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--brand); font: inherit; cursor: pointer; }
+.enf-content { width: min(1100px, 100%); margin: 0 auto; padding: 32px 28px 56px; }
+.enf-heading { margin-bottom: 22px; }
+.enf-heading p, .enf-patient-card p { margin: 0 0 8px; color: var(--brand); font-size: 10px; font-weight: 700; letter-spacing: .08em; }
+.enf-heading h1 { margin: 0; font-size: 25px; font-weight: 600; }
+.enf-heading span { display: block; margin-top: 8px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.enf-panel { margin-top: 18px; padding: 20px 22px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+.enf-panel > h2, .enf-panel-heading h2 { margin: 0; font-size: 16px; font-weight: 600; }
+.enf-panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 16px; }
+.enf-panel-heading > span { color: var(--muted); font-size: 11px; }
+.enf-search { display: grid; gap: 7px; margin-top: 15px; color: #53606b; font-size: 12px; font-weight: 600; }
+.enf-search input, .enf-field textarea, .enf-measurements input { width: 100%; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--ink); font: inherit; font-size: 13px; }
+.enf-search input { min-height: 42px; padding: 9px 12px; }
+.enf-patient-option { display: flex; flex-direction: column; width: 100%; gap: 5px; padding: 12px 4px; border: 0; border-top: 1px solid var(--line); background: #fff; text-align: left; cursor: pointer; }
+.enf-patient-option:first-of-type { margin-top: 12px; }
+.enf-patient-option strong { color: var(--ink); font-size: 13px; }
+.enf-patient-option span { color: var(--muted); font-size: 11px; }
+.enf-patient-option:hover, .enf-patient-option.enf-selected { background: #f1f8f7; }
+.enf-pagination { display: flex; justify-content: flex-end; align-items: center; gap: 10px; padding-top: 10px; color: var(--muted); font-size: 11px; }
+.enf-pagination button { padding: 7px 10px; border: 1px solid var(--line); border-radius: 5px; background: #fff; color: var(--brand); }
+.enf-pagination button:disabled { opacity: .5; }
+.enf-patient-card { display: flex; align-items: center; justify-content: space-between; }
+.enf-patient-card h2 { margin: 0 0 5px; font-size: 18px; }
+.enf-patient-card span { color: var(--muted); font-size: 12px; }
+.enf-form { display: grid; gap: 16px; }
+.enf-field { display: grid; gap: 7px; color: #53606b; font-size: 12px; font-weight: 600; }
+.enf-field textarea { min-height: 72px; padding: 10px 12px; resize: vertical; }
+.enf-form fieldset { margin: 0; padding: 14px 0 0; border: 0; border-top: 1px solid var(--line); }
+.enf-form legend { padding: 12px 0; font-size: 14px; font-weight: 600; }
+.enf-measurements { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; }
+.enf-measurements label { display: grid; gap: 6px; min-width: 0; color: #53606b; font-size: 11px; font-weight: 600; }
+.enf-measurements input { min-height: 38px; padding: 8px 10px; }
+.enf-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 9px; margin-top: 12px; }
+.enf-actions button:disabled { opacity: .55; cursor: not-allowed; }
+.enf-message { margin: 12px 0 0; color: var(--muted); font-size: 12px; }
+.enf-error { margin: 0; color: #a33b16; font-size: 12px; }
+.enf-record { padding: 16px 0; border-top: 1px solid var(--line); }
+.enf-record header { display: flex; justify-content: space-between; gap: 16px; align-items: center; }
+.enf-record header > div { display: flex; flex-direction: column; gap: 4px; }
+.enf-record header strong { font-size: 13px; }
+.enf-record header span { color: var(--muted); font-size: 11px; }
+.enf-record header .enf-published { color: #176057; }
+.enf-record dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; margin: 14px 0 0; }
+.enf-record dl div { min-width: 0; }
+.enf-record dt { color: var(--muted); font-size: 10px; }
+.enf-record dd { margin: 4px 0 0; font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.enf-page :is(input, textarea, a, button):focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+@media (max-width: 700px) {
+  .enf-topbar { align-items: flex-start; flex-direction: column; padding: 14px 18px; }
+  .enf-topbar > div { flex-wrap: wrap; gap: 12px; }
+  .enf-content { padding: 24px 16px 40px; }
+  .enf-panel { padding: 17px 16px; }
+  .enf-panel-heading { align-items: flex-start; flex-direction: column; }
+  .enf-measurements, .enf-record dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

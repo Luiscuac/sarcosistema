@@ -15,6 +15,7 @@ class Captura(BaseModel):
 class CapturaModelo(BaseModel):
     model_config = ConfigDict(extra='forbid')
     campos: list[Captura] = Field(default_factory=list, max_length=24)
+    campos_sin_sentido: list[CampoClinico] = Field(default_factory=list, max_length=24)
     multiples_pacientes: bool = False
     identidad_incierta: bool = False
 
@@ -23,4 +24,5 @@ class CapturaModelo(BaseModel):
             Sugerencia(campo=c.campo, evidencia=c.evidencia,
                 valor=c.numero if c.campo in NUMERICOS else c.evidencia, ambiguo=c.ambiguo)
             for c in self.campos if c.campo not in NUMERICOS or c.numero is not None
-        ], multiples_pacientes=self.multiples_pacientes, identidad_incierta=self.identidad_incierta)
+        ], campos_sin_sentido=self.campos_sin_sentido,
+            multiples_pacientes=self.multiples_pacientes, identidad_incierta=self.identidad_incierta)

@@ -14,6 +14,9 @@ La evidencia siempre debe copiarse exactamente del texto recibido; no corrijas o
 puntuación ni palabras de Whisper.
 
 Devuelve campos como capturas {campo, evidencia, numero, ambiguo}. Omite lo no mencionado.
+Incluye cada campo narrativo que tenga un rótulo explícito y contenido con sentido clínico literal.
+Si el rótulo está presente pero su contenido no tiene sentido clínico o no puede clasificarse,
+no lo propongas y agrega su nombre a campos_sin_sentido. No uses esa lista para campos sin rótulo.
 Para campos de texto, numero=null y evidencia debe ser el segmento literal completo indicado
 arriba, incluyendo el rótulo y cualquier negación o corrección antes del siguiente rótulo.
 No resumas, parafrasees ni normalices diagnósticos, medicamentos, negaciones, sospechas,

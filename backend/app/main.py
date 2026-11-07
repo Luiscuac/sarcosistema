@@ -11,6 +11,7 @@ from app.config.database import engine
 from app.accesos.presentation.routes.router import router as accesos_router
 from app.consultas.presentation.router import router as consultas_router
 from app.ia.router import router as ia_router
+from app.enfermeria.presentation.router import router as enfermeria_router
 from app.imagenes.router import router as imagenes_router
 from app.laboratorio.presentation.routes.router import router as laboratorio_router
 from app.laboratorio.presentation.routes.router import router_medico as laboratorio_medico_router
@@ -31,6 +32,7 @@ registrar_manejadores_de_error(app)
 app.include_router(laboratorio_router)
 app.include_router(laboratorio_medico_router)
 app.include_router(consultas_router)
+app.include_router(enfermeria_router)
 app.include_router(imagenes_router)
 app.include_router(accesos_router)
 app.include_router(ia_router)

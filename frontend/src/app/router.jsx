@@ -10,6 +10,7 @@ import IaPage from '../features/ia/whisper/pages/IaPage.jsx'
 import ProtectedRoute from '../features/accesos/auth/ProtectedRoute.jsx'
 import ConsultasPage from '../features/consultas/pages/ConsultasPage.jsx'
 import ImagenesPage from '../features/imagenes/pages/ImagenesPage.jsx'
+import EnfermeriaPage from '../features/enfermeria/pages/EnfermeriaPage.jsx'
 const router = createBrowserRouter(createRoutesFromElements(
   <>
         <Route path="/" element={<Navigate to="/inicio" replace />} />
@@ -66,6 +67,11 @@ const router = createBrowserRouter(createRoutesFromElements(
         <Route path="/imagenes" element={
           <ProtectedRoute rolesPermitidos={['imagenes']}>
             {({ usuario, logout }) => <ImagenesPage usuario={usuario} logout={logout} />}
+          </ProtectedRoute>
+        } />
+        <Route path="/enfermeria" element={
+          <ProtectedRoute rolesPermitidos={['enfermeria']}>
+            {({ usuario, logout }) => <EnfermeriaPage usuario={usuario} logout={logout} />}
           </ProtectedRoute>
         } />
   </>
