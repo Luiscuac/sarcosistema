@@ -12,3 +12,11 @@ export const publicarRegistroEnfermeria = async (registroId) =>
   (await api.post(`/enfermeria/registros/${registroId}/publicar`)).data
 export const obtenerRegistrosPublicados = async (pacienteId) =>
   (await api.get(`/enfermeria/pacientes/${pacienteId}/publicados`)).data
+export const guardarRecetaEnfermeria = async (pacienteId, datos) =>
+  (await api.post(`/enfermeria/pacientes/${pacienteId}/recetas`, datos)).data
+export const obtenerRecetasEnfermeria = async (pacienteId) =>
+  (await api.get(`/enfermeria/pacientes/${pacienteId}/recetas`)).data
+export const publicarRecetaEnfermeria = async (recetaId) =>
+  (await api.post(`/enfermeria/recetas/${recetaId}/publicar`)).data
+export const obtenerRecetasPublicadas = async (pacienteId) =>
+  (await api.get(`/enfermeria/pacientes/${pacienteId}/recetas-publicadas`)).data

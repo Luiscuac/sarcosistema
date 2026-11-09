@@ -50,6 +50,15 @@
 .enf-record dt { color: var(--muted); font-size: 10px; }
 .enf-record dd { margin: 4px 0 0; font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .enf-page :is(input, textarea, a, button):focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.enf-tabs { display:flex; gap:8px; margin-top:18px; }
+.enf-tabs button { padding:9px 16px; border:1px solid var(--line); border-radius:6px; background:#fff; color:var(--brand); cursor:pointer; }
+.enf-tabs button.active { background:var(--brand); color:#fff; }
+.enf-form input, .enf-form select { min-height:38px; padding:8px 10px; border:1px solid var(--line); border-radius:6px; font:inherit; }
+.enf-checks { display:flex; flex-wrap:wrap; gap:12px 20px; }
+.enf-checks label, .enf-check { display:flex; align-items:center; gap:7px; color:#53606b; font-size:12px; }
+.enf-checks input, .enf-check input { min-height:auto; }
+.enf-med-row { padding:14px 0; border-bottom:1px solid var(--line); }
+.enf-med-row > strong { display:block; margin-bottom:12px; }
 @media (max-width: 700px) {
   .enf-topbar { align-items: flex-start; flex-direction: column; padding: 14px 18px; }
   .enf-topbar > div { flex-wrap: wrap; gap: 12px; }

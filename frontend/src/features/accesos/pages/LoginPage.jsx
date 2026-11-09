@@ -23,9 +23,13 @@ export default function LoginPage() {
       login(sesion.access_token)
 
       const perfil = await obtenerUsuarioActual()
-      navigate(perfil.rol === 'laboratorio' ? '/laboratorio' : '/inicio', {
-        replace: true,
-      })
+      const destinoPorRol = {
+        laboratorio: '/laboratorio',
+        enfermeria: '/enfermeria',
+        medico: '/consultas',
+        imagenes: '/imagenes',
+      }
+      navigate(destinoPorRol[perfil.rol] || '/inicio', { replace: true })
     } catch (err) {
       logout()
       setError(

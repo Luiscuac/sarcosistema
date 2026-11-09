@@ -54,7 +54,7 @@ class SqlAlchemyRegistroEnfermeriaRepository:
             VALUES (:paciente_id, :usuario_id, {valores})
             RETURNING id
         '''), params)).scalar_one()
-        await self._auditar(usuario_id, 'crear_borrador', registro_id)
+        await self._auditar(usuario_id, 'crear', registro_id)
         return await self._obtener(registro_id)
 
     async def editar_borrador(self, registro_id: int, usuario_id: int, datos):
@@ -67,7 +67,7 @@ class SqlAlchemyRegistroEnfermeriaRepository:
         '''), params)).scalar_one_or_none()
         if cambiado is None:
             return None
-        await self._auditar(usuario_id, 'actualizar_borrador', registro_id)
+        await self._auditar(usuario_id, 'modificar', registro_id)
         return await self._obtener(registro_id)
 
     async def publicar(self, registro_id: int, usuario_id: int):

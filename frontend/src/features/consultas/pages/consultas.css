@@ -67,6 +67,12 @@
 .med-patient dd { margin: 5px 0 0; font-size: 12px; }
 .med-button-link { display: inline-flex; align-items: center; text-decoration: none; white-space: nowrap; }
 .med-form { padding: 0 24px 20px; }
+.med-form-sections { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px; padding:14px 0 0; border-bottom:1px solid var(--line); }
+.med-form-sections button { min-height:44px; padding:8px 10px; border:0; border-bottom:3px solid transparent; background:transparent; color:var(--muted); font:inherit; font-size:11px; cursor:pointer; }
+.med-form-sections button.active { border-bottom-color:var(--brand); color:var(--brand); font-weight:700; }
+.med-form-section-count { margin:12px 0 0; color:var(--muted); font-size:11px; }
+.med-form-navigation { flex-wrap:wrap; }
+.med-form-spacer { flex:1; }
 .med-form fieldset { border: 0; border-bottom: 1px solid var(--line); margin: 0; padding: 22px 0; min-width: 0; }
 .med-form legend { padding: 22px 0 0; font-size: 14px; font-weight: 600; }
 .med-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
@@ -149,4 +155,4 @@
 .med-nursing-record dt { color: var(--muted); font-size: 10px; }
 .med-nursing-record dd { margin: 4px 0 0; font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
 @media(max-width:900px) { .med-page { grid-template-columns: 190px minmax(0,1fr); } .med-content { padding: 28px 24px; } .med-table { min-width: 780px; } }
-@media(max-width:700px) { .med-page { grid-template-columns: 1fr; } .med-sidebar { min-height: auto; } .med-sidebar-heading { height: 58px; } .med-sidebar nav { display: flex; padding: 8px; } .med-signout { min-height: 40px; } .med-topbar { min-height: 58px; padding: 10px 20px; } .med-session { display: none; } .med-content { padding: 26px 20px; } .med-heading { flex-wrap: wrap; } .med-patient dl, .med-fields, .med-detail dl, .med-nursing-record dl { grid-template-columns: 1fr; } .med-capture { grid-template-columns: 1fr; } .med-microphone-picker { grid-template-columns: 1fr; } .med-microphone-picker label { grid-column: auto; } }
+@media(max-width:700px) { .med-page { grid-template-columns: 1fr; } .med-sidebar { min-height: auto; } .med-sidebar-heading { height: 58px; } .med-sidebar nav { display: flex; padding: 8px; } .med-signout { min-height: 40px; } .med-topbar { min-height: 58px; padding: 10px 20px; } .med-session { display: none; } .med-content { padding: 26px 20px; } .med-heading { flex-wrap: wrap; } .med-patient dl, .med-fields, .med-detail dl, .med-nursing-record dl { grid-template-columns: 1fr; } .med-form-sections { grid-template-columns:repeat(2,minmax(0,1fr)); } .med-capture { grid-template-columns: 1fr; } .med-microphone-picker { grid-template-columns: 1fr; } .med-microphone-picker label { grid-column: auto; } }

@@ -7,6 +7,7 @@ import {
   publicarRegistroEnfermeria,
 } from '../api/enfermeriaApi.js'
 import './enfermeria.css'
+import RecetaForm from '../components/RecetaForm.jsx'
 
 const inicial = {
   motivo_consulta: '', sintomas: '', observaciones_enfermeria: '',
@@ -68,6 +69,7 @@ export default function EnfermeriaPage({ usuario, logout }) {
   const [ocupado, setOcupado] = useState(false)
   const [mensaje, setMensaje] = useState('')
   const [error, setError] = useState('')
+  const [pantalla, setPantalla] = useState('admision')
 
   useEffect(() => {
     const timer = setTimeout(() => { setBuscar(entrada.trim()); setPagina(1) }, 350)
@@ -91,6 +93,7 @@ export default function EnfermeriaPage({ usuario, logout }) {
     setPaciente(item)
     setForm(inicial)
     setEdicion(null)
+    setPantalla('admision')
     setMensaje('')
     setError('')
   }
@@ -151,6 +154,8 @@ export default function EnfermeriaPage({ usuario, logout }) {
 
       {paciente && <>
         <section className="enf-panel enf-patient-card"><div><p>PACIENTE SELECCIONADO</p><h2>{paciente.nombre_completo}</h2><span>HC {paciente.historia_clinica || 'No registrada'} · {paciente.codigo_paciente} · {paciente.numero_documento || 'Sin documento'}</span></div></section>
+        <nav className="enf-tabs" aria-label="Módulos de enfermería"><button className={pantalla==='admision'?'active':''} onClick={()=>setPantalla('admision')}>Admisión</button><button className={pantalla==='receta'?'active':''} onClick={()=>setPantalla('receta')}>Receta</button></nav>
+        {pantalla === 'receta' ? <RecetaForm paciente={paciente} /> : <>
         <section className="enf-panel">
           <div className="enf-panel-heading"><h2>{edicion ? 'Editar borrador' : 'Nueva admisión'}</h2><span>Los campos no medidos pueden dejarse vacíos.</span></div>
           <form className="enf-form" onSubmit={guardar}>
@@ -168,6 +173,7 @@ export default function EnfermeriaPage({ usuario, logout }) {
           {registros.data?.length === 0 && <p className="enf-message">Aún no hay registros de esta cuenta para el paciente.</p>}
           {registros.data?.map((registro) => <RegistroResumen key={registro.id} registro={registro} ocupado={ocupado} onEditar={(item) => { setEdicion(item.id); setForm(valores(item)); setError(''); setMensaje('') }} onPublicar={publicar} />)}
         </section>
+        </>}
       </>}
     </div>
   </main>

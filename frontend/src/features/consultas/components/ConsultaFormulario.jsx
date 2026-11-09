@@ -21,6 +21,7 @@ function FormularioPaciente({ id, usuario }) {
   const navegar = useNavigate()
   const cache = useQueryClient()
   const [form, setForm] = useState(inicial)
+  const [seccionActiva, setSeccionActiva] = useState(0)
   const formRef = useRef(form)
   const versionesCampos = useRef({})
   const [origenIA, setOrigenIA] = useState({})
@@ -112,6 +113,7 @@ function FormularioPaciente({ id, usuario }) {
   async function transportar() {
     if (transporteEnCurso.current || transportando || estadoIA.bloqueado) return
     if (!formRef.current.motivo_consulta.trim() || !formRef.current.diagnostico_principal.trim()) {
+      setSeccionActiva(!formRef.current.motivo_consulta.trim() ? 1 : 3)
       setError('Completa el motivo de consulta y el diagnóstico principal antes de transportar.')
       return
     }
@@ -149,6 +151,7 @@ function FormularioPaciente({ id, usuario }) {
       return
     }
     if (!form.motivo_consulta.trim() || !form.diagnostico_principal.trim()) {
+      setSeccionActiva(!form.motivo_consulta.trim() ? 1 : 3)
       setError('Completa el motivo de consulta y el diagnóstico principal.')
       return
     }
@@ -168,13 +171,17 @@ function FormularioPaciente({ id, usuario }) {
     <RegistrosPublicados pacienteId={id} />
     <AsistenteClinico key={id} pacienteId={id} valores={form} onAplicar={aplicarIA} onDeshacer={deshacerIA} onEstado={setEstadoIA} onRevision={registrarRevisionIA} />
     <form onSubmit={enviar} className="med-panel med-form">
-      {grupos.map((grupo, indice) => <fieldset key={grupo.titulo}><legend>{indice ? grupo.titulo : 'Signos vitales y antropometría'}</legend><div className="med-fields">{grupo.campos.map(([campo, etiqueta]) => <label key={campo} className={origenIA[campo] ? 'med-field-from-ai' : undefined}>{etiqueta}{origenIA[campo] && <span className="med-ai-badge">Propuesta IA aceptada · editable</span>}{grupo.numerico
+      <nav className="med-form-sections" role="tablist" aria-label="Secciones del formulario de consulta">
+        {grupos.map((grupo, indice) => <button key={grupo.titulo} type="button" role="tab" aria-selected={seccionActiva === indice} aria-controls={`consulta-seccion-${indice}`} id={`consulta-tab-${indice}`} className={seccionActiva === indice ? 'active' : ''} onClick={() => setSeccionActiva(indice)}>{grupo.titulo}</button>)}
+      </nav>
+      <p className="med-form-section-count">Sección {seccionActiva + 1} de {grupos.length}</p>
+      {grupos.map((grupo, indice) => indice === seccionActiva && <fieldset key={grupo.titulo} role="tabpanel" id={`consulta-seccion-${indice}`} aria-labelledby={`consulta-tab-${indice}`}><legend>{grupo.titulo}</legend><div className="med-fields">{grupo.campos.map(([campo, etiqueta]) => <label key={campo} className={origenIA[campo] ? 'med-field-from-ai' : undefined}>{etiqueta}{origenIA[campo] && <span className="med-ai-badge">Propuesta IA aceptada · editable</span>}{grupo.numerico
         ? <input type="number" inputMode="decimal" step="any" min="0" max={campo === 'saturacion_oxigeno' ? '100' : undefined} value={form[campo]} onChange={e => cambiar(campo, e.target.value)} placeholder="No registrado" />
-        : <textarea required={campo === 'motivo_consulta' || campo === 'diagnostico_principal'} rows={3} value={form[campo]} onChange={e => cambiar(campo, e.target.value)} />}</label>)}</div>{grupo.numerico && <p className="med-hint">IMC calculado: <strong>{imc ?? 'Pendiente'}</strong> · Deja vacías las mediciones no realizadas.</p>}</fieldset>)}
+        : <textarea rows={3} value={form[campo]} onChange={e => cambiar(campo, e.target.value)} />}</label>)}</div>{grupo.numerico && <p className="med-hint">IMC calculado: <strong>{imc ?? 'Pendiente'}</strong> · Deja vacías las mediciones no realizadas.</p>}</fieldset>)}
       {error && <p role="alert" className="med-error">{error}</p>}
       {estadoTransporte && <p role="status" className="med-hint">{estadoTransporte}</p>}
       {estadoIA.bloqueado && <p className="med-hint">Revisa o rechaza las propuestas pendientes. La IA nunca guarda la consulta automáticamente.</p>}
-      <div className="med-form-actions"><button type="button" onClick={salir}>Volver a ficha</button><button type="button" onClick={transportar} disabled={transportando || mutation.isPending || estadoIA.bloqueado}>{transportando ? 'Transportando…' : 'Transportar a demo destino'}</button><button className="primary-button" type="submit" disabled={mutation.isPending || transportando || estadoIA.bloqueado}>{mutation.isPending ? 'Guardando…' : 'Finalizar y guardar consulta'}</button></div>
+      <div className="med-form-actions med-form-navigation"><button type="button" onClick={() => setSeccionActiva(actual => Math.max(0, actual - 1))} disabled={seccionActiva === 0}>Sección anterior</button><button type="button" onClick={() => setSeccionActiva(actual => Math.min(grupos.length - 1, actual + 1))} disabled={seccionActiva === grupos.length - 1}>Siguiente sección</button><span className="med-form-spacer" /><button type="button" onClick={salir}>Volver a ficha</button><button type="button" onClick={transportar} disabled={transportando || mutation.isPending || estadoIA.bloqueado}>{transportando ? 'Transportando…' : 'Transportar a demo destino'}</button><button className="primary-button" type="submit" disabled={mutation.isPending || transportando || estadoIA.bloqueado}>{mutation.isPending ? 'Guardando…' : 'Finalizar y guardar consulta'}</button></div>
     </form>
   </>
 }
