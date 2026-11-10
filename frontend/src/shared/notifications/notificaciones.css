@@ -1,0 +1,10 @@
+.notificaciones { position: fixed; right: 24px; bottom: 24px; z-index: 100; max-width: min(420px, calc(100vw - 32px)); }
+.notificacion { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-left-width: 4px; border-radius: 6px; background: #fff; box-shadow: 0 8px 24px rgb(15 23 42 / 12%); color: var(--ink); font-size: 13px; line-height: 1.45; animation: notificacion-entrada .18s ease-out; }
+.notificacion span { flex: 1; }
+.notificacion button { border: 0; background: transparent; color: var(--muted); font-size: 18px; line-height: 1; cursor: pointer; }
+.notificacion--exito { border-left-color: #0f766e; }
+.notificacion--error { border-left-color: #a33b16; }
+.notificacion--info { border-left-color: #285a9e; }
+@keyframes notificacion-entrada { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media print { .notificaciones { display: none; } }
+@media (prefers-reduced-motion: reduce) { .notificacion { animation: none; } }

@@ -1,0 +1,237 @@
+{
+  "verdict": "SI para demostracion universitaria controlada; NO validacion clinica ni cierre funcional completo",
+  "phases": {
+    "1": "completada",
+    "2": "completada_tecnicamente",
+    "3": "completada_con_alternativa_extractiva",
+    "4": "parcialmente_completada",
+    "5": "completada_exploratoria"
+  },
+  "browser_new_execution": {
+    "browser_real": true,
+    "login_real": true,
+    "imagen_correcta_sha256": true,
+    "visual_real": true,
+    "fuentes_ui_iguales_api": true,
+    "numero_citas": 4,
+    "correccion_persistida_tras_reload": true,
+    "informe_publicado_intacto": true,
+    "diagnosticos_automaticos": 0,
+    "recursos_externos_browser": 0,
+    "total_seconds": 57.432,
+    "analisis_id": "f4890466-6f3e-4a38-b43d-2c076707f257",
+    "estudio_id": 32,
+    "vision_metrics": {
+      "inference_seconds": [
+        0.22304850001819432
+      ],
+      "end_to_end_seconds": 17.89887719997205,
+      "model_load_seconds": 0.26049720001174137,
+      "worker_total_seconds": 13.516041700029746,
+      "preprocessing_seconds": 0.67905370000517,
+      "worker_rss_at_end_bytes": 404381696,
+      "available_bytes_before_model": 4194197504,
+      "worker_peak_rss_bytes_observed": 404381696
+    },
+    "extraction": {
+      "Effusion": {
+        "estado": "negado",
+        "evidencia": [
+          "No se observa derrame pleural"
+        ]
+      },
+      "Cardiomegaly": {
+        "estado": "incierto",
+        "evidencia": [
+          "Posible cardiomegalia"
+        ]
+      },
+      "Consolidation": {
+        "estado": "no_mencionado",
+        "evidencia": []
+      }
+    }
+  },
+  "memory_browser": {
+    "sample_interval_seconds": 0.15,
+    "n": 811,
+    "initial_backend_tree_rss": 116269056,
+    "peak_backend_tree_rss_observed": 1016258560,
+    "min_host_ram_available_observed": 3422642176
+  },
+  "rag_new_profile": {
+    "embedding_seconds": 20.24529650004115,
+    "query_and_metadata_seconds": 0.15690950001589954,
+    "verificacion_y_respuesta_extractiva_seconds": 0.0005852000322192907,
+    "total_seconds": 20.43066050001653,
+    "generacion_llm": false,
+    "modelo": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2@e8f8c211226b894fcb81acc59f3b34ba3efd5f42",
+    "citas_validas": 4,
+    "documentos": 2,
+    "metadatos_db": {
+      "dimension_vectores": 384,
+      "tipo_embedding": "vector(384)"
+    },
+    "parent_rss_end_bytes": 69062656
+  },
+  "offline_new_execution": {
+    "api": {
+      "offline_real": true,
+      "api_autenticada": true,
+      "imagen_local": true,
+      "modelos_cpu_reales": true,
+      "idempotencia": true,
+      "citas_locales": 4,
+      "revision_persistida": true,
+      "conflicto_revision_409": true,
+      "informe_sin_cambios": true,
+      "analisis_id": "495dbe12-a355-4ddf-bd01-fdd25a28e5d3",
+      "scores_experimentales": [
+        {
+          "name": "Consolidation",
+          "score": 0.31243300437927246
+        },
+        {
+          "name": "Effusion",
+          "score": 0.39427393674850464
+        },
+        {
+          "name": "Cardiomegaly",
+          "score": 0.621515154838562
+        }
+      ],
+      "metricas_vision": {
+        "inference_seconds": [
+          0.17253213200001483
+        ],
+        "end_to_end_seconds": 11.281978346999495,
+        "model_load_seconds": 0.6018268859997988,
+        "worker_total_seconds": 6.331255004999548,
+        "preprocessing_seconds": 0.21990490600001067,
+        "worker_rss_at_end_bytes": 463314944,
+        "available_bytes_before_model": 3083112448,
+        "worker_peak_rss_bytes_observed": 463314944
+      }
+    },
+    "wall_seconds": 44.450192800024524,
+    "exit_code": 0,
+    "oom_killed": false,
+    "db_network": "none",
+    "runtime_network": "container:d7ce7b12b3afef71346965e886236715515df103caf6594735d36453673b8468",
+    "runtime_ports": {},
+    "rootfs_readonly": true,
+    "memory_limit_bytes": 3221225472,
+    "cpus": 4.0,
+    "image_id": "sha256:43a643497e1686e985d2e1abf6926aad3cd1bcaa8e310d662f80c8b8d4c2c775"
+  },
+  "checks": {
+    "fase5_archivos_crudos_hash_verificados": 7,
+    "casos_sinteticos": 300,
+    "distribucion": {
+      "positivo": 75,
+      "negativo": 75,
+      "ambiguo": 75,
+      "contradictorio": 75
+    },
+    "imagenes_reales_verificadas": 60,
+    "metricas_recalculadas_sklearn": true,
+    "nueva_inferencia_visual_browser": true,
+    "nueva_inferencia_visual_offline": true,
+    "n_citas_browser_db_fragmentos_iguales": 4,
+    "correccion_db_verificada": true,
+    "informe_original_intacto": true,
+    "rutas_duplicadas": [],
+    "problemas_extraccion_reproducidos": [
+      {
+        "synthetic": true,
+        "texto": "No hay derrame pleural y hay cardiomegalia.",
+        "estados": {
+          "Consolidation": "no_mencionado",
+          "Effusion": "negado",
+          "Cardiomegaly": "negado"
+        }
+      },
+      {
+        "synthetic": true,
+        "texto": "Derrame pleural no evidente.",
+        "estados": {
+          "Consolidation": "no_mencionado",
+          "Effusion": "descrito",
+          "Cardiomegaly": "no_mencionado"
+        }
+      },
+      {
+        "synthetic": true,
+        "texto": "Consolidación?",
+        "estados": {
+          "Consolidation": "descrito",
+          "Effusion": "no_mencionado",
+          "Cardiomegaly": "no_mencionado"
+        }
+      }
+    ],
+    "imagen_docker_codigo_produccion_igual_host": true
+  },
+  "environment": {
+    "python": "3.12.10",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "ram_total_bytes": 16455806976,
+    "ram_available_bytes": 4242935808,
+    "disk_free_bytes": 108148793344,
+    "cpu_logical": 16,
+    "versions": {
+      "torch": "2.6.0+cpu",
+      "torchvision": "0.21.0+cpu",
+      "torchxrayvision": "1.5.7",
+      "sentence-transformers": "3.4.1",
+      "transformers": "4.57.6",
+      "safetensors": "0.8.0",
+      "SQLAlchemy": "2.0.35",
+      "asyncpg": "0.29.0",
+      "fastapi": "0.115.0"
+    }
+  },
+  "ollama": {
+    "generacion_ejecutada": false,
+    "motivo": "Menos de 4 GiB libres; se conserva alternativa extractiva radiologica",
+    "ram_libre_bytes": 4162297856
+  },
+  "backend_tests_with_running_server": {
+    "passed": 297,
+    "skipped": 12,
+    "seconds": 24.26
+  },
+  "backend_tests_copy_with_rag_after_test_fix": {
+    "passed": 299,
+    "skipped": 10,
+    "seconds": 24.95
+  },
+  "test_isolation_reproducer": {
+    "before": {
+      "passed": 1,
+      "failed": 1
+    },
+    "after": {
+      "passed": 2,
+      "failed": 0,
+      "seconds": 0.82
+    }
+  },
+  "frontend": {
+    "tests_passed": 27,
+    "lint": "passed",
+    "build": "passed"
+  },
+  "phase5_lot_reexecuted": false,
+  "phase5_artifacts_and_metrics_reverified": true,
+  "production_code_changed_by_audit": false,
+  "test_only_fix": "app/imagenes/tests/test_rag_repository.py engine propio NullPool y dispose",
+  "demo_seeded": "RX-DEMO-IA-001 nuevo; cuenta existente no renovada; informe explicitamente ficticio",
+  "limits": [
+    "no evaluacion clinica",
+    "no generacion LLM radiologica",
+    "no navegador dentro de Docker offline",
+    "no reboot fisico",
+    "no estres prolongado"
+  ]
+}

@@ -31,7 +31,9 @@ class AnalizarEstudio:
         pregunta = 'Radiografía de tórax: consolidación pulmonar, derrame pleural y cardiomegalia. Hallazgos radiográficos.'
         try:
             evidencia = await self.rag.consultar(pregunta)
-        except (ValueError, OSError, ErrorVision):
+        except Exception:
+            # El componente documental es opcional; incluso un fallo de su BD
+            # no debe borrar una inferencia visual válida. Cancelación no se absorbe.
             evidencia = {'estado':'no_disponible','evidencia':[],
                 'mensaje':'No se pudo consultar el corpus local; no se generó explicación sin evidencia.'}
         return {'experimental':True,'vision':visual,'fusion':combinado,'rag':evidencia}

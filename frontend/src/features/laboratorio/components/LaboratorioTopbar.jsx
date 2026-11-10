@@ -1,10 +1,13 @@
-export default function LaboratorioTopbar({ usuario, onLogout }) {
+import { Link } from 'react-router-dom'
+
+/** Barra superior compartida. `inicio` es la pantalla principal del servicio que muestra la barra. */
+export default function LaboratorioTopbar({ usuario, onLogout, titulo = 'Laboratorio', inicio = '/laboratorio' }) {
   return (
     <header className="lab-topbar">
-      <div className="lab-brand">
+      <Link className="lab-brand" to={inicio} title={`Ir al inicio de ${titulo}`}>
         <strong>SarcoSistema</strong>
-        <span>Laboratorio</span>
-      </div>
+        <span>{titulo}</span>
+      </Link>
       <div className="lab-session">
         <span className="lab-session-user" title={usuario.identificador_acceso}>
           {usuario.identificador_acceso}

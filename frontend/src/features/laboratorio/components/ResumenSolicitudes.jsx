@@ -1,25 +1,24 @@
 import { useExamenes } from '../hooks/useExamenes.js'
 import { agruparSolicitudes } from '../utils/agruparSolicitudes.js'
+import { INDICADORES_BANDEJA } from '../utils/bandeja.js'
 
-export default function ResumenSolicitudes() {
+/** Indicadores de la bandeja; cada tarjeta filtra la tabla al pulsarla. */
+export default function ResumenSolicitudes({ indicadorActivo, onSeleccionar }) {
   const { data: estudios = [], isLoading, isError } = useExamenes()
   const solicitudes = agruparSolicitudes(estudios)
-  const indicadores = [
-    { nombre: 'Solicitudes pendientes', valor: solicitudes.length },
-    { nombre: 'Con muestras por recibir', valor: solicitudes.filter((s) => s.estudios.some((e) => e.estado === 'pendiente_muestra')).length },
-    { nombre: 'Con resultados en preparación', valor: solicitudes.filter((s) => s.estudios.some((e) => e.estado === 'resultado_en_preparacion')).length },
-    { nombre: 'Solicitudes urgentes', valor: solicitudes.filter((s) => s.prioridad === 'urgente').length },
-  ]
 
   return (
     <div className="lab-summary" aria-label="Indicadores de laboratorio">
-      {indicadores.map((indicador) => (
-        <div className="lab-summary-card" key={indicador.nombre}>
-          <strong>{isLoading ? '…' : isError ? '—' : indicador.valor}</strong>
+      {INDICADORES_BANDEJA.map((indicador) => {
+        const activo = indicadorActivo === indicador.codigo
+        return <button type="button" key={indicador.codigo} aria-pressed={activo}
+          className={activo ? 'lab-summary-card is-active' : 'lab-summary-card'}
+          onClick={() => onSeleccionar(activo ? 'todas' : indicador.codigo)}>
+          <strong>{isLoading ? '…' : isError ? '—' : solicitudes.filter(indicador.cumple).length}</strong>
           <span>{indicador.nombre}</span>
           {isError && <small>No disponible</small>}
-        </div>
-      ))}
+        </button>
+      })}
     </div>
   )
 }

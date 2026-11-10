@@ -1,9 +1,4 @@
-export const categoriasLaboratorio = [
-  { codigo: 'hematologia', nombre: 'Hematología' },
-  { codigo: 'bioquimica', nombre: 'Bioquímica' },
-  { codigo: 'serologia', nombre: 'Serología' },
-  { codigo: 'copro_orina', nombre: 'Copro y orina' },
-]
+import { AREAS_LABORATORIO, ESTADOS_FINALES } from './catalogos.js'
 
 export function agruparSolicitudes(estudios) {
   const porSolicitud = new Map()
@@ -27,18 +22,18 @@ export function agruparSolicitudes(estudios) {
 }
 
 export function agruparPorCategoria(estudios) {
-  const categorias = categoriasLaboratorio.map((categoria) => ({
+  const categorias = AREAS_LABORATORIO.map((categoria) => ({
     ...categoria,
     estudios: estudios.filter((estudio) => estudio.categoria_laboratorio === categoria.codigo),
   })).filter((categoria) => categoria.estudios.length > 0)
-  const codigosConocidos = new Set(categoriasLaboratorio.map((categoria) => categoria.codigo))
+  const codigosConocidos = new Set(AREAS_LABORATORIO.map((categoria) => categoria.codigo))
   const otros = estudios.filter((estudio) => !codigosConocidos.has(estudio.categoria_laboratorio))
   if (otros.length > 0) categorias.push({ codigo: null, nombre: 'Otros estudios', estudios: otros })
   return categorias
 }
 
 export function estadoSolicitud(estudios) {
-  const finalizados = estudios.every((estudio) => ['publicado', 'no_realizado'].includes(estudio.estado))
+  const finalizados = estudios.every((estudio) => ESTADOS_FINALES.has(estudio.estado))
   if (finalizados && estudios.some((estudio) => estudio.estado === 'no_realizado')) return 'Finalizada con incidencias'
   if (estudios.every((estudio) => estudio.estado === 'publicado')) return 'Publicado'
   if (estudios.every((estudio) => estudio.estado === 'pendiente_muestra')) return 'Pendiente de muestra'

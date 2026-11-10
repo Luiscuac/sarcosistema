@@ -28,3 +28,24 @@
   .lab-dialog-footer { padding-right: 18px; padding-left: 18px; }
   .lab-form-grid { grid-template-columns: 1fr; }
 }
+
+/* Diálogos de confirmación y resumen del pie */
+.lab-dialog--compacto { width: min(560px, 100%); }
+.lab-confirm-body { padding-top: 18px; padding-bottom: 18px; color: var(--ink); font-size: 13px; line-height: 1.55; }
+.lab-confirm-body p { margin: 0 0 10px; }
+.lab-confirm-body ul { margin: 0; padding-left: 20px; }
+.lab-confirm-study { margin-top: 14px; }
+.lab-confirm-study h3 { margin: 0 0 8px; font-size: 13px; }
+.lab-confirm-study table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.lab-confirm-study th, .lab-confirm-study td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: left; font-weight: 400; }
+.lab-confirm-study td:nth-child(2) { font-weight: 600; }
+.lab-confirm-study td:last-child { color: #b42318; font-weight: 600; text-align: right; white-space: nowrap; }
+.lab-confirm-study tr.is-out-of-range { background: #fdf1f1; }
+.lab-confirm-study tr.is-out-of-range td:nth-child(2) { color: #b42318; }
+.lab-dialog-summary { flex: 1; align-self: center; margin: 0; color: var(--muted); font-size: 12px; }
+.lab-dialog-footer button { cursor: pointer; }
+
+/* Estudios seleccionados en la nueva solicitud */
+.lab-selected-studies { display: grid; gap: 8px; padding: 12px; border: 1px dashed var(--line); border-radius: 6px; background: #fafbfc; }
+.lab-selected-studies ul { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.lab-form-grid label small { color: var(--muted); font-weight: 400; }

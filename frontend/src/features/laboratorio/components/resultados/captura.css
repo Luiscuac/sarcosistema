@@ -1,0 +1,17 @@
+/* Captura de resultados: campos, avance y avisos */
+.lab-result-field { display: grid; gap: 6px; }
+.lab-result-field > span abbr { color: #a33b16; text-decoration: none; }
+.lab-result-field small { color: var(--muted); font-weight: 400; }
+.lab-result-field.is-out-of-range input,
+.lab-result-field.is-out-of-range select { border-color: #d64545; background: #fdf1f1; color: #b42318; }
+.lab-range-flag { color: #b42318; font-weight: 600; }
+
+.lab-capture-summary { position: sticky; top: 0; z-index: 2; display: grid; gap: 8px; margin-bottom: 4px; padding: 14px 18px; border: 1px solid var(--line); border-radius: 6px; background: #fff; box-shadow: 0 1px 3px rgb(15 23 42 / 6%); }
+.lab-capture-progress { display: grid; grid-template-columns: auto minmax(120px, 1fr); align-items: center; gap: 14px; font-size: 13px; }
+.lab-capture-warning, .lab-capture-blocked { margin: 0; font-size: 12px; line-height: 1.45; }
+.lab-capture-warning { color: #8a4b16; }
+.lab-capture-blocked { color: #285a9e; }
+
+.lab-area-published { margin: 0 0 18px; padding: 12px 16px; border: 1px solid #b9ddd7; border-radius: 6px; background: #f0f8f6; color: #0f5f58; font-size: 13px; }
+.lab-area-result-actions { align-items: center; }
+.lab-area-result-actions .lab-form-hint { flex: 1; margin: 0; }

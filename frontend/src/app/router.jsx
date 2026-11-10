@@ -11,6 +11,7 @@ import ProtectedRoute from '../features/accesos/auth/ProtectedRoute.jsx'
 import ConsultasPage from '../features/consultas/pages/ConsultasPage.jsx'
 import ImagenesPage from '../features/imagenes/pages/ImagenesPage.jsx'
 import EnfermeriaPage from '../features/enfermeria/pages/EnfermeriaPage.jsx'
+import RayosXPage from '../features/imagenes/pages/RayosXPage.jsx'
 const router = createBrowserRouter(createRoutesFromElements(
   <>
         <Route path="/" element={<Navigate to="/inicio" replace />} />
@@ -20,7 +21,7 @@ const router = createBrowserRouter(createRoutesFromElements(
             {({ usuario, logout }) => <InicioPage usuario={usuario} logout={logout} />}
           </ProtectedRoute>
         } />
-        <Route path="/laboratorio" element={
+         <Route path="/laboratorio" element={
           <ProtectedRoute rolesPermitidos={['laboratorio']}>
             {({ usuario, logout }) => <LaboratorioPage usuario={usuario} logout={logout} />}
           </ProtectedRoute>
@@ -67,6 +68,11 @@ const router = createBrowserRouter(createRoutesFromElements(
         <Route path="/imagenes" element={
           <ProtectedRoute rolesPermitidos={['imagenes']}>
             {({ usuario, logout }) => <ImagenesPage usuario={usuario} logout={logout} />}
+          </ProtectedRoute>
+        } />
+        <Route path="/imagenes/rayos-x" element={
+          <ProtectedRoute rolesPermitidos={['medico']}>
+            {({ usuario, logout }) => <RayosXPage usuario={usuario} logout={logout} />}
           </ProtectedRoute>
         } />
         <Route path="/enfermeria" element={

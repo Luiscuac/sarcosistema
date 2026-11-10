@@ -144,6 +144,8 @@ class SqlAlchemyExamenRepository:
                 "referencia": muestra.referencia_muestra,
                 "tipo_muestra": muestra.tipo_muestra,
                 "fecha_toma": muestra.fecha_toma_real,
+                "hora_toma": muestra.hora_toma_real,
+                "hora_no_registrada": muestra.hora_no_registrada,
                 "responsable_recepcion": muestra.responsable_recepcion,
                 "estudio_ids": [],
             })
@@ -153,6 +155,8 @@ class SqlAlchemyExamenRepository:
             "referencia": solicitud.referencia,
             "paciente_nombre": paciente.nombre_completo,
             "paciente_documento": paciente.numero_documento,
+            "paciente_fecha_nacimiento": paciente.fecha_nacimiento,
+            "paciente_sexo": paciente.sexo,
             "fecha_solicitud": solicitud.fecha_solicitud,
             "fecha_registro": solicitud.created_at,
             "referencia_papel_formulario": solicitud.referencia_papel_formulario,
