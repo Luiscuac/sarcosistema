@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { obtenerRecetasPublicadas, obtenerRegistrosPublicados } from '../api/enfermeriaApi.js'
+import { formatearFecha } from '../../../shared/utils/formatearFecha.js'
 
 const campos = [
   ['motivo_consulta', 'Motivo referido'], ['sintomas', 'Síntomas referidos'],
@@ -34,7 +35,7 @@ export default function RegistrosPublicados({ pacienteId }) {
     {recetas.isError && <p role="alert" className="med-message">No se pudieron cargar las recetas.</p>}
     {recetas.data?.length === 0 && <p className="med-message">No hay recetas emitidas para este paciente.</p>}
     {recetas.data?.map(receta => <article className="med-nursing-record" key={receta.id}>
-      <header><strong>Receta {receta.numero_receta || `#${receta.id}`} · emitida por {receta.registrado_por}</strong><span>{new Date(receta.fecha).toLocaleDateString('es-BO')} · enviada {fechaHora(receta.publicado_en)}</span></header>
+      <header><strong>Receta {receta.numero_receta || `#${receta.id}`} · emitida por {receta.registrado_por}</strong><span>{formatearFecha(receta.fecha)} · enviada {fechaHora(receta.publicado_en)}</span></header>
       <dl>{[['establecimiento','Establecimiento'],['programas','Programas'],['historia_clinica','Historia clínica'],['tipo_atencion','Tipo de atención'],['diagnostico_principal','Diagnóstico principal (CIE-10)'],['diagnostico_secundario','Diagnóstico secundario (CIE-10)'],['prescriptor','Prescriptor / firma'],['dispensador','Dispensador'],['costo_total','Costo total'],['paciente_firma','Firma / C.I. paciente']].filter(([key])=>receta[key]).map(([key,title])=><div key={key}><dt>{title}</dt><dd>{receta[key]}</dd></div>)}</dl>
       {receta.prestaciones?.length>0&&<p><strong>Prestaciones:</strong> {receta.prestaciones.join(', ')}</p>}
       <h3>Medicamentos e indicaciones</h3><ul>{receta.medicamentos.map((m,i)=><li key={i}><strong>{m.nombre_generico}</strong> · {m.forma_concentracion}<br />{m.indicaciones}<br />Recetada: {m.cantidad_recetada||'—'} · Dispensada: {m.cantidad_dispensada||'—'} · Valor: {m.valor_total??'—'}</li>)}</ul>

@@ -308,9 +308,13 @@ class RepositorioImagenSql:
                 select(EstudioSolicitado, Solicitud, TipoEstudio)
                 .join(Solicitud, Solicitud.id == EstudioSolicitado.solicitud_id)
                 .join(TipoEstudio, TipoEstudio.id == EstudioSolicitado.tipo_estudio_id)
+                # Solo el servicio de imagen: sin este filtro, los análisis de laboratorio
+                # publicados aparecían en la ficha como si fueran ecografías.
+                .join(Servicio, Servicio.id == TipoEstudio.servicio_id)
                 .where(
                     EstudioSolicitado.paciente_id == paciente_id,
                     EstudioSolicitado.estado == 'publicado',
+                    Servicio.codigo == 'IMG',
                 )
                 .order_by(Solicitud.fecha_solicitud.desc(), EstudioSolicitado.id.desc())
             )

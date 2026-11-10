@@ -1,12 +1,18 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { obtenerCatalogoImagenes, solicitarEcografia } from '../api/consultasApi.js'
+import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
 
-/** El medico pide la ecografia desde la ficha del paciente. */
+/** El médico pide una o varias ecografías desde la ficha del paciente. */
 export default function SolicitarEcografia({ pacienteId, usuario }) {
+  const { notificar } = useNotificacion()
   const [abierto, setAbierto] = useState(false)
   const [seleccion, setSeleccion] = useState([])
-  const [estado, setEstado] = useState('')
+  const [urgente, setUrgente] = useState(false)
+  const [enviando, setEnviando] = useState(false)
+  const [error, setError] = useState('')
+  // Una clave por solicitud: si se reintenta el envío, el backend no la duplica.
+  const clave = useRef(null)
 
   const catalogo = useQuery({
     queryKey: ['consultas', 'catalogo-imagenes'],
@@ -14,57 +20,73 @@ export default function SolicitarEcografia({ pacienteId, usuario }) {
     enabled: abierto,
   })
 
+  function abrir() {
+    clave.current = crypto.randomUUID()
+    setSeleccion([]); setUrgente(false); setError(''); setAbierto(true)
+  }
+
   function alternar(id) {
-    setSeleccion((actual) => (actual.includes(id)
-      ? actual.filter((valor) => valor !== id)
-      : [...actual, id]))
+    setSeleccion((actual) => (actual.includes(id) ? actual.filter((valor) => valor !== id) : [...actual, id]))
   }
 
   async function enviar(evento) {
     evento.preventDefault()
-    if (!seleccion.length) {
-      setEstado('Elige al menos un estudio de ecografía.')
-      return
-    }
-    setEstado('Enviando la solicitud…')
+    if (!seleccion.length || enviando) return
+    setEnviando(true); setError('')
     try {
-      await solicitarEcografia(pacienteId, seleccion, usuario.identificador_acceso)
-      setEstado('Solicitud enviada al servicio de imagen.')
-      setSeleccion([])
+      await solicitarEcografia(pacienteId, seleccion, usuario.identificador_acceso, {
+        prioridad: urgente ? 'urgente' : 'sin_prioridad', claveIdempotencia: clave.current,
+      })
+      notificar(`${seleccion.length === 1 ? 'Ecografía solicitada' : `${seleccion.length} ecografías solicitadas`}${urgente ? ' con prioridad urgente' : ''}. El servicio de imagen la recibió en su bandeja.`, 'exito')
       setAbierto(false)
-    } catch {
-      setEstado('No se pudo enviar la solicitud. Inténtalo de nuevo.')
+    } catch (err) {
+      const detalle = err.response?.data?.detail
+      setError(typeof detalle === 'string' ? detalle : 'No se pudo enviar la solicitud. Inténtalo de nuevo.')
+    } finally {
+      setEnviando(false)
     }
   }
 
   if (!abierto) {
-    return (
-      <button type="button" className="med-button-link" onClick={() => setAbierto(true)}>
-        + Solicitar ecografía
-      </button>
-    )
+    return <div className="med-eco-request-bar">
+      <button type="button" className="med-secondary-button" onClick={abrir}>+ Solicitar ecografía</button>
+    </div>
   }
 
+  const nombres = Object.fromEntries((catalogo.data ?? []).map((estudio) => [estudio.id, estudio.nombre]))
   return (
     <form className="med-panel med-eco-form" onSubmit={enviar}>
-      <div className="med-panel-header"><h2>Solicitar ecografía</h2><span>El radiólogo la recibirá en su bandeja</span></div>
-      {catalogo.isPending && <p className="med-message">Cargando estudios disponibles…</p>}
-      {catalogo.isError && <p role="alert" className="med-message">No se pudo cargar el catálogo de ecografías.</p>}
-      {catalogo.data?.length === 0 && <p className="med-message">El servicio de imagen no tiene estudios configurados.</p>}
-      {catalogo.data?.map((estudio) => (
-        <label key={estudio.id} className="med-eco-opcion">
-          <input
-            type="checkbox"
-            checked={seleccion.includes(estudio.id)}
-            onChange={() => alternar(estudio.id)}
-          />
-          {estudio.nombre}
-        </label>
-      ))}
-      {estado && <p className="med-message" role="status">{estado}</p>}
-      <div className="med-eco-acciones">
-        <button type="submit" className="primary-button" disabled={!seleccion.length}>Enviar solicitud</button>
-        <button type="button" className="med-button-link" onClick={() => setAbierto(false)}>Cancelar</button>
+      <div className="med-panel-header">
+        <div><h2>Solicitar ecografía</h2><span>El servicio de imagen la recibirá en su bandeja.</span></div>
+      </div>
+      <div className="med-eco-form-body">
+        <fieldset className="med-eco-group">
+          <legend>Estudios <small>puedes elegir varios</small></legend>
+          {catalogo.isPending && <p className="med-message">Cargando estudios disponibles…</p>}
+          {catalogo.isError && <p role="alert" className="med-error">No se pudo cargar el catálogo de ecografías.</p>}
+          {catalogo.data?.length === 0 && <p className="med-message">El servicio de imagen no tiene estudios configurados.</p>}
+          {catalogo.data?.length > 0 && <div className="med-eco-options">
+            {catalogo.data.map((estudio) => <label key={estudio.id} className={`med-eco-option${seleccion.includes(estudio.id) ? ' is-selected' : ''}`}>
+              <input type="checkbox" checked={seleccion.includes(estudio.id)} disabled={enviando} onChange={() => alternar(estudio.id)} />
+              <span>{estudio.nombre}</span>
+            </label>)}
+          </div>}
+        </fieldset>
+        <fieldset className="med-eco-group">
+          <legend>Prioridad</legend>
+          <div className="med-eco-priority" role="radiogroup" aria-label="Prioridad">
+            <label className={!urgente ? 'is-selected' : undefined}><input type="radio" name="prioridad-eco" checked={!urgente} disabled={enviando} onChange={() => setUrgente(false)} />Normal</label>
+            <label className={urgente ? 'is-selected is-urgent' : undefined}><input type="radio" name="prioridad-eco" checked={urgente} disabled={enviando} onChange={() => setUrgente(true)} />Urgente</label>
+          </div>
+        </fieldset>
+        {seleccion.length > 0 && <p className="med-hint">Seleccionadas: {seleccion.map((id) => nombres[id]).filter(Boolean).join(' · ')}</p>}
+        {error && <p role="alert" className="med-error">{error}</p>}
+      </div>
+      <div className="med-eco-actions">
+        <button type="button" className="med-secondary-button" disabled={enviando} onClick={() => setAbierto(false)}>Cancelar</button>
+        <button type="submit" className="primary-button" disabled={!seleccion.length || enviando}>
+          {enviando ? 'Enviando…' : `Enviar solicitud${seleccion.length ? ` (${seleccion.length})` : ''}`}
+        </button>
       </div>
     </form>
   )

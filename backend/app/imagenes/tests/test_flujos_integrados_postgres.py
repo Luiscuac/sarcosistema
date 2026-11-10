@@ -121,3 +121,7 @@ async def test_laboratorio_real_muestra_borrador_publicacion_y_consulta_medica(f
     assert informe.status_code == 200, informe.text
     assert informe.json()['resultados']
     assert (await client.get('/laboratorio/catalogo/estudios', headers=h['imagenes'])).status_code == 403
+    # Un análisis de laboratorio publicado no es un examen de imagen: no debe listarse como ecografía.
+    historial = await client.get(f'/consultas/pacientes/{paciente}/historial', headers=h['medico'])
+    assert historial.status_code == 200, historial.text
+    assert estudio not in [e['estudio_id'] for e in historial.json()['estudios_imagen']]

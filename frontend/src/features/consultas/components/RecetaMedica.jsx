@@ -2,49 +2,85 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { emitirRecetaMedica } from '../api/consultasApi.js'
 import { obtenerRecetasPublicadas } from '../../enfermeria/api/enfermeriaApi.js'
+import ConfirmarAccion from '../../laboratorio/components/ConfirmarAccion.jsx'
+import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
+import { formatearFecha } from '../../../shared/utils/formatearFecha.js'
+import { fechaLocalDe } from '../utils/paciente.js'
 
 const medicamentoVacio = () => ({ nombre_generico: '', forma_concentracion: '', indicaciones: '', cantidad_recetada: '' })
 
 export default function RecetaMedica({ paciente }) {
   const cache = useQueryClient()
+  const { notificar } = useNotificacion()
   const [diagnostico, setDiagnostico] = useState('')
   const [medicamentos, setMedicamentos] = useState([medicamentoVacio()])
+  const [confirmando, setConfirmando] = useState(false)
   const recetas = useQuery({ queryKey: ['enfermeria', 'recetas-publicadas', paciente.id],
     queryFn: () => obtenerRecetasPublicadas(paciente.id) })
   const mutation = useMutation({ mutationFn: datos => emitirRecetaMedica(paciente.id, datos),
     onSuccess: async () => {
       await cache.invalidateQueries({ queryKey: ['enfermeria', 'recetas-publicadas', paciente.id] })
-      setDiagnostico(''); setMedicamentos([medicamentoVacio()])
-    } })
+      setDiagnostico(''); setMedicamentos([medicamentoVacio()]); setConfirmando(false)
+      notificar('Receta emitida y enviada a farmacia.', 'exito')
+    },
+    onError: () => setConfirmando(false) })
   const actualizar = (i, campo, valor) => setMedicamentos(actual => actual.map((m, n) => n === i ? { ...m, [campo]: valor } : m))
-  function enviar(evento) {
-    evento.preventDefault()
-    mutation.mutate({ fecha: new Date().toISOString().slice(0, 10), diagnostico_principal: diagnostico,
+  function revisar(evento) {
+    evento.preventDefault() // los campos `required` ya validaron; antes de enviar a farmacia se confirma
+    setConfirmando(true)
+  }
+  function emitir() {
+    // Fecha de calendario local: con toISOString() las recetas de la noche quedaban con fecha de mañana.
+    mutation.mutate({ fecha: fechaLocalDe(), diagnostico_principal: diagnostico.trim(),
       medicamentos: medicamentos.map(m => ({ ...m, cantidad_dispensada: null, valor_unitario: null, valor_total: null })) })
   }
   return <section className="med-panel">
-    <div className="med-panel-header"><h2>Receta médica</h2><span>Al emitirla, farmacia recibe el informe.</span></div>
-    <form className="med-form" onSubmit={enviar}>
-      <label>Diagnóstico<input required maxLength={1000} value={diagnostico} onChange={e => setDiagnostico(e.target.value)} /></label>
-      {medicamentos.map((m, i) => <fieldset key={i}><legend>Medicamento {i + 1}</legend><div className="med-fields">
-        <label>Nombre genérico<input required value={m.nombre_generico} onChange={e => actualizar(i, 'nombre_generico', e.target.value)} /></label>
-        <label>Forma y concentración<input required value={m.forma_concentracion} onChange={e => actualizar(i, 'forma_concentracion', e.target.value)} /></label>
-        <label>Indicaciones (dosis, frecuencia, duración y vía)<textarea required rows={3} value={m.indicaciones} onChange={e => actualizar(i, 'indicaciones', e.target.value)} /></label>
-        <label>Cantidad recetada<input value={m.cantidad_recetada} onChange={e => actualizar(i, 'cantidad_recetada', e.target.value)} /></label>
-      </div>{medicamentos.length > 1 && <button type="button" onClick={() => setMedicamentos(actual => actual.filter((_, n) => n !== i))}>Quitar</button>}</fieldset>)}
-      <div className="med-form-actions"><button type="button" onClick={() => setMedicamentos(actual => [...actual, medicamentoVacio()])}>Añadir medicamento</button>
-        <button className="primary-button" disabled={mutation.isPending}>{mutation.isPending ? 'Enviando…' : 'Emitir receta y enviar a farmacia'}</button></div>
-      {mutation.isSuccess && <p role="status" className="med-message">Receta emitida y enviada a farmacia.</p>}
-      {mutation.isError && <p role="alert" className="med-error">No se pudo emitir la receta.</p>}
+    <div className="med-panel-header"><h2>Receta médica</h2><span>Al emitirla, farmacia recibe la receta.</span></div>
+    <form className="med-form med-prescription-form" onSubmit={revisar}>
+      <div className="med-fields med-fields--single">
+        <label>Diagnóstico <abbr title="Obligatorio">*</abbr>
+          <input required maxLength={1000} value={diagnostico} onChange={e => setDiagnostico(e.target.value)} placeholder="Ej.: Faringoamigdalitis aguda" />
+        </label>
+      </div>
+      <div className="med-prescription-meds">
+        <h3>Medicamentos <span>{medicamentos.length}</span></h3>
+        {medicamentos.map((m, i) => <fieldset key={i} className="med-prescription-med" aria-label={`Medicamento ${i + 1}`}>
+          <div className="med-prescription-med-heading">
+            <strong className="med-prescription-med-title">Medicamento {i + 1}</strong>
+            {medicamentos.length > 1 && <button type="button" className="med-secondary-button med-danger-button"
+              onClick={() => setMedicamentos(actual => actual.filter((_, n) => n !== i))} aria-label={`Quitar medicamento ${i + 1}`}>Quitar</button>}
+          </div>
+          <div className="med-fields">
+            <label>Nombre genérico <abbr title="Obligatorio">*</abbr><input required value={m.nombre_generico} onChange={e => actualizar(i, 'nombre_generico', e.target.value)} placeholder="Ej.: Amoxicilina" /></label>
+            <label>Forma y concentración <abbr title="Obligatorio">*</abbr><input required value={m.forma_concentracion} onChange={e => actualizar(i, 'forma_concentracion', e.target.value)} placeholder="Ej.: Cápsula 500 mg" /></label>
+            <label className="med-field-wide">Indicaciones (dosis, frecuencia, duración y vía) <abbr title="Obligatorio">*</abbr><textarea required rows={2} value={m.indicaciones} onChange={e => actualizar(i, 'indicaciones', e.target.value)} placeholder="Ej.: 1 cápsula cada 8 horas por 10 días, vía oral" /></label>
+            <label>Cantidad recetada<input value={m.cantidad_recetada} onChange={e => actualizar(i, 'cantidad_recetada', e.target.value)} placeholder="Ej.: 30 cápsulas" /></label>
+          </div>
+        </fieldset>)}
+        <button type="button" className="med-add-button" onClick={() => setMedicamentos(actual => [...actual, medicamentoVacio()])}>+ Añadir otro medicamento</button>
+      </div>
+      {mutation.isError && <p role="alert" className="med-error">No se pudo emitir la receta. Revisa los datos e inténtalo de nuevo.</p>}
+      <div className="med-form-actions">
+        <button className="primary-button" disabled={mutation.isPending}>Revisar y emitir…</button>
+      </div>
     </form>
     <div className="med-panel-header"><h2>Recetas emitidas para este paciente</h2></div>
     {recetas.isPending && <p role="status" className="med-message">Cargando recetas…</p>}
     {recetas.isError && <p role="alert" className="med-error">No se pudieron cargar las recetas emitidas.</p>}
     {recetas.data?.length === 0 && <p className="med-message">Todavía no hay recetas emitidas.</p>}
     {recetas.data?.map(r => <article className="med-nursing-record" key={r.id}>
-      <header><strong>Receta {r.numero_receta || `#${r.id}`} · emitida por {r.registrado_por}</strong><span>{new Date(r.fecha).toLocaleDateString('es-BO')} · {new Date(r.publicado_en).toLocaleString('es-BO')}</span></header>
+      <header><strong>Receta {r.numero_receta || `#${r.id}`} · emitida por {r.registrado_por}</strong><span>{formatearFecha(r.fecha)} · {new Date(r.publicado_en).toLocaleString('es-BO')}</span></header>
       <p><strong>Diagnóstico:</strong> {r.diagnostico_principal || 'No indicado'}</p>
       <ul>{r.medicamentos.map((m, i) => <li key={`${r.id}-${i}`}><strong>{m.nombre_generico}</strong> · {m.forma_concentracion}<br />{m.indicaciones}<br />Cantidad: {m.cantidad_recetada || 'No especificada'}</li>)}</ul>
     </article>)}
+
+    {confirmando && <ConfirmarAccion titulo="Emitir receta" textoConfirmar="Emitir y enviar a farmacia" textoCancelar="Seguir editando"
+      pendiente={mutation.isPending} onCancelar={() => setConfirmando(false)} onConfirmar={emitir}>
+      <p>Paciente: <strong>{paciente.nombre_completo}</strong>. Farmacia y enfermería verán la receta en cuanto la emitas; <strong>no se puede editar después</strong>.</p>
+      <dl className="med-final-summary"><div><dt>Diagnóstico</dt><dd>{diagnostico}</dd></div></dl>
+      <ol className="med-prescription-summary">{medicamentos.map((m, i) => <li key={i}>
+        <strong>{m.nombre_generico}</strong> · {m.forma_concentracion}<br />{m.indicaciones}{m.cantidad_recetada && <><br />Cantidad: {m.cantidad_recetada}</>}
+      </li>)}</ol>
+    </ConfirmarAccion>}
   </section>
 }

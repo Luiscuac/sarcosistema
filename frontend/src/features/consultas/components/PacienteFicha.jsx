@@ -9,6 +9,7 @@ import ExamenesComplementarios from './ExamenesComplementarios.jsx'
 import RegistrosPublicados from '../../enfermeria/components/RegistrosPublicados.jsx'
 import DatosDemoClinicos from './DatosDemoClinicos.jsx'
 import RecetaMedica from './RecetaMedica.jsx'
+import { nombreSexo } from '../../laboratorio/utils/catalogos.js'
 
 export function IdentidadPaciente({ paciente }) {
   return <div className="med-patient">
@@ -17,7 +18,7 @@ export function IdentidadPaciente({ paciente }) {
       <div><dt>Documento</dt><dd>{paciente.numero_documento || 'Sin documento'}</dd></div>
       <div><dt>Nacimiento</dt><dd>{fecha(paciente.fecha_nacimiento)}</dd></div>
       <div><dt>Edad</dt><dd>{edad(paciente.fecha_nacimiento)}</dd></div>
-      <div><dt>Sexo</dt><dd>{paciente.sexo || 'No registrado'}</dd></div>
+      <div><dt>Sexo</dt><dd>{paciente.sexo ? nombreSexo(paciente.sexo) : 'No registrado'}</dd></div>
     </dl>
   </div>
 }
@@ -84,12 +85,8 @@ export default function PacienteFicha({ id, usuario }) {
       {laboratorio.data?.map(solicitud => <SolicitudLaboratorioItem key={solicitud.id} solicitud={solicitud} pacienteId={id} />)}
     </section>}
     {seccion === 'imagenes' && <div className="med-patient-tab-content">
-      <div className="med-image-request"><SolicitarEcografia pacienteId={id} usuario={usuario} /></div>
-      {esDemo && <DatosDemoClinicos seccion="ecografia" />}
-      {historial.isPending && <p role="status" className="med-message">Cargando ecografías…</p>}
-      {historial.isError && <p role="alert" className="med-message">No se pudieron cargar los estudios de imagen.</p>}
-      {historial.data && <ExamenesComplementarios estudios={historial.data.estudios_imagen} />}
-      {historial.data?.estudios_imagen?.length === 0 && <p className="med-message">Este paciente no tiene ecografías publicadas.</p>}
+      <SolicitarEcografia pacienteId={id} usuario={usuario} />
+      <ExamenesComplementarios historial={historial} ejemplo={esDemo ? <DatosDemoClinicos /> : null} />
     </div>}
   </>
 }

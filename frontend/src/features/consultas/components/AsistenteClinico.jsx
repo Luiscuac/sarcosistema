@@ -4,6 +4,7 @@ import { transcribirAudio } from '../../ia/whisper/api/iaApi.js'
 import { extraerDatosClinicos } from '../api/consultasApi.js'
 import { grupos } from '../utils/formulario.js'
 import PropuestaCampo from './PropuestaCampo.jsx'
+import ConfirmarAccion from '../../laboratorio/components/ConfirmarAccion.jsx'
 
 const etiquetas = Object.fromEntries(grupos.flatMap(g => g.campos))
 const ttl = Math.max(10, Math.min(900, Number(import.meta.env.VITE_CLINICAL_AUDIO_TTL_SECONDS) || 300))
@@ -18,6 +19,8 @@ export default function AsistenteClinico({ pacienteId, valores, onAplicar, onDes
   const [items, setItems] = useState([])
   const [propuesta, setPropuesta] = useState(null)
   const [error, setError] = useState('')
+  // Pregunta abierta en un diálogo propio: { titulo, cuerpo, textoConfirmar, accion }.
+  const [pregunta, setPregunta] = useState(null)
   const operacion = useRef(0)
   const controlador = useRef(null)
   const procesado = useRef(new WeakSet())
@@ -99,14 +102,20 @@ export default function AsistenteClinico({ pacienteId, valores, onAplicar, onDes
       campos_aceptados: nuevos.filter(item => item.estado === 'aceptada').map(item => item.campo) })
   }
 
-  function resolver(indice, aceptar) {
+  function resolver(indice, aceptar, confirmado = false) {
     const item = items[indice]
     let aplicacion
     if (aceptar) {
-      aplicacion = onAplicar(item)
+      aplicacion = onAplicar(item, confirmado)
       if (aplicacion.requiereConfirmacion) {
-        if (!window.confirm(`Este campo ya tiene información manual:\n${aplicacion.anterior}\n\nPropuesta:\n${item.valor}\n\n¿Confirmas reemplazar únicamente este campo?`)) return
-        aplicacion = onAplicar(item, true)
+        setPregunta({
+          titulo: `Reemplazar «${etiquetas[item.campo] || item.campo}»`,
+          cuerpo: <><p>Este campo ya tiene información escrita a mano. Solo se reemplaza este campo.</p>
+            <dl className="med-final-summary"><div><dt>Valor actual</dt><dd>{aplicacion.anterior}</dd></div><div><dt>Propuesta</dt><dd>{String(item.valor)}</dd></div></dl></>,
+          textoConfirmar: 'Reemplazar con la propuesta',
+          accion: () => resolver(indice, true, true),
+        })
+        return
       }
       if (!aplicacion.aplicada) return
     }
@@ -138,9 +147,18 @@ export default function AsistenteClinico({ pacienteId, valores, onAplicar, onDes
     setError('')
   }
 
-  async function reprocesar() {
+  function reprocesar() {
     if (ocupado || texto.trim().length < 2) return
-    if (pendientes && !window.confirm('¿Descartar las propuestas pendientes y volver a analizar? Los campos manuales o aceptados se conservan.')) return
+    if (pendientes) {
+      setPregunta({ titulo: 'Volver a analizar', textoConfirmar: 'Descartar pendientes y analizar',
+        cuerpo: <p>Se descartan las propuestas que todavía no revisaste. Los campos escritos a mano o ya aceptados se conservan.</p>,
+        accion: analizarDeNuevo })
+      return
+    }
+    analizarDeNuevo()
+  }
+
+  async function analizarDeNuevo() {
     descartarPendientes()
     const idOperacion = ++operacion.current
     const controller = new window.AbortController()
@@ -156,7 +174,16 @@ export default function AsistenteClinico({ pacienteId, valores, onAplicar, onDes
 
   function iniciar() {
     if (!autorizado || ocupado) return
-    if (pendientes && !window.confirm('¿Descartar las propuestas pendientes para una nueva grabación?')) return
+    if (pendientes) {
+      setPregunta({ titulo: 'Nueva grabación', textoConfirmar: 'Descartar pendientes y grabar',
+        cuerpo: <p>Se descartan las propuestas que todavía no revisaste. Los campos ya aceptados se conservan.</p>,
+        accion: grabarDeNuevo })
+      return
+    }
+    grabarDeNuevo()
+  }
+
+  function grabarDeNuevo() {
     descartarPendientes()
     setPropuesta(null)
     setItems([])
@@ -168,10 +195,10 @@ export default function AsistenteClinico({ pacienteId, valores, onAplicar, onDes
   }
 
   return <section className="med-panel med-assistant" aria-label="Dictado y propuestas clínicas">
-    <div className="med-panel-header"><div><h2>Asistente de consulta</h2><p className="med-hint">Graba o escribe la consulta. Revisa cada propuesta antes de aplicarla a la ficha.</p></div></div>
+    <p className="med-hint med-assistant-intro">Graba o escribe la consulta; la IA propone campos y tú decides cuáles aplicar.</p>
     <div className="med-capture" aria-label="Formas de ingresar la consulta">
       <div className="med-capture-card med-capture-voice">
-        <div className="med-capture-heading"><h3>Dictar consulta</h3><p>Habla con claridad y detén la grabación al terminar.</p></div>
+        <div className="med-capture-heading"><h3>Dictar</h3></div>
         <button type="button" className={`med-record-button${recorder.estado === 'recording' ? ' med-record-button--active' : ''}`}
           disabled={recorder.estado !== 'recording' && (!autorizado || ocupado)}
           onClick={recorder.estado === 'recording' ? recorder.detenerGrabacion : iniciar}
@@ -181,8 +208,8 @@ export default function AsistenteClinico({ pacienteId, valores, onAplicar, onDes
           {recorder.estado === 'recording' && <time>{recorder.tiempo}</time>}
         </button>
         {recorder.estado === 'recording' && <div className="med-input-level" role="status" aria-label={recorder.nivelMicrofono > 4 ? 'Señal de micrófono detectada' : 'No se detecta señal de micrófono'}><span className="med-live-dot" /><span className="med-input-track"><span style={{ width: `${recorder.nivelMicrofono}%` }} /></span><span>{recorder.nivelMicrofono > 4 ? 'Se está escuchando' : 'Comprueba el micrófono'}</span></div>}
-        <label className="med-consent"><input type="checkbox" checked={autorizado} disabled={ocupado} onChange={e => setAutorizado(e.target.checked)} />Confirmo la autorización y el consentimiento para grabar esta atención.</label>
-        <div className="med-microphone-picker">
+        <label className="med-consent"><input type="checkbox" checked={autorizado} disabled={ocupado} onChange={e => setAutorizado(e.target.checked)} />El paciente autorizó grabar esta atención.</label>
+        <details className="med-microphone-settings"><summary>Configurar micrófono</summary><div className="med-microphone-picker">
           <label htmlFor="med-microphone-select">Micrófono de entrada</label>
           {recorder.microfonos.length > 0
             ? <select id="med-microphone-select" value={recorder.microfonoId} disabled={ocupado} onChange={e => recorder.setMicrofonoId(e.target.value)}>
@@ -190,11 +217,11 @@ export default function AsistenteClinico({ pacienteId, valores, onAplicar, onDes
             </select>
             : <span className="med-hint">Se usará el micrófono predeterminado.</span>}
           <button type="button" disabled={ocupado || recorder.buscandoMicrofonos} onClick={recorder.buscarMicrofonos}>{recorder.buscandoMicrofonos ? 'Buscando…' : 'Buscar micrófonos'}</button>
-        </div>
+        </div></details>
       </div>
       <div className="med-capture-card med-capture-text">
-        <div className="med-capture-heading"><h3>Escribir consulta</h3><p>Escribe o pega el texto y solicita las propuestas.</p></div>
-        <label className="med-ai-text" htmlFor="med-analysis-text">Texto para analizar</label>
+        <div className="med-capture-heading"><h3>Escribir o pegar</h3></div>
+        <label className="sr-only" htmlFor="med-analysis-text">Texto para analizar</label>
         <textarea id="med-analysis-text" rows={7} maxLength={12000} placeholder="Escribe aquí el motivo de consulta, síntomas, antecedentes y otros datos…" value={texto} disabled={ocupado} onChange={e => setTexto(e.target.value)} />
         <button type="button" className="med-analyze-button" disabled={ocupado || texto.trim().length < 2} onClick={reprocesar}>Analizar texto</button>
         {original && <span className="med-hint">Puedes corregir la transcripción aquí sin cambiar el original.</span>}
@@ -206,7 +233,7 @@ export default function AsistenteClinico({ pacienteId, valores, onAplicar, onDes
         <button type="button" onClick={cancelar}>Cancelar y continuar manualmente</button>
       </div>}
     </div>
-    <details className="med-dictation-example"><summary>Texto de ejemplo para probar el asistente</summary><p>La paciente viene porque desde hace tres días tiene dolor de garganta y fiebre por las noches. Dice que le duele al tragar y que tiene tos seca, pero no le falta el aire. De niña tuvo asma leve. Al revisarla tiene la garganta roja con placas blancas. Tiene 38.5 de temperatura y el pulso en 96. Creo que es una amigdalitis bacteriana. Le doy amoxicilina de 500 cada 8 horas por 10 días y que vuelva en tres días.</p><span className="med-hint">Puedes hablar con naturalidad: no hace falta nombrar cada campo. Revisa cada propuesta antes de aplicarla.</span></details>
+    <details className="med-dictation-example"><summary>Ver un ejemplo de dictado</summary><p>La paciente viene porque desde hace tres días tiene dolor de garganta y fiebre por las noches. Dice que le duele al tragar y que tiene tos seca, pero no le falta el aire. De niña tuvo asma leve. Al revisarla tiene la garganta roja con placas blancas. Tiene 38.5 de temperatura y el pulso en 96. Creo que es una amigdalitis bacteriana. Le doy amoxicilina de 500 cada 8 horas por 10 días y que vuelva en tres días.</p><span className="med-hint">Puedes hablar con naturalidad: no hace falta nombrar cada campo. Revisa cada propuesta antes de aplicarla.</span></details>
     {pendientes && <button type="button" className="med-cancel-proposals" onClick={cancelar}>Cancelar propuestas y continuar manualmente</button>}
     {fase === 'revision' && pendientes && <p className="med-process-result" role="status">Propuestas listas para revisar</p>}
     {(error || recorder.error) && <p className="med-error" role="alert">{error || recorder.error}</p>}
@@ -225,6 +252,12 @@ export default function AsistenteClinico({ pacienteId, valores, onAplicar, onDes
         <button type="button" onClick={() => deshacer(indice)}>Deshacer</button>
       </div>)}</div>
     </details>}
-    <p className="med-hint">Audio solo en memoria: se elimina tras transcribir o a los {ttl} s. Grabación limitada a {duracionMaxima} s. Whisper no identifica hablantes ni entrega confianza en esta integración; revisa ambigüedades y errores. Las transcripciones se descartan al salir.</p>
+    <details className="med-privacy-note"><summary>Privacidad y límites del dictado</summary>
+      <p className="med-hint">El audio queda solo en memoria: se elimina al transcribir o a los {ttl} s, y la grabación dura como máximo {duracionMaxima} s. La transcripción se descarta al salir. Whisper no distingue quién habla ni indica su confianza: revisa ambigüedades y errores.</p>
+    </details>
+    {pregunta && <ConfirmarAccion titulo={pregunta.titulo} textoConfirmar={pregunta.textoConfirmar} textoCancelar="Volver"
+      onCancelar={() => setPregunta(null)} onConfirmar={() => { const { accion } = pregunta; setPregunta(null); accion() }}>
+      {pregunta.cuerpo}
+    </ConfirmarAccion>}
   </section>
 }

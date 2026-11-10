@@ -1,3 +1,5 @@
+import { leerNumero, leerPresion } from '../../enfermeria/utils/signosVitales.js'
+
 export const grupos = [
   { titulo: 'Signos vitales y antropometría', campos: [
     ['peso_kg', 'Peso (kg)'], ['talla_cm', 'Talla (cm)'], ['temperatura_c', 'Temperatura (°C)'],
@@ -38,11 +40,61 @@ export function formularioAPayload(formulario, pacienteId, clave) {
   for (const [nombre, valor] of Object.entries(formulario)) {
     if (!permitidos.has(nombre)) continue
     const limpio = String(valor ?? '').trim()
-    payload[nombre] = limpio ? (numericos.has(nombre) ? Number(limpio) : limpio) : null
+    // leerNumero acepta coma decimal ("36,5"); Number("36,5") daba NaN.
+    payload[nombre] = limpio ? (numericos.has(nombre) ? leerNumero(limpio) : limpio) : null
   }
   return payload
 }
 
 export function confirmarSalida(sucio, confirmar) {
   return !sucio || confirmar('Hay cambios sin guardar. ¿Quieres salir de esta consulta?')
+}
+
+/** Formulario vacío de la consulta; `presion` es el campo visible "120/80" (no se envía). */
+export const formularioInicial = () => ({
+  ...Object.fromEntries(grupos.flatMap((grupo) => grupo.campos.map(([campo]) => [campo, '']))),
+  presion: '',
+})
+
+/** Escribir "120/80" actualiza también sistólica y diastólica (vacías mientras no sea válida). */
+export function conPresion(form, texto) {
+  const presion = leerPresion(texto)
+  const valida = presion && !presion.error
+  return { ...form, presion: texto,
+    presion_sistolica: valida ? String(presion.sistolica) : '',
+    presion_diastolica: valida ? String(presion.diastolica) : '' }
+}
+
+/** Tras aplicar sistólica o diastólica (p. ej. desde la IA), rehace el texto visible "120/80". */
+export function sincronizarPresion(form) {
+  const s = String(form.presion_sistolica ?? '').trim()
+  const d = String(form.presion_diastolica ?? '').trim()
+  return { ...form, presion: s || d ? `${s}/${d}` : '' }
+}
+
+/** Campos de la admisión de enfermería que existen en la consulta (mismo nombre). */
+export const CAMPOS_DE_ENFERMERIA = [
+  'peso_kg', 'talla_cm', 'temperatura_c', 'frecuencia_cardiaca', 'frecuencia_respiratoria',
+  'presion_sistolica', 'presion_diastolica', 'saturacion_oxigeno', 'motivo_consulta', 'sintomas',
+]
+
+/**
+ * Copia la admisión publicada por enfermería a la consulta, solo en campos vacíos:
+ * lo que el médico ya escribió no se pisa. Devuelve los campos copiados y los conservados.
+ */
+export function transferirEnfermeria(form, registro) {
+  const nuevo = { ...form }
+  const copiados = []
+  const conservados = []
+  for (const campo of CAMPOS_DE_ENFERMERIA) {
+    const valor = registro?.[campo]
+    if (valor == null || String(valor).trim() === '') continue
+    if (String(form[campo] ?? '').trim() !== '') {
+      if (String(form[campo]).trim() !== String(valor).trim()) conservados.push(campo)
+      continue
+    }
+    nuevo[campo] = String(valor)
+    copiados.push(campo)
+  }
+  return { form: sincronizarPresion(nuevo), copiados, conservados }
 }
