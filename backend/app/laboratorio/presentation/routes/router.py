@@ -81,6 +81,18 @@ async def obtener_informe_medico(
     return informe
 
 
+@router_medico.get("/medicos/estudios/{estudio_id}/resultado", response_model=ResultadoEstudioResponse)
+async def obtener_resultado_publicado_medico(
+    estudio_id: int,
+    usuario: Usuario = Depends(usuario_actual),
+    service: LaboratorioService = Depends(get_service),
+):
+    resultado = await service.obtener_resultado_medico(estudio_id, usuario.id)
+    if resultado is None:
+        raise HTTPException(status_code=404, detail="El resultado publicado no está disponible")
+    return resultado
+
+
 @router.get("/medicos", response_model=list[MedicoSolicitanteResponse])
 async def listar_medicos(
     termino: str = Query(min_length=2, max_length=100),

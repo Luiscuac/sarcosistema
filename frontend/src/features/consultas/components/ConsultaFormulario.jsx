@@ -5,7 +5,7 @@ import { crearConsulta } from '../api/consultasApi.js'
 import { usePaciente } from '../hooks/useConsultas.js'
 import { IdentidadPaciente } from './PacienteFicha.jsx'
 import {
-  calcularImc, conPresion, formularioAPayload, formularioInicial, grupos, sincronizarPresion,
+  calcularImc, conPresion, formularioAPayload, formularioATransporte, formularioInicial, grupos, sincronizarPresion,
   transferirEnfermeria,
 } from '../utils/formulario.js'
 import AsistenteClinico from './AsistenteClinico.jsx'
@@ -190,7 +190,7 @@ function FormularioPaciente({ id, usuario }) {
         codigo_paciente: paciente.data.codigo_paciente,
         historia_clinica: paciente.data.historia_clinica,
         profesional: usuario.identificador_acceso,
-        datos: formRef.current,
+        datos: formularioATransporte(formRef.current),
       })
       setEstadoTransporte(`Consulta transportada para ${resultado.paciente}. El cuaderno destino la guardó.`)
     } catch (errorAgente) {

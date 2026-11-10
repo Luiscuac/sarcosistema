@@ -97,6 +97,24 @@ class SqlAlchemyExamenRepository:
         )).scalar_one_or_none()
         return await self.obtener_solicitud(solicitud_id) if autorizado is not None else None
 
+    async def obtener_resultado_medico(self, estudio_id: int, usuario_id: int):
+        medico_id = await self._medico_de_usuario(usuario_id)
+        if medico_id is None:
+            return None
+        publicado = (await self.db.execute(
+            select(EstudioSolicitado.id)
+            .join(Solicitud, Solicitud.id == EstudioSolicitado.solicitud_id)
+            .where(
+                EstudioSolicitado.id == estudio_id,
+                EstudioSolicitado.estado == "publicado",
+                Solicitud.medico_solicitante_id == medico_id,
+            )
+        )).scalar_one_or_none()
+        if publicado is None:
+            return None
+        resultado = await self.obtener_resultado(estudio_id)
+        return resultado if resultado.estado_resultado == "publicado" else None
+
     async def listar_solicitudes_paciente(self, paciente_id: int, usuario_id: int):
         medico_id = await self._medico_de_usuario(usuario_id)
         if medico_id is None:

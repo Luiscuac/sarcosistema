@@ -61,6 +61,7 @@
 .enf-med-row { padding:14px 0; border-bottom:1px solid var(--line); }
 .enf-med-row > strong { display:block; margin-bottom:12px; }
 .enf-prescription-card { overflow:hidden; padding:0; }
+.enf-prescription-card + .enf-prescription-card { margin-top:14px; }
 .enf-prescription-heading { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:20px 22px; border-bottom:1px solid var(--line); background:#f8fbfb; }
 .enf-prescription-heading h2 { margin:4px 0 0; font-size:18px; }
 .enf-prescription-kicker { color:var(--brand); font-size:10px; font-weight:700; letter-spacing:.09em; }
@@ -81,6 +82,17 @@
 .enf-prescription-med p { margin:9px 0; color:#34414b; font-size:12px; line-height:1.55; white-space:pre-wrap; }
 .enf-prescription-med footer { display:flex; justify-content:space-between; gap:12px; padding-top:8px; border-top:1px solid #edf0f0; font-size:11px; }
 .enf-prescription-med footer span { color:var(--muted); }
+.enf-prescription-tools { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:end; gap:16px; }
+.enf-prescription-tools .enf-search { margin:0; }
+.enf-prescription-tool-actions { display:flex; align-items:center; gap:8px; }
+.enf-prescription-result-count { padding:10px 12px; border:1px solid var(--line); border-radius:6px; background:#f8fbfb; color:#46535e; font-size:11px; font-weight:700; white-space:nowrap; }
+.enf-print-button { min-height:38px; padding:8px 12px; border:1px solid var(--line); border-radius:6px; background:#fff; color:var(--brand); font:inherit; font-size:12px; font-weight:600; cursor:pointer; }
+.enf-print-button:hover:not(:disabled) { border-color:var(--brand); background:#f4faf9; }
+.enf-print-button:disabled { opacity:.5; cursor:not-allowed; }
+.enf-prescription-empty { display:grid; justify-items:center; padding:42px 22px; text-align:center; }
+.enf-prescription-empty > div { display:grid; place-items:center; width:48px; height:48px; border-radius:14px; background:#e8f4ef; color:var(--brand); font-size:16px; font-weight:800; }
+.enf-prescription-empty h2 { margin:14px 0 0; font-size:16px; }
+.enf-prescription-empty p { margin:7px 0 0; color:var(--muted); font-size:12px; }
 @media (max-width: 700px) {
   .enf-topbar { align-items: flex-start; flex-direction: column; padding: 14px 18px; }
   .enf-topbar > div { flex-wrap: wrap; gap: 12px; }
@@ -94,6 +106,21 @@
   .enf-prescription-meds { padding:0 16px 16px; }
   .enf-prescription-med > div { align-items:flex-start; flex-direction:column; gap:4px; }
   .enf-prescription-med > div span { text-align:left; }
+  .enf-prescription-tools { grid-template-columns:1fr; align-items:stretch; }
+  .enf-prescription-tool-actions { flex-wrap:wrap; }
+}
+
+@media print {
+  @page { margin: 14mm; }
+  .enf-topbar, .enf-prescription-tools { display:none !important; }
+  .enf-page, .enf-content { width:100%; min-height:0; margin:0; padding:0; background:#fff; }
+  .enf-heading { margin-bottom:12px; }
+  .enf-panel.enf-prescription-card { margin:0 0 12px; border-color:#b8c1c5; box-shadow:none; break-inside:avoid; }
+  .enf-prescription-heading { padding:12px 14px; background:#fff; }
+  .enf-prescription-meta { padding:12px 14px; }
+  .enf-prescription-diagnosis { margin:12px 14px; }
+  .enf-prescription-meds { padding:0 14px 14px; }
+  .enf-prescription-med { break-inside:avoid; }
 }
 
 /* Admisión: mediciones primero, unidad dentro del campo y avisos que no bloquean.

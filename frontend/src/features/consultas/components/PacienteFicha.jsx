@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useHistorial, usePaginaHistorial, usePaciente } from '../hooks/useConsultas.js'
-import { obtenerSolicitudesLaboratorio } from '../api/consultasApi.js'
+import { obtenerResultadoPublicadoLaboratorio, obtenerSolicitudesLaboratorio } from '../api/consultasApi.js'
 import { edad, fecha } from '../utils/paciente.js'
 import SolicitarEcografia from './SolicitarEcografia.jsx'
 import ExamenesComplementarios from './ExamenesComplementarios.jsx'
@@ -30,6 +30,30 @@ function estadoEstudio(estudio) {
   return 'En preparación'
 }
 
+function ResultadoPublicadoItem({ estudioId }) {
+  const [abierto, setAbierto] = useState(false)
+  const resultado = useQuery({
+    queryKey: ['consultas', 'laboratorio', 'resultado', estudioId],
+    queryFn: () => obtenerResultadoPublicadoLaboratorio(estudioId),
+    enabled: abierto,
+    retry: false,
+  })
+  return <details className="med-lab-result-details" onToggle={evento => setAbierto(evento.currentTarget.open)}>
+    <summary>Ver resultado publicado</summary>
+    {resultado.isPending && <p className="med-message">Cargando resultado…</p>}
+    {resultado.isError && <p role="alert" className="med-message">No se pudo cargar el resultado publicado.</p>}
+    {resultado.data && <>
+      <p className="med-lab-result-meta">Publicado por {resultado.data.responsable_publicacion || 'Laboratorio'} · versión {resultado.data.numero_version}</p>
+      <div className="med-table-wrap"><table className="med-table"><thead><tr><th>Parámetro</th><th>Resultado</th><th>Unidad</th><th>Referencia</th></tr></thead>
+        <tbody>{resultado.data.parametros.filter(parametro => parametro.valor != null && parametro.valor !== '').map(parametro => <tr key={parametro.id}>
+          <td>{parametro.nombre}</td><td>{parametro.valor}</td><td>{parametro.unidad || '—'}</td><td>{parametro.rango_referencia || '—'}</td>
+        </tr>)}</tbody></table></div>
+      {resultado.data.observaciones && <p className="med-lab-result-observations"><strong>Observaciones:</strong> {resultado.data.observaciones}</p>}
+      {!resultado.data.parametros.some(parametro => parametro.valor != null && parametro.valor !== '') && <p className="med-message">El resultado publicado no contiene valores visibles.</p>}
+    </>}
+  </details>
+}
+
 function SolicitudLaboratorioItem({ solicitud, pacienteId }) {
   const finalizada = solicitud.estudios.length > 0
     && solicitud.estudios.every((estudio) => ['publicado', 'no_realizado'].includes(estudio.estado))
@@ -43,6 +67,7 @@ function SolicitudLaboratorioItem({ solicitud, pacienteId }) {
     </div>
     <details className="med-lab-request-details"><summary>Ver estudios solicitados</summary>
       <ul>{solicitud.estudios.map((estudio) => <li key={estudio.estudio_id}><div><strong>{estudio.tipo_estudio_nombre}</strong><span>{estadoEstudio(estudio)}</span></div>
+        {estudio.estado === 'publicado' && <ResultadoPublicadoItem estudioId={estudio.estudio_id} />}
         {estudio.incidencias.map((incidencia, index) => <p key={index}>Constancia: {incidencia.motivo === 'muestra_no_entregada' ? 'Muestra no entregada' : incidencia.motivo === 'toma_rechazada' ? 'Toma rechazada' : 'Toma no realizada'} · {incidencia.descripcion} · {incidencia.responsable} · {new Date(incidencia.fecha_hora).toLocaleString('es-BO')}</p>)}</li>)}</ul>
     </details>
   </div>
@@ -62,7 +87,7 @@ export default function PacienteFicha({ id, usuario }) {
   const pagina = usePaginaHistorial(id)
   const paciente = usePaciente(id)
   const historial = useHistorial(id, pagina.pagina, seccion === 'consultas' || seccion === 'imagenes')
-  const laboratorio = useQuery({ queryKey: ['consultas', 'laboratorio', id], queryFn: () => obtenerSolicitudesLaboratorio(id), enabled: seccion === 'laboratorio' })
+  const laboratorio = useQuery({ queryKey: ['consultas', 'laboratorio', id], queryFn: () => obtenerSolicitudesLaboratorio(id), enabled: seccion === 'laboratorio', refetchInterval: 15000 })
   if (paciente.isPending) return <p role="status">Cargando ficha del paciente…</p>
   if (paciente.isError) return <p role="alert">No se pudo cargar el paciente. Comprueba el acceso y vuelve a intentarlo.</p>
   const esDemo = paciente.data.codigo_paciente === 'PAC-DEMO-CONSULTA-001'
