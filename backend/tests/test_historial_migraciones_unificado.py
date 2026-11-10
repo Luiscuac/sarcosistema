@@ -33,7 +33,7 @@ def historial():
 
 def test_una_cabeza_conserva_ambas_ramas():
     scripts = historial()
-    assert scripts.get_heads() == ['20261109_0012']
+    assert scripts.get_heads() == ['20261109_0013']
     ancestros = {r.revision for r in scripts.walk_revisions()}
     assert {'20261103_0011', '20261103_0009', '20261027_0007'} <= ancestros
     merge = scripts.get_revision('20261109_0012')
@@ -55,7 +55,7 @@ def test_migraciones_main_identicas_al_origen(nombre, monkeypatch):
 
 def test_merge_no_ejecuta_ddl_y_bloquea_downgrade():
     scripts = historial()
-    assert scripts.get_heads() == ['20261109_0012']
+    assert scripts.get_heads() == ['20261109_0013']
     modulo = scripts.get_revision('20261109_0012').module
     # Sin contexto Alembic: cualquier operacion DDL fallaria aqui.
     assert modulo.upgrade() is None
