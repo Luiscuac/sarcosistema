@@ -26,7 +26,7 @@ def raiz_archivos():
 
 
 def analisis_publico(a):
-    return {k:a[k] for k in ('id','estudio_id','estado','proyeccion','resultado','error_codigo',
+    return {k:a[k] for k in ('id','estudio_id','informe_id','archivo_id','archivo_sha256','informe_sha256','informe_texto','estado','proyeccion','resultado','error_codigo',
         'version_revision','creado_en','actualizado_en','revisiones') if k in a}
 
 

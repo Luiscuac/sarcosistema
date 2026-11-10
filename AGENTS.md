@@ -5,7 +5,7 @@
 ## Estructura
 
 - **Backend** en `backend/app/`, imports `app.*`. Cada módulo sigue **arquitectura limpia** por carpeta: `domain/`, `application/`, `infrastructure/`, `presentation/`. No hay `__init__.py`: se usan *namespace packages* (no los agregues solo por costumbre).
-- Módulos: `accesos` (login/JWT/roles), `laboratorio` (catálogo, solicitudes, muestras, resultados), `consultas` (pacientes, historial, SOAP, extracción asistida), `ia` (whisper + transcriptor), `imagenes` (servicio visual CPU experimental; router y pantallas pendientes), `shared`, `config`.
+- Módulos: `accesos` (login/JWT/roles), `laboratorio` (catálogo, solicitudes, muestras, resultados), `consultas` (pacientes, historial, SOAP, extracción asistida), `ia` (whisper + transcriptor), `imagenes` (visión CPU, RAG local y pantalla/API de revisión experimental optativa), `shared`, `config`.
 - **Composición única de IA**: `app/ia/router.py` (prefijo `/ia`) incluye whisper y transcriptor. `main.py` incluye `app.ia.router`; **no** enlaces los routers internos de `ia/` directo (antes causaba `/ia/ia/transcribir`).
 - Los repositorios hacen `flush()`; la transacción por petición la administra `get_db` (`SessionLocal.begin()`).
 - **Frontend** en `frontend/src/`: `app/` (router + providers), `features/<modulo>/`, `shared/`. Pruebas con **`node:test`** (no vitest/jest): archivos `*.test.js` junto al código.
@@ -50,7 +50,7 @@ npm run dev
 - `backend/.env` y `frontend/.env` están en `.gitignore` (cambios locales). Credenciales del Compose: `hospital:hospital_dev_password@localhost:5432/hospital_sarcobamba`.
 - Esas credenciales son de desarrollo. No imprimir JWT, contraseñas, hashes o transcripciones en logs; nunca versionar `.env` ni archivos locales de claves de demostración.
 - Python ejecutado en Windows usa `localhost:5432`; el backend ejecutado dentro de Docker usa `db:5432` (override en Compose). No cambiar la URL local a `db` para ejecutar Python en el host.
-- Hay siete revisiones Alembic, cabecera `20261027_0007`. Para una base nueva, Compose inicializa el esquema; después siempre aplicar migraciones. Una base ya existente se conserva.
+- En esta rama hay nueve revisiones Alembic, cabecera `20261103_0009` (0008 corpus pgvector, 0009 análisis/revisión experimental de imágenes). Para una base nueva, Compose inicializa el esquema; después siempre aplicar migraciones. Una base ya existente se conserva.
 - Sin `alembic upgrade head` fallan pruebas que verifican `alembic_version` (p. ej. `tests/test_preparar_medico_demo.py`) y los flujos contra PostgreSQL.
 - Tras **cambiar de rama**, reinicia uvicorn a mano: el watcher de `--reload` deja procesos viejos que se quedan con el puerto 8000 y código obsoleto.
 - Ante un puerto ocupado, identificar proceso/comando antes de detenerlo; no cerrar procesos ajenos. CORS acepta `http://localhost:5173`, no intercambiarlo sin más por `http://127.0.0.1:5173`.
@@ -64,6 +64,8 @@ npm run dev
 - Detalles de privacidad, retención en memoria, configuración y pruebas lentas: `docs/consultas/autocompletado-ia.md`.
 - Visión de tórax Fase 2: dependencias **opcionales** `backend/requirements-radiologia-cpu.txt` y `requirements-radiologia.txt`; pesos se preparan solo con `scripts.preparar_modelos_radiologia --descargar`. Runtime carga safetensors local verificado, CPU y trabajador efímero con lock/timeout; no llamar al constructor XRV con pesos remotos desde inferencia. No importar Torch al arrancar los módulos manuales.
 - Guía visual y prueba offline real (`Docker --network none`, sin tocar red del host): `docs/imagenes/fase-2-vision-local.md`. No introducir RAG/LLM/frontend en esta fase ni presentar scores como diagnósticos. `.models/`, `.datasets/` y resultados locales están fuera de Git; preservar procedencia/atribución de las muestras NIH.
+- La integración posterior autorizada está en `docs/imagenes/integracion-local.md`: ruta `/imagenes`, médico solicitante, informe publicado solo lectura, modelos secuenciales y revisión append-only separada del diagnóstico. `RADIOLOGY_AI_ENABLED=false` por defecto; dependencias RAG opcionales. No introducir LLM nuevo ni auto-publicación. `.storage/` también está fuera de Git.
+- Cierre documental 09/11/2026: las pruebas históricas y sus omisiones están en esa guía; Docker Linux no estaba disponible al retomar. No asumir el entorno levantado ni que sobreviven las bases tmpfs de prueba. No modificar credenciales locales para hacer pasar pruebas.
 
 ## Pruebas
 

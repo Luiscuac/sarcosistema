@@ -1,0 +1,9 @@
+# Preparación online; runtime posterior sin red externa ni descargas.
+FROM sarcosistema-imagenes-integracion:test
+USER root
+COPY app ./app
+COPY scripts ./scripts
+COPY alembic ./alembic
+COPY alembic.ini ./alembic.ini
+USER 10001:10001
+CMD ["python", "-m", "scripts.evaluar_radiologia", "--offline", "--visual", "--rag", "--entradas", "/entradas", "--salida", "/resultados"]

@@ -1,7 +1,7 @@
-export default function LaboratorioTopbar({ usuario }) {
+export default function LaboratorioTopbar({ usuario, titulo = 'UNIDAD DE ANÁLISIS CLÍNICO' }) {
   return (
     <header className="lab-topbar">
-      <span>UNIDAD DE ANÁLISIS CLÍNICO</span>
+      <span>{titulo}</span>
       <div className="lab-session">
         <span className="lab-session-status"><span aria-hidden="true" /> Sesión activa</span>
         <span className="lab-session-user" title={usuario.identificador_acceso}>

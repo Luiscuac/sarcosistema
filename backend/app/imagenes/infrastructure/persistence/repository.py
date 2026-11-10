@@ -52,7 +52,11 @@ class EstudiosRepository:
         archivo = (await self.db.execute(text('''SELECT id,nombre_original,url_archivo,mime_type,
             tamano_bytes,hash_sha256,activo FROM public.archivo_imagen
             WHERE informe_id=:id AND activo ORDER BY id DESC LIMIT 1'''), {'id':informe['informe_id']})).mappings().first()
-        return dict(row) | dict(informe) | {'archivo': dict(archivo) if archivo else None}
+        ultimo = await self.db.scalar(text('''SELECT id FROM public.imagen_analisis_ia
+            WHERE estudio_id=:id AND informe_id=:informe AND solicitado_por=:usuario
+            ORDER BY creado_en DESC,id DESC LIMIT 1'''),
+            {'id':estudio_id,'informe':informe['informe_id'],'usuario':usuario_id})
+        return dict(row) | dict(informe) | {'archivo': dict(archivo) if archivo else None,'analisis_reciente':ultimo}
 
     async def crear_analisis(self, snapshot: dict, usuario_id: int, clave: str, proyeccion: str):
         if not clave or len(clave)>100 or proyeccion not in ('PA','AP','frontal_no_especificada'):
@@ -85,12 +89,17 @@ class EstudiosRepository:
             FROM public.imagen_revision_ia WHERE analisis_id=CAST(:id AS uuid) ORDER BY version'''), {'id':str(analisis_id)})).mappings()
         return dict(row) | {'revisiones':[dict(r) for r in revisiones]}
 
-    async def finalizar(self, analisis_id, resultado: dict | None, error: str | None):
+    async def finalizar(self, analisis_id, resultado: dict | None, error: str | None, liderazgo=None):
+        fence = ''' AND EXISTS (SELECT 1 FROM pg_locks l JOIN pg_stat_activity a ON a.pid=l.pid
+            WHERE l.locktype='advisory' AND l.classid=0 AND l.objid=2111009 AND l.objsubid=1
+            AND l.granted AND l.pid=:lider_pid AND a.backend_start=:lider_inicio)''' if liderazgo else ''
         await self.db.execute(text('''UPDATE public.imagen_analisis_ia SET estado=:estado,
             resultado=CAST(:resultado AS jsonb),error_codigo=:error,actualizado_en=now()
-            WHERE id=CAST(:id AS uuid) AND estado IN ('en_cola','procesando')'''),
+            WHERE id=CAST(:id AS uuid) AND estado IN ('en_cola','procesando')''' + fence),
             {'id':str(analisis_id),'estado':'error' if error else 'completado',
-             'resultado':json.dumps(resultado) if resultado is not None else None,'error':error})
+             'resultado':json.dumps(resultado) if resultado is not None else None,'error':error,
+             'lider_pid':liderazgo['pid'] if liderazgo else None,
+             'lider_inicio':liderazgo['inicio'] if liderazgo else None})
 
     async def registrar_revision(self, analisis_id, usuario_id, version, decision, motivo, correccion):
         analisis = await self.obtener_analisis(analisis_id, usuario_id)

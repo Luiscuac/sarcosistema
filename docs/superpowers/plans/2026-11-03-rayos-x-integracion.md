@@ -1,5 +1,7 @@
 # Integración Rayos X Implementation Plan
 
+Estado de entrega: implementación y verificaciones previas registradas en `docs/imagenes/integracion-progreso.md`; cierre documental el 09/11/2026. Guía de uso y límites: `docs/imagenes/integracion-local.md`. No repetir tareas ya verificadas ni asumir entorno activo: Docker no estaba disponible al retomar el cierre. Rama conservada sin merge, commit ni push.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Integrar visión y RAG locales con revisión médica explícita dentro de SarcoSistema.
