@@ -11,3 +11,8 @@
 __pycache__/
 *.py[cod]
 /COMANDOS.txt
+.env
+.env.*
+!.env.example
+/.playwright-mcp/
+/backend/_ellos_cola.tmp

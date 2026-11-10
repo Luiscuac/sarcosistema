@@ -1,0 +1,514 @@
+[
+  {
+    "id": "RAG-01",
+    "pregunta": "¿Qué volumen de derrame pleural se hace evidente en una radiografía PA?",
+    "grupo": "respondible",
+    "respondible": true,
+    "hallazgo": "Effusion",
+    "referencias": [
+      {
+        "documento_id": "PMC4753987:ba7d29fde20f3f1a",
+        "seccion": "Imaging studies / Chest X-ray",
+        "cita": "200 mL",
+        "sha256": "ba7d29fde20f3f1a3803df54fca68862141a7c2b22750f82e139dd0c21399121"
+      }
+    ],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-02",
+    "pregunta": "¿Cuánto líquido pleural puede borrar el ángulo costofrénico en la vista lateral?",
+    "grupo": "respondible",
+    "respondible": true,
+    "hallazgo": "Effusion",
+    "referencias": [
+      {
+        "documento_id": "PMC4753987:ba7d29fde20f3f1a",
+        "seccion": "Imaging studies / Chest X-ray",
+        "cita": "50 mL",
+        "sha256": "ba7d29fde20f3f1a3803df54fca68862141a7c2b22750f82e139dd0c21399121"
+      }
+    ],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-03",
+    "pregunta": "¿Qué forma tiene el borde superior clásico del derrame pleural?",
+    "grupo": "respondible",
+    "respondible": true,
+    "hallazgo": "Effusion",
+    "referencias": [
+      {
+        "documento_id": "PMC4753987:ba7d29fde20f3f1a",
+        "seccion": "Imaging studies / Chest X-ray",
+        "cita": "Ellis S-shaped curve",
+        "sha256": "ba7d29fde20f3f1a3803df54fca68862141a7c2b22750f82e139dd0c21399121"
+      }
+    ],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-04",
+    "pregunta": "¿Puede un derrame pleural tener localización subpulmonar?",
+    "grupo": "respondible",
+    "respondible": true,
+    "hallazgo": "Effusion",
+    "referencias": [
+      {
+        "documento_id": "PMC4753987:ba7d29fde20f3f1a",
+        "seccion": "Imaging studies / Chest X-ray",
+        "cita": "subpulmonic",
+        "sha256": "ba7d29fde20f3f1a3803df54fca68862141a7c2b22750f82e139dd0c21399121"
+      }
+    ],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-05",
+    "pregunta": "¿Qué apariencia tiene un derrame pleural en una cisura?",
+    "grupo": "respondible",
+    "respondible": true,
+    "hallazgo": "Effusion",
+    "referencias": [
+      {
+        "documento_id": "PMC4753987:ba7d29fde20f3f1a",
+        "seccion": "Imaging studies / Chest X-ray",
+        "cita": "biconvex opacities",
+        "sha256": "ba7d29fde20f3f1a3803df54fca68862141a7c2b22750f82e139dd0c21399121"
+      }
+    ],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-06",
+    "pregunta": "¿Qué desplazamiento puede producir un derrame pleural masivo?",
+    "grupo": "respondible",
+    "respondible": true,
+    "hallazgo": "Effusion",
+    "referencias": [
+      {
+        "documento_id": "PMC4753987:ba7d29fde20f3f1a",
+        "seccion": "Imaging studies / Chest X-ray",
+        "cita": "contralateral mediastinal shift",
+        "sha256": "ba7d29fde20f3f1a3803df54fca68862141a7c2b22750f82e139dd0c21399121"
+      }
+    ],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-07",
+    "pregunta": "¿Qué vista radiográfica ayuda a evaluar un derrame pleural subpulmonar?",
+    "grupo": "respondible",
+    "respondible": true,
+    "hallazgo": "Effusion",
+    "referencias": [
+      {
+        "documento_id": "PMC4753987:ba7d29fde20f3f1a",
+        "seccion": "Imaging studies / Chest X-ray",
+        "cita": "Lateral decubitus radiography",
+        "sha256": "ba7d29fde20f3f1a3803df54fca68862141a7c2b22750f82e139dd0c21399121"
+      }
+    ],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-08",
+    "pregunta": "¿Qué opacidad pleural residual puede aparecer al resolverse un derrame?",
+    "grupo": "respondible",
+    "respondible": true,
+    "hallazgo": "Effusion",
+    "referencias": [
+      {
+        "documento_id": "PMC4753987:ba7d29fde20f3f1a",
+        "seccion": "Imaging studies / Chest X-ray",
+        "cita": "rounded opacity",
+        "sha256": "ba7d29fde20f3f1a3803df54fca68862141a7c2b22750f82e139dd0c21399121"
+      }
+    ],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-09",
+    "pregunta": "¿La cardiomegalia ayuda a diferenciar edema hidrostático de ARDS?",
+    "grupo": "respondible",
+    "respondible": true,
+    "hallazgo": "Cardiomegaly",
+    "referencias": [
+      {
+        "documento_id": "PMC6958895:fe8c601fd4fc9702",
+        "seccion": "Introduction / Pulmonary edema",
+        "cita": "presence of cardiomegaly",
+        "sha256": "fe8c601fd4fc970273a149c397f17f2c44c8359b0cb83fc943b48744e786cec6"
+      }
+    ],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-10",
+    "pregunta": "¿Qué ancho del pedículo vascular acompaña a cardiomegalia en edema hidrostático?",
+    "grupo": "respondible",
+    "respondible": true,
+    "hallazgo": "Cardiomegaly",
+    "referencias": [
+      {
+        "documento_id": "PMC6958895:fe8c601fd4fc9702",
+        "seccion": "Introduction / Pulmonary edema",
+        "cita": "vascular pedicle",
+        "sha256": "fe8c601fd4fc970273a149c397f17f2c44c8359b0cb83fc943b48744e786cec6"
+      }
+    ],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-11",
+    "pregunta": "¿La ausencia de cardiomegalia es típica de ARDS frente al edema cardiogénico?",
+    "grupo": "respondible",
+    "respondible": true,
+    "hallazgo": "Cardiomegaly",
+    "referencias": [
+      {
+        "documento_id": "PMC6958895:fe8c601fd4fc9702",
+        "seccion": "Introduction / Acute respiratory distress syndrome (ARDS)",
+        "cita": "cardiomegaly, normal vascular pedicle",
+        "sha256": "fe8c601fd4fc970273a149c397f17f2c44c8359b0cb83fc943b48744e786cec6"
+      }
+    ],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-12",
+    "pregunta": "¿Puede existir insuficiencia cardiaca con tamaño cardiaco normal y confundir la lectura de cardiomegalia?",
+    "grupo": "respondible",
+    "respondible": true,
+    "hallazgo": "Cardiomegaly",
+    "referencias": [
+      {
+        "documento_id": "PMC6958895:fe8c601fd4fc9702",
+        "seccion": "Introduction / Acute respiratory distress syndrome (ARDS)",
+        "cita": "heart failure in a normal sized heart",
+        "sha256": "fe8c601fd4fc970273a149c397f17f2c44c8359b0cb83fc943b48744e786cec6"
+      }
+    ],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-13",
+    "pregunta": "¿Pueden coexistir ARDS y edema cardiogénico al interpretar cardiomegalia?",
+    "grupo": "respondible",
+    "respondible": true,
+    "hallazgo": "Cardiomegaly",
+    "referencias": [
+      {
+        "documento_id": "PMC6958895:fe8c601fd4fc9702",
+        "seccion": "Introduction / Acute respiratory distress syndrome (ARDS)",
+        "cita": "coexistence of ARDS",
+        "sha256": "fe8c601fd4fc970273a149c397f17f2c44c8359b0cb83fc943b48744e786cec6"
+      }
+    ],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-14",
+    "pregunta": "¿Qué redistribución vascular ayuda a distinguir ARDS de edema con cardiomegalia?",
+    "grupo": "respondible",
+    "respondible": true,
+    "hallazgo": "Cardiomegaly",
+    "referencias": [
+      {
+        "documento_id": "PMC6958895:fe8c601fd4fc9702",
+        "seccion": "Introduction / Acute respiratory distress syndrome (ARDS)",
+        "cita": "apical vascular redistribution",
+        "sha256": "fe8c601fd4fc970273a149c397f17f2c44c8359b0cb83fc943b48744e786cec6"
+      }
+    ],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-15",
+    "pregunta": "¿Cómo es la silueta cardiaca en el patrón descrito de aspiración, en contraste con cardiomegalia?",
+    "grupo": "respondible",
+    "respondible": true,
+    "hallazgo": "Cardiomegaly",
+    "referencias": [
+      {
+        "documento_id": "PMC6958895:fe8c601fd4fc9702",
+        "seccion": "Aspiration",
+        "cita": "normal cardiac silhouette",
+        "sha256": "fe8c601fd4fc970273a149c397f17f2c44c8359b0cb83fc943b48744e786cec6"
+      }
+    ],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-16",
+    "pregunta": "¿Qué patrones pueden variar con la posición en edema acompañado de cardiomegalia?",
+    "grupo": "respondible",
+    "respondible": true,
+    "hallazgo": "Cardiomegaly",
+    "referencias": [
+      {
+        "documento_id": "PMC6958895:fe8c601fd4fc9702",
+        "seccion": "Introduction / Pulmonary edema",
+        "cita": "patient position",
+        "sha256": "fe8c601fd4fc970273a149c397f17f2c44c8359b0cb83fc943b48744e786cec6"
+      }
+    ],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-17",
+    "pregunta": "¿Qué patrón de consolidación se describe en neumonía asociada a ventilación?",
+    "grupo": "respondible",
+    "respondible": true,
+    "hallazgo": "Consolidation",
+    "referencias": [
+      {
+        "documento_id": "PMC6958895:fe8c601fd4fc9702",
+        "seccion": "Introduction / Ventilator-associated pneumonia",
+        "cita": "patchy areas of consolidation",
+        "sha256": "fe8c601fd4fc970273a149c397f17f2c44c8359b0cb83fc943b48744e786cec6"
+      }
+    ],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-18",
+    "pregunta": "¿La consolidación de neumonía asociada a ventilación puede ser multifocal?",
+    "grupo": "respondible",
+    "respondible": true,
+    "hallazgo": "Consolidation",
+    "referencias": [
+      {
+        "documento_id": "PMC6958895:fe8c601fd4fc9702",
+        "seccion": "Introduction / Ventilator-associated pneumonia",
+        "cita": "often multifocal",
+        "sha256": "fe8c601fd4fc970273a149c397f17f2c44c8359b0cb83fc943b48744e786cec6"
+      }
+    ],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-19",
+    "pregunta": "¿Un derrame asociado favorece el contexto de consolidación en neumonía del ventilado?",
+    "grupo": "respondible",
+    "respondible": true,
+    "hallazgo": "Consolidation",
+    "referencias": [
+      {
+        "documento_id": "PMC6958895:fe8c601fd4fc9702",
+        "seccion": "Introduction / Ventilator-associated pneumonia",
+        "cita": "pleural effusion favors",
+        "sha256": "fe8c601fd4fc970273a149c397f17f2c44c8359b0cb83fc943b48744e786cec6"
+      }
+    ],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-20",
+    "pregunta": "¿Qué ausencia de pérdida de volumen orienta al interpretar consolidación frente a atelectasia?",
+    "grupo": "respondible",
+    "respondible": true,
+    "hallazgo": "Consolidation",
+    "referencias": [
+      {
+        "documento_id": "PMC6958895:fe8c601fd4fc9702",
+        "seccion": "Introduction / Ventilator-associated pneumonia",
+        "cita": "Absence of volume loss",
+        "sha256": "fe8c601fd4fc970273a149c397f17f2c44c8359b0cb83fc943b48744e786cec6"
+      }
+    ],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-21",
+    "pregunta": "¿El empeoramiento del edema alveolar puede producir consolidación?",
+    "grupo": "respondible",
+    "respondible": true,
+    "hallazgo": "Consolidation",
+    "referencias": [
+      {
+        "documento_id": "PMC6958895:fe8c601fd4fc9702",
+        "seccion": "Introduction / Pulmonary edema",
+        "cita": "frank consolidation",
+        "sha256": "fe8c601fd4fc970273a149c397f17f2c44c8359b0cb83fc943b48744e786cec6"
+      }
+    ],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-22",
+    "pregunta": "¿Cómo evolucionan las opacidades hacia consolidación difusa en ARDS?",
+    "grupo": "respondible",
+    "respondible": true,
+    "hallazgo": "Consolidation",
+    "referencias": [
+      {
+        "documento_id": "PMC6958895:fe8c601fd4fc9702",
+        "seccion": "Introduction / Acute respiratory distress syndrome (ARDS)",
+        "cita": "diffuse consolidation",
+        "sha256": "fe8c601fd4fc970273a149c397f17f2c44c8359b0cb83fc943b48744e786cec6"
+      }
+    ],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-23",
+    "pregunta": "¿En qué intervalo descrito puede progresar la consolidación del ARDS?",
+    "grupo": "respondible",
+    "respondible": true,
+    "hallazgo": "Consolidation",
+    "referencias": [
+      {
+        "documento_id": "PMC6958895:fe8c601fd4fc9702",
+        "seccion": "Introduction / Acute respiratory distress syndrome (ARDS)",
+        "cita": "48",
+        "sha256": "fe8c601fd4fc970273a149c397f17f2c44c8359b0cb83fc943b48744e786cec6"
+      }
+    ],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-24",
+    "pregunta": "¿Una radiografía negativa excluye neumonía asociada a ventilación con posible consolidación?",
+    "grupo": "respondible",
+    "respondible": true,
+    "hallazgo": "Consolidation",
+    "referencias": [
+      {
+        "documento_id": "PMC6958895:fe8c601fd4fc9702",
+        "seccion": "Introduction / Ventilator-associated pneumonia",
+        "cita": "negative chest x-ray does not exclude",
+        "sha256": "fe8c601fd4fc970273a149c397f17f2c44c8359b0cb83fc943b48744e786cec6"
+      }
+    ],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-25",
+    "pregunta": "¿Qué dosis de insulina corresponde a esta glucemia?",
+    "grupo": "fuera_corpus",
+    "respondible": false,
+    "referencias": [],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-26",
+    "pregunta": "¿Cómo se clasifica una fractura de cadera?",
+    "grupo": "fuera_corpus",
+    "respondible": false,
+    "referencias": [],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-27",
+    "pregunta": "¿Qué muestra la resonancia cerebral?",
+    "grupo": "fuera_corpus",
+    "respondible": false,
+    "referencias": [],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-28",
+    "pregunta": "¿Cuál es la técnica de cirugía de catarata?",
+    "grupo": "fuera_corpus",
+    "respondible": false,
+    "referencias": [],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-29",
+    "pregunta": "¿Qué antibiótico y dosis debe recibir esta persona?",
+    "grupo": "fuera_corpus",
+    "respondible": false,
+    "referencias": [],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-30",
+    "pregunta": "¿Cuál es la estadificación histológica del melanoma?",
+    "grupo": "fuera_corpus",
+    "respondible": false,
+    "referencias": [],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-31",
+    "pregunta": "¿Qué vacuna corresponde según el calendario boliviano?",
+    "grupo": "fuera_corpus",
+    "respondible": false,
+    "referencias": [],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-32",
+    "pregunta": "¿Qué interacciones tiene la warfarina con este medicamento?",
+    "grupo": "fuera_corpus",
+    "respondible": false,
+    "referencias": [],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-33",
+    "pregunta": "¿Está confirmado el derrame pleural de este paciente?",
+    "grupo": "ambiguo_paciente",
+    "respondible": false,
+    "referencias": [],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-34",
+    "pregunta": "¿Esta cardiomegalia pertenece al paciente A o B?",
+    "grupo": "ambiguo_paciente",
+    "respondible": false,
+    "referencias": [],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-35",
+    "pregunta": "¿La consolidación es derecha o izquierda en mi imagen no adjunta?",
+    "grupo": "ambiguo_paciente",
+    "respondible": false,
+    "referencias": [],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-36",
+    "pregunta": "¿El derrame pleural de hoy aumentó frente a ayer sin imágenes?",
+    "grupo": "ambiguo_paciente",
+    "respondible": false,
+    "referencias": [],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-37",
+    "pregunta": "¿Cuál de dos informes contradictorios confirma cardiomegalia?",
+    "grupo": "ambiguo_paciente",
+    "respondible": false,
+    "referencias": [],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-38",
+    "pregunta": "¿Este score de consolidación confirma neumonía?",
+    "grupo": "ambiguo_paciente",
+    "respondible": false,
+    "referencias": [],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-39",
+    "pregunta": "¿La silueta cardiaca de esta persona demuestra cardiomegalia sin imagen?",
+    "grupo": "ambiguo_paciente",
+    "respondible": false,
+    "referencias": [],
+    "autor": "sintético, no revisión experta"
+  },
+  {
+    "id": "RAG-40",
+    "pregunta": "¿El derrame pleural de este paciente es maligno sin estudios?",
+    "grupo": "ambiguo_paciente",
+    "respondible": false,
+    "referencias": [],
+    "autor": "sintético, no revisión experta"
+  }
+]

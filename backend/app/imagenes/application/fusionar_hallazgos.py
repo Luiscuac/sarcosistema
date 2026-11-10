@@ -10,16 +10,18 @@ PATRONES = {
 
 def extraer_informe(texto: str) -> dict:
     resultado = {}
-    clausulas = re.split(r'[.;\n]+|\bpero\b|\bsin embargo\b', texto, flags=re.I)
+    clausulas = re.split(r'[.;,\n]+|\bpero\b|\bsin embargo\b|\bcon\b', texto, flags=re.I)
     for nombre, patron in PATRONES.items():
         estados, evidencia = set(), []
         for clausula in clausulas:
             if not re.search(patron, clausula, re.I):
                 continue
             evidencia.append(clausula.strip())
-            if re.search(r'posible|probable|sugestiv|no se descarta|no puede descartarse|\bpossible\b|\bsuspected\b', clausula, re.I):
+            if re.search(r'sin cambios|no (?:hay|se observan?) cambios|sin variaci[oó]n', clausula, re.I):
+                estados.add('ambiguo')
+            elif re.search(r'posible|probable|sugestiv|dudos[oa]|sospech|no (?:se )?(?:puede )?descart|no puede descartarse|\bpossible\b|\bsuspected\b', clausula, re.I):
                 estados.add('incierto')
-            elif re.search(r'\bno\b|\bsin\b|\bausencia\b|\bwithout\b', clausula, re.I):
+            elif re.search(r'\bno\b|\bsin\b|\bausencia\b|\bwithout\b', clausula[:re.search(patron,clausula,re.I).start()], re.I):
                 estados.add('negado')
             else:
                 estados.add('descrito')

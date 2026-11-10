@@ -13,9 +13,9 @@ y FORM_HEMOGRAMA_COMPLETO (20261102_0009). VLDL no tiene rango confirmado.
 Es idempotente: si la versión activa ya coincide con lo definido aquí, no crea
 otra. Así puede convivir con bases donde el cambio se aplicó antes a mano.
 
-NOTA DE INTEGRACIÓN: parte de 20261103_0009, igual que 20261107_0013 (enfermería).
-Al unir ramas, cambia down_revision a la última revisión de la otra cadena
-(p. ej. 20261109_0014) para que Alembic tenga una sola cabecera.
+NOTA DE INTEGRACIÓN: va después de 20261109_0013 (cabecera de main al integrar).
+La rama de enfermería (20261107_0013 -> 20261109_0014) parte de 20261103_0009;
+al integrarla, una de las dos cadenas debe continuar desde la otra.
 """
 
 from alembic import op
@@ -23,7 +23,7 @@ import sqlalchemy as sa
 
 
 revision = "20261110_0015"
-down_revision = "20261103_0009"
+down_revision = "20261109_0013"
 branch_labels = None
 depends_on = None
 
