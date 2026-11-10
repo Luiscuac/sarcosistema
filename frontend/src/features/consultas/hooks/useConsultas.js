@@ -10,9 +10,9 @@ export const usePacientes = (buscar, pagina) => useQuery({
 export const usePaciente = (id) => useQuery({
   queryKey: ['consultas', 'paciente', id], queryFn: () => obtenerPaciente(id), enabled: Boolean(id),
 })
-export const useHistorial = (id, pagina) => useQuery({
+export const useHistorial = (id, pagina, enabled = true) => useQuery({
   queryKey: ['consultas', 'historial', id, pagina],
-  queryFn: () => obtenerHistorial(id, pagina), enabled: Boolean(id),
+  queryFn: () => obtenerHistorial(id, pagina), enabled: Boolean(id) && enabled,
 })
 export const useConsulta = (id) => useQuery({
   queryKey: ['consultas', 'detalle', id], queryFn: () => obtenerConsulta(id), enabled: Boolean(id),

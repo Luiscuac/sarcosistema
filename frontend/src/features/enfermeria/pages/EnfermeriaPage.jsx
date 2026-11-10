@@ -31,6 +31,18 @@ const valores = (registro) => Object.fromEntries(Object.keys(inicial).map((campo
   campo, registro?.[campo] == null ? '' : String(registro[campo]),
 ]))
 const fechaHora = (value) => value ? new Date(value).toLocaleString('es-BO') : 'Sin fecha'
+const etiquetasCampos = Object.fromEntries([...narrativas, ...mediciones].map(([campo, etiqueta]) => [campo, etiqueta]))
+function mensajeErrorApi(error) {
+  const detalle = error.response?.data?.detail
+  if (Array.isArray(detalle)) return detalle.map((item) => {
+    const campo = item.loc?.at(-1)
+    const etiqueta = etiquetasCampos[campo]
+    const mensaje = String(item.msg || 'Dato no válido').replace(/^Value error, /, '')
+    return `${etiqueta ? `${etiqueta}: ` : ''}${mensaje}`
+  }).join(' ')
+  if (typeof detalle === 'string') return detalle
+  return 'No se pudo guardar el borrador. Revisa los datos e inténtalo de nuevo.'
+}
 function edadPaciente(nacimiento) {
   if (!nacimiento) return 'Edad no registrada'
   const hoy = new Date()
@@ -101,6 +113,11 @@ export default function EnfermeriaPage({ usuario, logout }) {
   async function guardar(evento) {
     evento.preventDefault()
     if (ocupado || !paciente) return
+    if (Object.values(form).every((valor) => valor.trim() === '')) {
+      setError('Registra al menos un dato de admisión o una medición antes de guardar.')
+      setMensaje('')
+      return
+    }
     setOcupado(true); setError(''); setMensaje('')
     const datos = Object.fromEntries(Object.entries(form).map(([campo, valor]) => [
       campo, valor.trim() === '' ? null : (campo === 'motivo_consulta' || campo === 'sintomas' || campo === 'observaciones_enfermeria' ? valor.trim() : Number(valor)),
@@ -111,8 +128,7 @@ export default function EnfermeriaPage({ usuario, logout }) {
       await cache.invalidateQueries({ queryKey: ['enfermeria', 'registros', paciente.id] })
       setForm(inicial); setEdicion(null); setMensaje('Borrador guardado. Revísalo antes de publicarlo.')
     } catch (err) {
-      const detalle = err.response?.data?.detail
-      setError(typeof detalle === 'string' ? detalle : 'No se pudo guardar el borrador. Revisa los datos e inténtalo de nuevo.')
+      setError(mensajeErrorApi(err))
     } finally { setOcupado(false) }
   }
 
