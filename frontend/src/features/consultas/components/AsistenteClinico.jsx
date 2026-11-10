@@ -3,6 +3,7 @@ import useAudioRecorder from '../../ia/hooks/useAudioRecorder.js'
 import { transcribirAudio } from '../../ia/whisper/api/iaApi.js'
 import { extraerDatosClinicos } from '../api/consultasApi.js'
 import { grupos } from '../utils/formulario.js'
+import PropuestaCampo from './PropuestaCampo.jsx'
 
 const etiquetas = Object.fromEntries(grupos.flatMap(g => g.campos))
 const ttl = Math.max(10, Math.min(900, Number(import.meta.env.VITE_CLINICAL_AUDIO_TTL_SECONDS) || 300))
@@ -205,22 +206,18 @@ export default function AsistenteClinico({ pacienteId, valores, onAplicar, onDes
         <button type="button" onClick={cancelar}>Cancelar y continuar manualmente</button>
       </div>}
     </div>
-    <details className="med-dictation-example"><summary>Texto de ejemplo para probar el asistente</summary><p>Motivo de consulta: dolor estomacal desde hace tres días. Síntomas: dolor de cabeza y náuseas. Temperatura: 37 grados Celsius. Niega vómitos y diarrea. No ha tomado medicamentos para estos síntomas.</p><span className="med-hint">Revisa el texto y cada propuesta antes de aplicarlos.</span></details>
+    <details className="med-dictation-example"><summary>Texto de ejemplo para probar el asistente</summary><p>La paciente viene porque desde hace tres días tiene dolor de garganta y fiebre por las noches. Dice que le duele al tragar y que tiene tos seca, pero no le falta el aire. De niña tuvo asma leve. Al revisarla tiene la garganta roja con placas blancas. Tiene 38.5 de temperatura y el pulso en 96. Creo que es una amigdalitis bacteriana. Le doy amoxicilina de 500 cada 8 horas por 10 días y que vuelva en tres días.</p><span className="med-hint">Puedes hablar con naturalidad: no hace falta nombrar cada campo. Revisa cada propuesta antes de aplicarla.</span></details>
     {pendientes && <button type="button" className="med-cancel-proposals" onClick={cancelar}>Cancelar propuestas y continuar manualmente</button>}
     {fase === 'revision' && pendientes && <p className="med-process-result" role="status">Propuestas listas para revisar</p>}
     {(error || recorder.error) && <p className="med-error" role="alert">{error || recorder.error}</p>}
     {original && <details className="med-original-transcript"><summary>Ver transcripción original</summary><p className="med-transcript">{original}</p></details>}
     {propuesta?.advertencias.map((aviso, i) => <p key={i} role="status" className="med-ai-warning">{aviso}</p>)}
     {propuesta?.bloqueada && <p role="alert" className="med-error">Autocompletado bloqueado: revisa a qué paciente corresponde el dictado. No se modificó la ficha.</p>}
-    {items.map((item, indice) => item.estado === 'pendiente' && <div key={`${propuesta?.propuesta_id}-${item.campo}`} className="med-suggestion">
-      <div className="med-ai-title"><strong>{etiquetas[item.campo] || item.campo}</strong><span>{item.ambiguo ? 'Ambiguo · completar manualmente' : item.estado}</span></div>
-      {Boolean(valores[item.campo]) && <p className="med-ai-current">Valor actual: {String(valores[item.campo])}</p>}
-      <label className="med-ai-text">Valor propuesto{typeof item.valor === 'number'
-        ? <input type="number" step="any" disabled={item.ambiguo} value={item.valor} onChange={e => setItems(actual => actual.map((s, i) => i === indice ? { ...s, valor: e.target.value } : s))} />
-        : <textarea rows={2} disabled={item.ambiguo} value={item.valor} onChange={e => setItems(actual => actual.map((s, i) => i === indice ? { ...s, valor: e.target.value } : s))} />}</label>
-      <blockquote><strong>Evidencia literal:</strong> {item.evidencia}</blockquote>
-      <div className="med-ai-actions"><button type="button" disabled={item.ambiguo || propuesta?.bloqueada} onClick={() => resolver(indice, true)}>Aceptar este campo</button><button type="button" onClick={() => resolver(indice, false)}>Rechazar</button></div>
-    </div>)}
+    {items.map((item, indice) => item.estado === 'pendiente' && <PropuestaCampo
+      key={`${propuesta?.propuesta_id}-${item.campo}`} item={item} etiqueta={etiquetas[item.campo] || item.campo}
+      valorActual={valores[item.campo]} bloqueada={propuesta?.bloqueada}
+      onCambiarValor={valor => setItems(actual => actual.map((s, i) => i === indice ? { ...s, valor } : s))}
+      onAceptar={() => resolver(indice, true)} onRechazar={() => resolver(indice, false)} />)}
     {pendientes && <button type="button" onClick={descartarPendientes}>Rechazar todas las pendientes</button>}
     {aceptadas.length > 0 && <details className="med-assistant-history"><summary>Deshacer un campo aplicado</summary>
       <div className="med-assistant-history-list">{aceptadas.map(({ item, indice }) => <div key={`${propuesta?.propuesta_id}-${item.campo}`}>

@@ -4,9 +4,21 @@
 
 El médico selecciona un paciente y abre **Nueva consulta**. El panel **Dictado asistido** reutiliza el `useAudioRecorder` existente y `POST /ia/transcribir` con faster-whisper en español. Al detener el audio, transcribe y solicita al extractor local que distribuya las frases entre los campos SOAP existentes.
 
-La respuesta **no es una consulta** y no se guarda automáticamente. Cada propuesta muestra campo, valor editable y evidencia literal. En prosa normal la evidencia es la oración completa; si Whisper devuelve una frase larga separada por comas, puede ser el segmento entre rótulos hablados claros como "síntomas", "temperatura" o "plan". Una palabra mal reconocida no se corrige por contexto: se conserva y se marca ambigua para revisión. El profesional puede aceptar un campo, rechazarlo o deshacer su aplicación. Un valor manual distinto exige confirmación de reemplazo. Deshacer no borra correcciones manuales posteriores. Mientras se está grabando/procesando o hay propuestas sin resolver, no se permite finalizar. Es posible cancelar o rechazar todas y continuar con el formulario manual si falla la IA.
+La respuesta **no es una consulta** y no se guarda automáticamente. El médico puede hablar con naturalidad, sin nombrar los campos ("la paciente viene porque…", "le doy amoxicilina…"). Cada propuesta muestra el campo, el **valor redactado en estilo clínico** (editable) y **lo que se dijo**, es decir, la frase real del dictado que lo respalda. El profesional puede aceptar un campo, rechazarlo o deshacer su aplicación. Un valor manual distinto exige confirmación de reemplazo. Deshacer no borra correcciones manuales posteriores. Mientras se está grabando/procesando o hay propuestas sin resolver, no se permite finalizar. Es posible cancelar o rechazar todas y continuar con el formulario manual si falla la IA.
 
-La IA **no diagnostica ni prescribe**: solo propone información expresada. Conserva negaciones, sospechas, antecedentes y medicamentos literalmente; no agrega CIE-10. El modelo elige citas y campos; para narrativas el servidor copia la cita validada, no permite paráfrasis generadas. La evidencia debe cubrir una oración completa o un segmento delimitado por rótulos clínicos explícitos, sin omitir negaciones o correcciones. Un complemento determinista reconoce signos vitales explícitos para no depender de omisiones del LLM: verifica unidades, conversión de talla y correcciones verbales; mediciones contradictorias quedan ambiguas, nunca elige silenciosamente una. Si algo no se puede validar, se descarta con una advertencia; un campo ambiguo debe completarse manualmente. Si hay indicios de varios pacientes/identidad incierta, se bloquea todo el autocompletado.
+### Cómo se reparte el trabajo
+
+1. **El modelo local (Ollama, `qwen2.5:3b`) clasifica y redacta.** Devuelve solo los campos mencionados, cada uno con `valor` (telegráfico, terminología médica inequívoca, negativos y dudas conservados) y `evidencia` (cita literal). El prompt le prohíbe agregar dosis, unidades, vías, frecuencias o duraciones no dichas.
+2. **El dominio verifica lo comprobable** (`app/consultas/domain/extraccion.py`):
+   - La cita debe existir en el dictado. Se tolera que el modelo la copie con pequeñas diferencias o una frases no seguidas, pero siempre se muestra el **texto real**; si no aparece, la propuesta se descarta.
+   - **Alertas** (el campo se puede aceptar solo marcando "Revisé los avisos"): cifras que no se dictaron, vía/unidad/forma farmacéutica agregada, negación perdida o agregada, duda del médico sin "(presuntivo)", palabras que no aparecen en lo dictado, posibles erratas y contenido repetido en otro campo.
+   - Se quita "(presuntivo)" si el médico no expresó duda.
+   - **Signos vitales:** número en rango fisiológico y presente en lo dictado (con conversión de talla en metros). Un detector literal sirve de respaldo si el modelo los omite y para contrastar: si el médico se corrigió ("39, perdón, 37") vale el valor corregido; si no coinciden, el campo queda ambiguo. Mediciones aproximadas, en Fahrenheit, contradictorias o de otro momento ("bajó 3 kilos") quedan ambiguas.
+   - Preguntas sin respuesta o texto incomprensible: ambiguo (debe completarse a mano).
+   - Si el dictado menciona a otro paciente, se bloquea todo; si solo el modelo lo sospecha, se muestra una advertencia.
+3. **El médico revisa y decide** campo por campo. Nada se aplica ni se guarda solo.
+
+La IA **no diagnostica ni prescribe**: solo organiza lo expresado. No agrega CIE-10.
 
 Estas comprobaciones reducen riesgos, **no garantizan exactitud clínica**. Whisper actual no identifica hablantes ni devuelve confianza; el extractor no puede certificar que una conversación corresponde al paciente seleccionado ni detectar todos los errores o contradicciones. Hay que verificar persona, autor de cada frase, dosis y contenido antes de aceptar. El uso en este repositorio es con datos ficticios, no una aprobación institucional.
 
@@ -45,7 +57,7 @@ Solo el adaptador local está implementado. El puerto `ExtractorClinico` permite
 
 Verifica paciente activo, 2–12000 caracteres, rol y esquema estricto del modelo. No transmite identidad, ID ni demografía del paciente a Ollama. Envía únicamente el dictado y las reglas de extracción; el dictado puede contener identificadores si el profesional los pronuncia, por eso el procesamiento queda en el equipo autorizado.
 
-La respuesta contiene `propuesta_id`, `modelo`, `campos_extraidos` (`campo`, `valor`, `evidencia`, `ambiguo`), `advertencias`, `bloqueada` y `requiere_revision=true`. Se usan los nombres reales: `temperatura_c`, `antecedentes`, `hallazgos`, `estudios_solicitados`, `plan_seguimiento`; diagnósticos secundarios y medicamentos siguen siendo texto como en el formulario manual.
+La respuesta contiene `propuesta_id`, `modelo`, `campos_extraidos` (`campo`, `valor`, `evidencia`, `ambiguo`, `alertas`), `advertencias`, `bloqueada` y `requiere_revision=true`. Se usan los nombres reales: `temperatura_c`, `antecedentes`, `hallazgos`, `estudios_solicitados`, `plan_seguimiento`; diagnósticos secundarios y medicamentos siguen siendo texto como en el formulario manual.
 
 La extracción no escribe tablas clínicas ni guarda audio/transcripción. Hay timeout, límite de respuesta y una sola inferencia simultánea por proceso backend; no se cachean textos entre usuarios ni se reintenta automáticamente un análisis fallido. Un JSON envuelto solo en un bloque Markdown puede desempaquetarse, pero nunca se reparan inventando valores las respuestas inválidas.
 
@@ -80,6 +92,15 @@ Evaluación real optativa (necesita Ollama/modelo descargados; no usa dobles):
 $env:RUN_LOCAL_AI_TESTS='1'
 .\.venv\Scripts\python.exe -m pytest tests/test_extraccion_modelo_local.py -v --tb=short
 ```
+
+Comparar calidad entre versiones o modelos con dictados **ficticios** (`scripts/casos_extractor_clinico.py`), sin tocar la base de datos:
+
+```powershell
+# backend, con Ollama iniciado
+.\.venv\Scripts\python.exe -m scripts.evaluar_extractor_clinico --modelo qwen2.5:3b --salida resultados.json
+```
+
+Resultado del 09/11/2026 con `qwen2.5:3b` en CPU: el extractor anterior (citas literales y rótulos) obtuvo **53/83 comprobaciones (64 %)** y con habla natural casi no proponía campos; el actual obtiene **73–76/83 (88–92 %)** según la ejecución (Ollama no es totalmente determinista en CPU), unos 5–6 s por dictado. Los fallos restantes son de clasificación del modelo (por ejemplo, un hallazgo de electrocardiograma propuesto como diagnóstico) y quedan visibles para la revisión del médico.
 
 Para incluir Whisper y persistencia PostgreSQL, definir `LOCAL_AI_AUDIO_PATH` a un WAV **sintético/ficticio**. La prueba de integración crea un paciente de prueba dentro de una transacción, transcribe, extrae, realiza aceptación explícita de prueba, guarda con auditoría, relee y revierte todo. Requiere la cuenta `medico_demo` ya preparada. El test no sustituye pruebas clínicas humanas ni acredita exactitud general del modelo.
 

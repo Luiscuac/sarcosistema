@@ -33,3 +33,26 @@
 @media (max-width: 700px) {
   .lab-request-study, .lab-sample-action { align-items: flex-start; flex-direction: column; }
 }
+
+/* Bandeja: avance, espera y siguiente paso */
+.lab-list-toolbar { align-items: center; }
+.lab-list-filters { display: flex; align-items: center; gap: 12px; padding: 0 22px 18px; }
+.lab-list-filters .lab-search { flex: 1; width: auto; margin: 0; }
+.lab-period { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; white-space: nowrap; }
+.lab-period select { height: 46px; padding: 0 12px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--ink); font: inherit; font-size: 13px; }
+.lab-active-filter { display: flex; align-items: center; gap: 10px; margin: -6px 22px 14px; color: var(--muted); font-size: 12px; }
+.lab-active-filter strong { color: var(--ink); }
+.lab-active-filter button { padding: 4px 9px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: var(--brand); font: inherit; font-size: 12px; cursor: pointer; }
+.lab-request-progress { display: grid; gap: 6px; min-width: 130px; }
+.lab-request-progress > span { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.lab-wait.is-long { color: #a33b16 !important; font-weight: 600; }
+.lab-row-action { white-space: nowrap; }
+.lab-row-action .lab-next-action { border-color: var(--brand); background: var(--brand); color: #fff; }
+.lab-row-action .lab-next-action:hover { border-color: #0b625b; background: #0b625b; }
+.lab-row-action .lab-next-action--informe,
+.lab-row-action .lab-next-action--abrir { border-color: var(--line); background: #fff; color: var(--brand); }
+.lab-row-action .lab-next-action--informe:hover,
+.lab-row-action .lab-next-action--abrir:hover { border-color: var(--brand); background: #f7fbfa; }
+.lab-row-action .lab-row-secondary { display: block; min-height: 0; margin-top: 6px; padding: 0; border: 0; background: none; color: var(--muted); font-size: 12px; font-weight: 400; text-align: right; }
+.lab-row-action .lab-row-secondary:hover { border: 0; background: none; color: var(--brand); text-decoration: underline; }
+@media (max-width: 700px) { .lab-list-filters { flex-direction: column; align-items: stretch; } }

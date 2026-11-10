@@ -1,4 +1,4 @@
-"""Puertos del modulo de imagen: la aplicacion no conoce SQL ni disco."""
+"""Puertos clínicos; paquete para convivir con el puerto de visión local."""
 from typing import Protocol
 
 from app.imagenes.domain.entities import (

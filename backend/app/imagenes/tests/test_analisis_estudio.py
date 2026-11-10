@@ -40,3 +40,18 @@ async def test_vision_y_rag_secuenciales_y_fallo_rag_no_inventa_fuentes():
     assert r['rag']['evidencia'] == []
     assert len(r['fusion']['discrepancias']) == 1
     assert r['fusion']['hallazgos_confirmados'] == []
+
+
+@pytest.mark.asyncio
+async def test_fallo_bd_rag_conserva_vision_valida():
+    from sqlalchemy.exc import OperationalError
+    class Vision:
+        def analizar(self,*args,**kwargs):
+            return {'findings':[{'name':'Effusion','score':0.8}]}
+    class Rag:
+        async def consultar(self,*args):
+            raise OperationalError('fixture',{},Exception('test'))
+    t,s = datos()
+    r = await AnalizarEstudio(Vision(),Rag(),lambda _:b'fixture').ejecutar(t,s)
+    assert r['vision']['findings'][0]['score'] == 0.8
+    assert r['rag']['estado'] == 'no_disponible'

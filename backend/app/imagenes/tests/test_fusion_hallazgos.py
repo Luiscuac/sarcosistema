@@ -1,4 +1,5 @@
 from app.imagenes.application.fusionar_hallazgos import extraer_informe, fusionar
+import pytest
 
 
 def test_negacion_e_incertidumbre_con_evidencia_literal():
@@ -36,3 +37,13 @@ def test_score_bajo_no_descarta_enfermedad_ni_declara_normal():
     assert r['discrepancias'] == []
     assert r['informe']['Effusion']['estado'] == 'no_mencionado'
     assert r['hallazgos_confirmados'] == []
+
+
+@pytest.mark.parametrize('texto,nombre,estado', [
+    ('Sin derrame pleural, con cardiomegalia.','Cardiomegaly','descrito'),
+    ('No se puede descartar derrame pleural.','Effusion','incierto'),
+    ('Derrame pleural dudoso.','Effusion','incierto'),
+    ('No hay cambios en la cardiomegalia.','Cardiomegaly','ambiguo'),
+])
+def test_no_promueve_negacion_o_incertidumbre_fuera_de_alcance(texto,nombre,estado):
+    assert extraer_informe(texto)[nombre]['estado'] == estado

@@ -1,28 +1,31 @@
-"""El LLM selecciona citas literales; solo genera un valor para medidas numéricas."""
-from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt
+"""Contrato JSON que Ollama debe respetar (salida estructurada).
 
-from app.consultas.domain.extraccion import CampoClinico, NUMERICOS, SalidaModelo, Sugerencia
+El modelo devuelve solo los campos mencionados, cada uno con el valor redactado y
+la cita literal que lo respalda. Todos los valores llegan como texto; los signos
+vitales se convierten a número al validarlos en el dominio.
+"""
+from pydantic import BaseModel, ConfigDict, Field
+
+from app.consultas.domain.extraccion import CampoClinico, SalidaModelo, Sugerencia
 
 
 class Captura(BaseModel):
     model_config = ConfigDict(extra='forbid')
     campo: CampoClinico
+    valor: str = Field(min_length=1, max_length=3000)
     evidencia: str = Field(min_length=1, max_length=3000)
-    numero: StrictFloat | StrictInt | None = None
     ambiguo: bool = False
 
 
 class CapturaModelo(BaseModel):
     model_config = ConfigDict(extra='forbid')
-    campos: list[Captura] = Field(default_factory=list, max_length=24)
-    campos_sin_sentido: list[CampoClinico] = Field(default_factory=list, max_length=24)
+    campos: list[Captura] = Field(default_factory=list, max_length=25)
     multiples_pacientes: bool = False
     identidad_incierta: bool = False
 
     def propuestas(self) -> SalidaModelo:
-        return SalidaModelo(campos=[
-            Sugerencia(campo=c.campo, evidencia=c.evidencia,
-                valor=c.numero if c.campo in NUMERICOS else c.evidencia, ambiguo=c.ambiguo)
-            for c in self.campos if c.campo not in NUMERICOS or c.numero is not None
-        ], campos_sin_sentido=self.campos_sin_sentido,
-            multiples_pacientes=self.multiples_pacientes, identidad_incierta=self.identidad_incierta)
+        return SalidaModelo(
+            campos=[Sugerencia(campo=c.campo, valor=c.valor, evidencia=c.evidencia, ambiguo=c.ambiguo) for c in self.campos],
+            multiples_pacientes=self.multiples_pacientes,
+            identidad_incierta=self.identidad_incierta,
+        )

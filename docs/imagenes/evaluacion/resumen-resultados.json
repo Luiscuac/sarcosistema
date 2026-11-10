@@ -1,0 +1,203 @@
+{
+  "status": "completed_exploratory_not_clinical_validation",
+  "text": {
+    "n": 300,
+    "correct_target": 242,
+    "accuracy": 0.8066666666666666,
+    "macro_f1": 0.7978694581280789
+  },
+  "visual": {
+    "n_seleccionados": 60,
+    "n_descargas_fallidas": 0,
+    "n_disponibles": 60,
+    "n_intentos": 60,
+    "n_completados": 60,
+    "n_errores": 0,
+    "n_perdidas_totales": 0,
+    "metrics_weak_NIH_labels": {
+      "Consolidation": {
+        "n_total": 60,
+        "n_evaluable": 60,
+        "excluidos": 0,
+        "positivos": 15,
+        "negativos": 45,
+        "tp": 11,
+        "fp": 13,
+        "tn": 32,
+        "fn": 4,
+        "sensibilidad": 0.7333333333333333,
+        "especificidad": 0.7111111111111111,
+        "precision": 0.4583333333333333,
+        "f1": 0.5641025641025641,
+        "auroc": 0.797037037037037,
+        "ap": 0.5715876974114961,
+        "umbral_tecnico_no_clinico": 0.5
+      },
+      "Effusion": {
+        "n_total": 60,
+        "n_evaluable": 60,
+        "excluidos": 0,
+        "positivos": 23,
+        "negativos": 37,
+        "tp": 18,
+        "fp": 9,
+        "tn": 28,
+        "fn": 5,
+        "sensibilidad": 0.782608695652174,
+        "especificidad": 0.7567567567567568,
+        "precision": 0.6666666666666666,
+        "f1": 0.72,
+        "auroc": 0.7861339600470035,
+        "ap": 0.7052306773353699,
+        "umbral_tecnico_no_clinico": 0.5
+      },
+      "Cardiomegaly": {
+        "n_total": 60,
+        "n_evaluable": 60,
+        "excluidos": 0,
+        "positivos": 19,
+        "negativos": 41,
+        "tp": 16,
+        "fp": 9,
+        "tn": 32,
+        "fn": 3,
+        "sensibilidad": 0.8421052631578947,
+        "especificidad": 0.7804878048780488,
+        "precision": 0.64,
+        "f1": 0.7272727272727273,
+        "auroc": 0.9037227214377407,
+        "ap": 0.8646950536538638,
+        "umbral_tecnico_no_clinico": 0.5
+      }
+    },
+    "independent_from_training": false,
+    "derived_resolution": [
+      224,
+      224
+    ]
+  },
+  "rag": {
+    "n": 40,
+    "n_completados": 40,
+    "n_errores": 0,
+    "recall_4": 0.9166666666666666,
+    "mrr_10": 0.6018518518518519,
+    "abstencion_precision": 0.5238095238095238,
+    "abstencion_recall": 0.6875,
+    "citas_n": 41,
+    "citas_integras": 1.0,
+    "cobertura_respondibles": 0.5833333333333334,
+    "embeddings_batch_seconds": 23.364347030999852
+  },
+  "ablation_contractual": {
+    "n_pares": 300,
+    "vision_synthetic": true,
+    "rag_replay": true,
+    "fuente_rag": "Respuesta real a consulta fija reutilizada; no 300 recuperaciones independientes",
+    "scores_identicos": 300,
+    "fusion_identica": 300,
+    "confirmaciones": 0,
+    "consultas_distintas": 1
+  },
+  "api_real": {
+    "offline_real": true,
+    "api_autenticada": true,
+    "imagen_local": true,
+    "modelos_cpu_reales": true,
+    "idempotencia": true,
+    "citas_locales": 4,
+    "revision_persistida": true,
+    "conflicto_revision_409": true,
+    "informe_sin_cambios": true,
+    "analisis_id": "e841852a-89f7-4888-9ec3-7b25810b7557",
+    "scores_experimentales": [
+      {
+        "name": "Consolidation",
+        "score": 0.31243300437927246
+      },
+      {
+        "name": "Effusion",
+        "score": 0.39427393674850464
+      },
+      {
+        "name": "Cardiomegaly",
+        "score": 0.621515154838562
+      }
+    ],
+    "metricas_vision": {
+      "inference_seconds": [
+        0.13200444499943842
+      ],
+      "end_to_end_seconds": 7.211935592999907,
+      "model_load_seconds": 0.5137679669996942,
+      "worker_total_seconds": 4.765038283999274,
+      "preprocessing_seconds": 0.20639430499977607,
+      "worker_rss_at_end_bytes": 457916416,
+      "available_bytes_before_model": 3079188480,
+      "worker_peak_rss_bytes_observed": 457916416
+    }
+  },
+  "latency_visual_seconds": {
+    "n": 60,
+    "median": 4.531658378499742,
+    "p95_nearest_rank": 11.614133303000017,
+    "min": 3.4415239650006697,
+    "max": 25.348792935000347
+  },
+  "visual_peak_rss_bytes_observed": 421994496,
+  "docker_evidence": [
+    {
+      "name": "sarco-fase5-db-a3536ff7",
+      "network": "none",
+      "ports": {},
+      "exit_code": 0,
+      "oom_killed": false,
+      "readonly": false,
+      "memory_limit_bytes": 805306368,
+      "cpus_limit": 0.0,
+      "image_id": "sha256:7b822b0aac60967beb1ea5e576b8602c94c300a157d187f385ae3e0da199b90a"
+    },
+    {
+      "name": "sarco-fase5-evaluacion-a3536ff7",
+      "network": "container:d7ce7b12b3afef71346965e886236715515df103caf6594735d36453673b8468",
+      "ports": {},
+      "exit_code": 0,
+      "oom_killed": false,
+      "readonly": true,
+      "memory_limit_bytes": 3221225472,
+      "cpus_limit": 4.0,
+      "image_id": "sha256:759589cfb6bf94286a0a798fe9be7171fb42915810cca7ea3c664204284b6154"
+    },
+    {
+      "name": "sarco-fase5-revision-a3536ff7",
+      "network": "container:d7ce7b12b3afef71346965e886236715515df103caf6594735d36453673b8468",
+      "ports": {},
+      "exit_code": 0,
+      "oom_killed": false,
+      "readonly": true,
+      "memory_limit_bytes": 3221225472,
+      "cpus_limit": 4.0,
+      "image_id": "sha256:43a643497e1686e985d2e1abf6926aad3cd1bcaa8e310d662f80c8b8d4c2c775"
+    },
+    {
+      "name": "sarco-fase5-api-a3536ff7",
+      "network": "container:d7ce7b12b3afef71346965e886236715515df103caf6594735d36453673b8468",
+      "ports": {},
+      "exit_code": 0,
+      "oom_killed": false,
+      "readonly": true,
+      "memory_limit_bytes": 3221225472,
+      "cpus_limit": 4.0,
+      "image_id": "sha256:43a643497e1686e985d2e1abf6926aad3cd1bcaa8e310d662f80c8b8d4c2c775"
+    }
+  ],
+  "raw_files_sha256": {
+    "visual.json": "893015e59a8a758c612b13249854de2aae8460dc6756c8753d4d6e82e8723109",
+    "rag.json": "7e142a73e5da767248c7aea724231b52697ce651ca5078d8f1d854e21dda7f1b",
+    "texto.json": "729a1145e241bbe904789100c008cb8a1415c577cb4063871ba592c7ac719aa3",
+    "revision/rag.json": "8a914d3be879d1a62b153fa5f6f53bfd846199b65738d948a1fe692bbf3d2740",
+    "revision/ablacion.json": "e21dacb706a068edc364e026327a0359aef5cd9531b3f4ca17cbdd4cd3f9aad9",
+    "api.json": "9d32adf4cfe5fa979802356a2ccdcc39771873a548884fd4fd415e4aa25ca356",
+    "ejecucion.json": "3d0932dca5e70dde1eb0b5c4b6056d291124de4bd621d8c6326060bd889b1779"
+  }
+}

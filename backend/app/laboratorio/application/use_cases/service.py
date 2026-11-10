@@ -89,6 +89,8 @@ class LaboratorioService:
             "referencia": solicitud["referencia"],
             "paciente_nombre": solicitud["paciente_nombre"],
             "paciente_documento": solicitud["paciente_documento"],
+            "paciente_fecha_nacimiento": solicitud.get("paciente_fecha_nacimiento"),
+            "paciente_sexo": solicitud.get("paciente_sexo"),
             "fecha_solicitud": solicitud["fecha_solicitud"],
             "referencia_papel_formulario": solicitud["referencia_papel_formulario"],
             "procedencia": solicitud["procedencia"],

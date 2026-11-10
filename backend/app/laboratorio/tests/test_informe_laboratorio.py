@@ -115,3 +115,20 @@ async def test_informe_rechaza_borrador_aunque_el_estado_del_estudio_sea_publica
 
     with pytest.raises(ValueError, match="todos los resultados estén publicados"):
         await LaboratorioService(Repositorio()).obtener_informe(9)
+
+
+@pytest.mark.asyncio
+async def test_informe_incluye_fecha_nacimiento_y_sexo_para_el_encabezado():
+    from datetime import date
+
+    datos = solicitud(estado="no_realizado")
+    datos["paciente_fecha_nacimiento"] = date(1990, 5, 1)
+    datos["paciente_sexo"] = "F"
+
+    class Repositorio:
+        async def obtener_solicitud(self, solicitud_id):
+            return datos
+
+    informe = await LaboratorioService(Repositorio()).obtener_informe(9)
+    assert informe["paciente_fecha_nacimiento"] == date(1990, 5, 1)
+    assert informe["paciente_sexo"] == "F"

@@ -1,5 +1,6 @@
 import hashlib
 import uuid
+from datetime import datetime, timezone
 
 import pytest
 from sqlalchemy import text
@@ -54,6 +55,7 @@ async def test_idempotencia_y_revision_no_modifican_informe(estudio_fixture):
     a = await repo.crear_analisis(snapshot, usuario, 'clave-prueba', 'PA')
     b = await repo.crear_analisis(snapshot, usuario, 'clave-prueba', 'PA')
     assert a['id'] == b['id']
+    assert (await repo.obtener(estudio,usuario))['analisis_reciente'] == a['id']
     with pytest.raises(ValueError):
         await repo.crear_analisis(snapshot, usuario, 'clave-prueba', 'AP')
     await repo.finalizar(a['id'], {'experimental':True}, None)
@@ -74,5 +76,23 @@ async def test_reclamar_una_vez_y_recuperar_interrupcion(estudio_fixture):
     assert reclamado['id'] == trabajo['id']
     assert reclamado['estado'] == 'procesando'
     assert await repo.reclamar() is None
+    await repo.finalizar(trabajo['id'],{'experimental':True},None,
+        liderazgo={'pid':-1,'inicio':datetime.now(timezone.utc)})
+    assert (await repo.obtener_analisis(trabajo['id'],usuario))['estado'] == 'procesando'
     await repo.recuperar_interrumpidos()
     assert (await repo.obtener_analisis(trabajo['id'],usuario))['estado'] == 'interrumpido'
+
+
+@pytest.mark.asyncio
+async def test_demo_declara_simulacion_y_no_reemplaza_datos(estudio_fixture,monkeypatch):
+    from scripts import preparar_estudio_imagen_demo as demo
+    monkeypatch.setattr(demo,'REFERENCIA','TEST-RX-DEMO-'+uuid.uuid4().hex)
+    monkeypatch.setattr(demo,'PACIENTE_CODIGO','TEST-PAC-RX-'+uuid.uuid4().hex)
+    db, usuario, _, _, _ = estudio_fixture
+    archivo = dict(url_archivo='fixture.png',tamano_bytes=10,hash_sha256='a'*64)
+    id = await demo.preparar_estudio_demo(db,usuario,archivo)
+    detalle = await EstudiosRepository(db).obtener(id,usuario)
+    assert 'SIMULACIÓN DE INTEGRACIÓN' in detalle['informe_texto']
+    assert 'no es el informe auténtico' in detalle['informe_texto']
+    with pytest.raises(ValueError,match='existe'):
+        await demo.preparar_estudio_demo(db,usuario,archivo)

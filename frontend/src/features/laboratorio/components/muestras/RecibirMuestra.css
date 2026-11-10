@@ -11,3 +11,11 @@
 .lab-reception-mode.is-incidence.is-active { border-color: #a33627; color: #a33627; background: #fff6f4; }
 .lab-incidence-submit { padding: 10px 16px; border: 1px solid #a33627; border-radius: 6px; background: #a33627; color: #fff; font-weight: 600; cursor: pointer; }
 .lab-incidence-submit:disabled { opacity: .55; cursor: not-allowed; }
+
+.lab-sample-types { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
+.lab-sample-type { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: #334155; font-size: 13px; cursor: pointer; }
+.lab-sample-type input { accent-color: var(--brand); }
+.lab-sample-type.is-active { border-color: var(--brand); background: #f1faf8; color: var(--brand); font-weight: 600; }
+.lab-sample-study-list > label { align-items: flex-start; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
+.lab-sample-study-list > label:has(input:checked) { border-color: var(--brand); background: #f7fbfa; }
+.lab-sample-study-list > label input { margin-top: 2px; }
