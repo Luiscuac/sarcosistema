@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { aplicarSugerencia, deshacerSugerencia } from './sugerencias.js'
+import { aplicarSugerencia, deshacerSugerencia, necesitaVerificacion } from './sugerencias.js'
 
 test('aceptar modifica solo un campo vacío y conserva los demás', () => {
   const resultado = aplicarSugerencia({ motivo_consulta: '', diagnostico_principal: 'Manual' },
@@ -35,4 +35,10 @@ test('no aplicar campo ambiguo ni identidad de paciente del proveedor', () => {
   const form = { sintomas: '' }
   assert.equal(aplicarSugerencia(form, { campo: 'sintomas', valor: '¿Fiebre?', ambiguo: true }).aplicada, false)
   assert.equal(aplicarSugerencia(form, { campo: 'paciente_id', valor: '999' }).aplicada, false)
+})
+
+test('las propuestas con avisos requieren verificación explícita', () => {
+  assert.equal(necesitaVerificacion({ campo: 'medicamentos', alertas: ['Agrega vía no dictada: vo.'] }), true)
+  assert.equal(necesitaVerificacion({ campo: 'medicamentos', alertas: [] }), false)
+  assert.equal(necesitaVerificacion({ campo: 'medicamentos' }), false)
 })
