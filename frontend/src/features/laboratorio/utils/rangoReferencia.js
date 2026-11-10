@@ -7,6 +7,8 @@ const PATRONES = [
   { regex: new RegExp(String.raw`^(${NUMERO})\s*(?:a|-|–)\s*(${NUMERO})`, 'i'), crear: ([a, b]) => ({ min: a, max: b }) },
   { regex: new RegExp(String.raw`^(?:hasta|menor\s+a|<|≤)\s*(${NUMERO})`, 'i'), crear: ([a]) => ({ min: null, max: a }) },
   { regex: new RegExp(String.raw`^(?:mayor\s+a|>|≥)\s*(${NUMERO})`, 'i'), crear: ([a]) => ({ min: a, max: null }) },
+  // Un valor único seguido solo de la unidad ("0 mg/dL", "0 PCM") es el valor esperado.
+  { regex: new RegExp(String.raw`^(${NUMERO})(?:\s*[^\d\s.,][^\d]*)?$`, 'i'), crear: ([a]) => ({ min: a, max: a }) },
 ]
 
 /** "3,500,000" usa comas de miles; "0,5" usa coma decimal; "1.010" usa punto decimal. */

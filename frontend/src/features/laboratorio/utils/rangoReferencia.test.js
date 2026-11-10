@@ -32,3 +32,23 @@ test('marca bajo o alto solo para valores numéricos con rango interpretable', (
   assert.equal(evaluarValor('Positivo', 'Negativo', 'cualitativo'), null)
   assert.equal(evaluarValor('300', 'Hasta 200 mg/dL', 'texto'), null)
 })
+
+test('un valor único con su unidad es el valor esperado', () => {
+  assert.deepEqual(interpretarRango('0 mg/dL'), { min: 0, max: 0 })
+  assert.deepEqual(interpretarRango('0 PCM'), { min: 0, max: 0 })
+  assert.equal(evaluarValor('0', '0 mg/dL', 'decimal'), null)
+  assert.equal(evaluarValor('50', '0 mg/dL', 'decimal'), 'alto')
+  assert.equal(evaluarValor('2', '0 PCM', 'entero'), 'alto')
+  // No confunde rangos ni textos con un valor único.
+  assert.deepEqual(interpretarRango('70–115 mg/dL'), { min: 70, max: 115 })
+  assert.equal(interpretarRango('Normal o 0 mg/dL'), null)
+  assert.equal(interpretarRango('Negativo'), null)
+})
+
+test('los límites del rango cuentan como dentro del rango', () => {
+  assert.equal(evaluarValor('11', '11.0 a 16.0 g/dL', 'decimal'), null)
+  assert.equal(evaluarValor('16.0', '11.0 a 16.0 g/dL', 'decimal'), null)
+  assert.equal(evaluarValor('10.9', '11.0 a 16.0 g/dL', 'decimal'), 'bajo')
+  assert.equal(evaluarValor('16.1', '11.0 a 16.0 g/dL', 'decimal'), 'alto')
+  assert.equal(evaluarValor('200', 'Hasta 200 mg/dL', 'entero'), null)
+})

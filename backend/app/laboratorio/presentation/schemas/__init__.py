@@ -168,6 +168,8 @@ class MuestraDetalleResponse(BaseModel):
     referencia: str
     tipo_muestra: str | None
     fecha_toma: date
+    hora_toma: time | None = None
+    hora_no_registrada: bool = False
     responsable_recepcion: str | None
     estudio_ids: list[int]
 

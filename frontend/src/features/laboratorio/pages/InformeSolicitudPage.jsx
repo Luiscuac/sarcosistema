@@ -12,8 +12,6 @@ import { formatearFecha } from '../../../shared/utils/formatearFecha.js'
 import './laboratorio.css'
 import './informe-solicitud.css'
 
-const MARCA_RANGO = { bajo: '↓', alto: '↑' }
-
 /** Responsables por área y el último estudio de cada área (donde se imprime la firma). */
 function resumenPorArea(resultados) {
   const ultimo = new Map()
@@ -27,11 +25,10 @@ function resumenPorArea(resultados) {
   return { ultimo, responsables }
 }
 
-/** El informe no trae el tipo de entrada: solo se marcan valores que son números. */
-function marcaDeRango(parametro) {
+/** El informe no trae el tipo de entrada: solo se evalúan valores que son números. */
+function fueraDeRango(parametro) {
   return /^\d[\d.,]*$/.test(String(parametro.valor).trim())
-    ? evaluarValor(parametro.valor, parametro.rango_referencia, 'decimal')
-    : null
+    && Boolean(evaluarValor(parametro.valor, parametro.rango_referencia, 'decimal'))
 }
 
 function TablaSeccion({ seccion, parametros }) {
@@ -42,10 +39,10 @@ function TablaSeccion({ seccion, parametros }) {
     <table>
       <thead><tr><th scope="col">Parámetro</th><th scope="col">Resultado</th>{tieneUnidad && <th scope="col">Unidad</th>}{tieneReferencia && <th scope="col">Referencia</th>}</tr></thead>
       <tbody>{parametros.map((parametro, indice) => {
-        const marca = marcaDeRango(parametro)
-        return <tr key={`${seccion}-${indice}`} className={marca ? 'is-out-of-range' : undefined}>
+        const fuera = fueraDeRango(parametro)
+        return <tr key={`${seccion}-${indice}`} className={fuera ? 'is-out-of-range' : undefined}>
           <th scope="row">{parametro.nombre}</th>
-          <td>{parametro.valor}{marca && <span className="lab-report-flag" title={marca === 'bajo' ? 'Bajo el rango de referencia' : 'Sobre el rango de referencia'}> {MARCA_RANGO[marca]}</span>}</td>
+          <td>{parametro.valor}{fuera && <span className="sr-only"> (fuera del rango de referencia)</span>}</td>
           {tieneUnidad && <td>{parametro.unidad || '—'}</td>}
           {tieneReferencia && <td>{parametro.rango_referencia || '—'}</td>}
         </tr>
@@ -58,7 +55,7 @@ function Informe({ informe }) {
   const { ultimo, responsables } = resumenPorArea(informe.resultados)
   const areasConObservaciones = new Set()
   const edad = describirEdad(informe.paciente_fecha_nacimiento)
-  const hayMarcas = informe.resultados.some((resultado) => resultado.parametros.some(marcaDeRango))
+  const hayFueraDeRango = informe.resultados.some((resultado) => resultado.parametros.some(fueraDeRango))
 
   return <article className="lab-report-document">
     <header className="lab-report-header">
@@ -75,7 +72,7 @@ function Informe({ informe }) {
       <div><dt>Procedencia</dt><dd>{informe.procedencia === 'otro_centro' ? informe.establecimiento_solicitante_nombre : 'Sarcobamba'}</dd></div>
       <div><dt>Profesional solicitante</dt><dd>{informe.medico_solicitante_nombre || 'No registrado'}</dd></div>
     </dl>
-    {hayMarcas && <p className="lab-report-legend">↑ / ↓ indican un valor sobre o bajo el rango de referencia impreso. La interpretación corresponde al profesional tratante.</p>}
+    {hayFueraDeRango && <p className="lab-report-legend">Los valores en <strong>rojo</strong> están fuera del rango de referencia impreso. La interpretación corresponde al profesional tratante.</p>}
     {informe.resultados.map((resultado) => {
       const area = nombreArea(resultado.categoria)
       const mostrarObservaciones = Boolean(resultado.observaciones) && !areasConObservaciones.has(resultado.categoria)

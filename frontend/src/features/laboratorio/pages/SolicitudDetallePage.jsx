@@ -18,6 +18,8 @@ import './solicitud-detalle.css'
 
 const fechaVisible = (valor) => (valor ? formatearFecha(valor) : 'No registrada')
 const fechaHora = (valor) => (valor ? new Date(valor).toLocaleString('es-BO') : 'No registrado')
+/** "09:30:00" -> "09:30". */
+const horaToma = (muestra) => (muestra.hora_toma ? muestra.hora_toma.slice(0, 5) : 'No registrada')
 
 function AccionPrincipal({ solicitud, onRegistrarMuestra }) {
   const accion = siguienteAccion(solicitud)
@@ -52,13 +54,13 @@ function MuestrasRegistradas({ muestras }) {
     <h2>Muestras registradas</h2>
     <div className="lab-table-wrap">
       <table className="lab-simple-table">
-        <thead><tr><th>Tipo</th><th>Fecha de toma</th><th>Recibió o tomó</th><th>Estudios</th><th>Referencia</th></tr></thead>
+        <thead><tr><th>Tipo</th><th>Fecha de toma</th><th>Hora de toma</th><th>Recibió o tomó</th><th>Estudios</th></tr></thead>
         <tbody>{muestras.map((muestra) => <tr key={muestra.referencia}>
-          <td><strong>{muestra.tipo_muestra}</strong></td>
+          <td><strong title={`Referencia ${muestra.referencia}`}>{muestra.tipo_muestra}</strong></td>
           <td>{fechaVisible(muestra.fecha_toma)}</td>
+          <td className={muestra.hora_toma ? 'lab-sample-time' : 'lab-sample-missing'}>{horaToma(muestra)}</td>
           <td>{muestra.responsable_recepcion || 'No registrado'}</td>
           <td>{muestra.estudio_ids.length}</td>
-          <td><small>{muestra.referencia}</small></td>
         </tr>)}</tbody>
       </table>
     </div>

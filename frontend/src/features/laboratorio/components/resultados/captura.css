@@ -3,8 +3,8 @@
 .lab-result-field > span abbr { color: #a33b16; text-decoration: none; }
 .lab-result-field small { color: var(--muted); font-weight: 400; }
 .lab-result-field.is-out-of-range input,
-.lab-result-field.is-out-of-range select { border-color: #e0a27f; background: #fff7f2; }
-.lab-range-flag { color: #a33b16; font-weight: 600; }
+.lab-result-field.is-out-of-range select { border-color: #d64545; background: #fdf1f1; color: #b42318; }
+.lab-range-flag { color: #b42318; font-weight: 600; }
 
 .lab-capture-summary { position: sticky; top: 0; z-index: 2; display: grid; gap: 8px; margin-bottom: 4px; padding: 14px 18px; border: 1px solid var(--line); border-radius: 6px; background: #fff; box-shadow: 0 1px 3px rgb(15 23 42 / 6%); }
 .lab-capture-progress { display: grid; grid-template-columns: auto minmax(120px, 1fr); align-items: center; gap: 14px; font-size: 13px; }

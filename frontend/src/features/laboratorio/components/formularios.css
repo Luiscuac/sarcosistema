@@ -39,8 +39,9 @@
 .lab-confirm-study table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .lab-confirm-study th, .lab-confirm-study td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: left; font-weight: 400; }
 .lab-confirm-study td:nth-child(2) { font-weight: 600; }
-.lab-confirm-study td:last-child { color: #a33b16; font-weight: 600; text-align: right; }
-.lab-confirm-study tr.is-out-of-range { background: #fff7f2; }
+.lab-confirm-study td:last-child { color: #b42318; font-weight: 600; text-align: right; white-space: nowrap; }
+.lab-confirm-study tr.is-out-of-range { background: #fdf1f1; }
+.lab-confirm-study tr.is-out-of-range td:nth-child(2) { color: #b42318; }
 .lab-dialog-summary { flex: 1; align-self: center; margin: 0; color: var(--muted); font-size: 12px; }
 .lab-dialog-footer button { cursor: pointer; }
 

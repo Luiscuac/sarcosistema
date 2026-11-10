@@ -144,6 +144,8 @@ class SqlAlchemyExamenRepository:
                 "referencia": muestra.referencia_muestra,
                 "tipo_muestra": muestra.tipo_muestra,
                 "fecha_toma": muestra.fecha_toma_real,
+                "hora_toma": muestra.hora_toma_real,
+                "hora_no_registrada": muestra.hora_no_registrada,
                 "responsable_recepcion": muestra.responsable_recepcion,
                 "estudio_ids": [],
             })

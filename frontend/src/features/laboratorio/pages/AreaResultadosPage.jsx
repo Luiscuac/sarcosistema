@@ -186,7 +186,7 @@ export default function AreaResultadosPage({ usuario, logout }) {
         </>}
       </section>
     </div>
-    {confirmando && <ConfirmarPublicacion estudios={editables} valores={valores} responsable={responsable.trim()} resumen={resumen}
+    {confirmando && <ConfirmarPublicacion estudios={editables} valores={valores} responsable={responsable.trim()}
       pendiente={publicar.isPending} onConfirmar={() => publicar.mutate()} onCancelar={() => setConfirmando(false)} />}
   </main>
 }

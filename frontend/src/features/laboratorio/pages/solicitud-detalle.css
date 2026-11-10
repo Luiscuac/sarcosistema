@@ -48,3 +48,7 @@
   .lab-steps { flex-wrap: wrap; }
   .lab-detail-page .lab-title-actions { flex-wrap: wrap; margin-left: 15px; }
 }
+
+/* Muestras registradas */
+.lab-sample-time { font-weight: 600; font-variant-numeric: tabular-nums; }
+.lab-sample-missing { color: var(--muted); font-style: italic; }

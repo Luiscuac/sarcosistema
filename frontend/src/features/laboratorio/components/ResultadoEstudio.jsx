@@ -125,7 +125,7 @@ export default function ResultadoEstudio({ estudioId, usuario }) {
         </footer>}
       </form>}
       {confirmando && <ConfirmarPublicacion estudios={[{ ...data, parametros }]} valores={valores} responsable={responsable.trim()}
-        resumen={resumen} pendiente={publicar.isPending} onConfirmar={() => publicar.mutate()} onCancelar={() => setConfirmando(false)} />}
+        pendiente={publicar.isPending} onConfirmar={() => publicar.mutate()} onCancelar={() => setConfirmando(false)} />}
     </article>
   )
 }
