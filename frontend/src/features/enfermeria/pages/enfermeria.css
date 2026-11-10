@@ -95,3 +95,54 @@
   .enf-prescription-med > div { align-items:flex-start; flex-direction:column; gap:4px; }
   .enf-prescription-med > div span { text-align:left; }
 }
+
+/* Admisión: mediciones primero, unidad dentro del campo y avisos que no bloquean.
+   Rojo = sobre lo habitual, azul = bajo lo habitual, borde rojo continuo = dato inválido. */
+.enf-form .enf-group { margin: 0; padding: 4px 0 0; border: 0; border-top: 1px solid var(--line); }
+.enf-form .enf-group > legend { padding: 12px 0 10px; font-size: 14px; font-weight: 600; }
+.enf-group .enf-field + .enf-field { margin-top: 12px; }
+.enf-measurements { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); align-items: start; }
+.enf-measure { display: grid; gap: 6px; min-width: 0; color: #53606b; font-size: 11px; font-weight: 600; }
+.enf-measure-input { display: flex; align-items: center; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+.enf-measure-input:focus-within { outline: 2px solid var(--brand); outline-offset: 1px; }
+.enf-form .enf-measure-input input { min-width: 0; flex: 1; min-height: 40px; padding: 8px 10px; border: 0; outline: none; background: transparent; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.enf-measure-input small { padding: 0 10px 0 4px; color: var(--muted); font-size: 11px; font-weight: 500; white-space: nowrap; }
+.enf-measure-note { font-size: 11px; font-weight: 600; }
+.enf-measure.is-alto .enf-measure-input { border-color: #d64545; background: #fdf1f1; }
+.enf-measure.is-alto input, .enf-measure.is-alto .enf-measure-note, .enf-measure-note.is-high { color: #b42318; }
+.enf-measure.is-bajo .enf-measure-input { border-color: #7aa7dd; background: #f1f6fd; }
+.enf-measure.is-bajo input, .enf-measure.is-bajo .enf-measure-note { color: #1f5aa6; }
+.enf-measure.is-invalid .enf-measure-input { border: 2px solid #b42318; }
+.enf-measure.is-invalid .enf-measure-note { color: #b42318; font-weight: 500; }
+.enf-imc strong { display: flex; align-items: center; min-height: 42px; padding: 0 10px; border: 1px dashed var(--line); border-radius: 6px; background: #f7f9fa; color: var(--ink); font-size: 15px; }
+
+.enf-pain { margin: 0; padding: 4px 0 0; border: 0; border-top: 1px solid var(--line); }
+.enf-pain > legend { padding: 12px 0 10px; font-size: 14px; font-weight: 600; }
+.enf-pain > legend small { margin-left: 6px; color: var(--muted); font-size: 11px; font-weight: 400; }
+.enf-pain > div { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.enf-pain-option { width: 40px; height: 40px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--ink); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.enf-pain-option:hover:not(:disabled) { border-color: var(--brand); }
+.enf-pain-option.is-selected.enf-pain-low { border-color: #17694f; background: #17694f; color: #fff; }
+.enf-pain-option.is-selected.enf-pain-mid { border-color: #b7791f; background: #b7791f; color: #fff; }
+.enf-pain-option.is-selected.enf-pain-high { border-color: #b42318; background: #b42318; color: #fff; }
+.enf-pain-clear { margin-left: 6px; padding: 8px 10px; border: 0; background: transparent; color: var(--brand); font: inherit; font-size: 12px; cursor: pointer; }
+.enf-pain .enf-measure-note { display: block; margin-top: 8px; }
+.enf-form textarea[data-campo-admision] { min-height: 56px; }
+.enf-actions button[type="submit"]:not(.primary-button) { padding: 9px 12px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--brand); font: inherit; font-weight: 600; cursor: pointer; }
+.enf-success { color: #17694f; font-weight: 600; }
+
+/* Resumen de un registro (lista y confirmación de publicación). */
+.enf-summary { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px 16px; margin: 14px 0 0; }
+.enf-summary div { min-width: 0; }
+.enf-summary dt { color: var(--muted); font-size: 10px; }
+.enf-summary dd { margin: 4px 0 0; font-size: 13px; font-weight: 600; white-space: pre-wrap; overflow-wrap: anywhere; }
+.lab-confirm-body .enf-summary { padding: 12px; border: 1px solid var(--line); border-radius: 6px; background: #f8fbfb; }
+
+/* Barra compartida, paciente seleccionado, edición y contador de recetas. */
+.enf-change-patient { flex-shrink: 0; padding: 9px 12px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--brand); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.enf-change-patient:hover { border-color: var(--brand); }
+.enf-patient-card { gap: 16px; }
+.enf-editing-banner { margin: -4px 0 16px; padding: 10px 12px; border-left: 3px solid #b7791f; border-radius: 0 6px 6px 0; background: #fdf7ec; color: #6b4a12; font-size: 12px; }
+.enf-record.is-editing { margin: 0 -10px; padding-left: 10px; padding-right: 10px; border-radius: 6px; background: #fdf7ec; }
+.enf-tab-count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; margin-left: 7px; padding: 0 6px; border-radius: 999px; background: var(--brand); color: #fff; font-size: 11px; font-weight: 700; }
+.enf-tabs button:not(.active) .enf-tab-count { background: #c9d6d5; color: #26323c; }

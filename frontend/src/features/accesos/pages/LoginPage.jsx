@@ -2,6 +2,7 @@
 import { useNavigate } from 'react-router-dom'
 import { iniciarSesion, obtenerUsuarioActual } from '../api/accesosApi.js'
 import { useAuth } from '../auth/AuthContext.jsx'
+import { destinoDeRol } from '../auth/destinos.js'
 import LoginBrand from '../components/LoginBrand.jsx'
 import LoginForm from '../components/LoginForm.jsx'
 import './LoginPage.css'
@@ -23,13 +24,7 @@ export default function LoginPage() {
       login(sesion.access_token)
 
       const perfil = await obtenerUsuarioActual()
-      const destinoPorRol = {
-        laboratorio: '/laboratorio',
-        enfermeria: '/enfermeria',
-        medico: '/consultas',
-        imagenes: '/imagenes',
-      }
-      navigate(destinoPorRol[perfil.rol] || '/inicio', { replace: true })
+      navigate(destinoDeRol(perfil.rol), { replace: true })
     } catch (err) {
       logout()
       setError(

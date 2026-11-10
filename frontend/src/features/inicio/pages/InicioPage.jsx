@@ -1,7 +1,11 @@
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
+import { redireccionDesdeInicio } from '../../accesos/auth/destinos.js'
 import './inicio.css'
 
 export default function InicioPage({ usuario, logout }) {
+  // Los roles con un solo módulo van directo a su pantalla: la bienvenida no les aporta nada.
+  const destino = redireccionDesdeInicio(usuario.rol)
+  if (destino) return <Navigate to={destino} replace />
   return (
     <main className="inicio-page">
       <header className="auth-topbar">SarcoSistema</header>
@@ -20,8 +24,10 @@ export default function InicioPage({ usuario, logout }) {
         ) : (
           <p>El módulo para este rol todavía no está disponible en el piloto.</p>
         )}
-        <Link className="inicio-link" to="/ia">Transcripción experimental</Link>
-        {usuario.rol === 'medico' && <Link className="inicio-link" to="/imagenes/rayos-x">Entrar a Rayos X</Link>}
+        {usuario.rol === 'medico' && <>
+          <Link className="inicio-link" to="/imagenes/rayos-x">Entrar a Rayos X</Link>
+          <Link className="inicio-link" to="/ia">Transcripción experimental</Link>
+        </>}
         <button className="primary-button" onClick={logout}>Cerrar sesión</button>
       </section>
     </main>
