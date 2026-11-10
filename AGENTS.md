@@ -4,7 +4,7 @@
 
 ## Estructura
 
-- **Backend** en `backend/app/`, imports `app.*`. Cada módulo sigue **arquitectura limpia** por carpeta: `domain/`, `application/`, `infrastructure/`, `presentation/`. No hay `__init__.py`: se usan *namespace packages* (no los agregues solo por costumbre).
+- **Backend** en `backend/app/`, imports `app.*`. Cada módulo sigue **arquitectura limpia** por carpeta: `domain/`, `application/`, `infrastructure/`, `presentation/`. Se prefieren *namespace packages*; existen paquetes de compatibilidad en Laboratorio y en `imagenes/application/ports/` (clínica y visión). No agregues `__init__.py` solo por costumbre.
 - Módulos: `accesos` (login/JWT/roles), `laboratorio` (catálogo, solicitudes, muestras, resultados), `consultas` (pacientes, historial, SOAP, extracción asistida), `ia` (whisper + transcriptor), `imagenes` (visión CPU, RAG local y pantalla/API de revisión experimental optativa), `shared`, `config`.
 - **Composición única de IA**: `app/ia/router.py` (prefijo `/ia`) incluye whisper y transcriptor. `main.py` incluye `app.ia.router`; **no** enlaces los routers internos de `ia/` directo (antes causaba `/ia/ia/transcribir`).
 - Los repositorios hacen `flush()`; la transacción por petición la administra `get_db` (`SessionLocal.begin()`).
@@ -50,7 +50,7 @@ npm run dev
 - `backend/.env` y `frontend/.env` están en `.gitignore` (cambios locales). Credenciales del Compose: `hospital:hospital_dev_password@localhost:5432/hospital_sarcobamba`.
 - Esas credenciales son de desarrollo. No imprimir JWT, contraseñas, hashes o transcripciones en logs; nunca versionar `.env` ni archivos locales de claves de demostración.
 - Python ejecutado en Windows usa `localhost:5432`; el backend ejecutado dentro de Docker usa `db:5432` (override en Compose). No cambiar la URL local a `db` para ejecutar Python en el host.
-- En esta rama hay nueve revisiones Alembic, cabecera `20261103_0009` (0008 corpus pgvector, 0009 análisis/revisión experimental de imágenes). Para una base nueva, Compose inicializa el esquema; después siempre aplicar migraciones. Una base ya existente se conserva.
+- En esta rama hay dieciséis revisiones Alembic, cabecera `20261109_0013`. RAG0008 fue distribuida con dos padres distintos: la correctiva y `scripts.reconciliar_historial_imagenes` cubren los historiales probados sin stamp. Antes de actualizar una instalación existente, revisar revisiones y ensayar en copia aislada; con dos cabezas IA/Laboratorio no usar upgrade head directo. Ver `docs/integracion/2026-11-10-resultado-integracion.md`. Para una base nueva, Compose inicializa el esquema; una base ya existente se conserva.
 - Sin `alembic upgrade head` fallan pruebas que verifican `alembic_version` (p. ej. `tests/test_preparar_medico_demo.py`) y los flujos contra PostgreSQL.
 - Tras **cambiar de rama**, reinicia uvicorn a mano: el watcher de `--reload` deja procesos viejos que se quedan con el puerto 8000 y código obsoleto.
 - Ante un puerto ocupado, identificar proceso/comando antes de detenerlo; no cerrar procesos ajenos. CORS acepta `http://localhost:5173`, no intercambiarlo sin más por `http://127.0.0.1:5173`.

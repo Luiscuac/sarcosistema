@@ -54,7 +54,9 @@ async def test_modelo_local_ocho_casos_espanol():
         elif nombre == 'incompleto':
             assert set(campos) == {'motivo_consulta'}
         elif nombre == 'negaciones':
-            assert 'niega fiebre y vómitos' in campos['sintomas'].valor
+            assert 'dolor abdominal' in campos['sintomas'].valor.lower()
+            assert 'fiebre' not in campos['sintomas'].valor.lower()
+            assert 'niega fiebre y vómitos' in campos['sintomas'].evidencia
         elif nombre == 'ambiguo':
             assert all(item.ambiguo for item in resultado.campos)
         elif nombre == 'correccion':

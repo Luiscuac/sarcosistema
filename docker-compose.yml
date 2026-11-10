@@ -1,4 +1,4 @@
-# Configuracion comun + inicio coordinado de servicios (seccion 8: Mantenimiento)
+﻿# Configuracion comun + inicio coordinado de servicios (seccion 8: Mantenimiento)
 services:
   db:
     image: pgvector/pgvector:pg16
@@ -17,6 +17,7 @@ services:
     env_file: ./backend/.env
     environment:
       WHISPER_MODEL_DIR: /app/.models/whisper
+      IMAGENES_STORAGE_DIR: /app/storage/imagenes
       # Dentro del contenedor, localhost es el propio backend, no PostgreSQL.
       DATABASE_URL: postgresql+asyncpg://hospital:hospital_dev_password@db:5432/hospital_sarcobamba
     depends_on:
@@ -25,7 +26,9 @@ services:
       - "8000:8000"
     volumes:
       - whisper_models:/app/.models/whisper
-  # Ollama puede añadirse más adelante si se aprueba la asistencia de redacción.
+      # Archivos clinicos de examenes complementarios (fuera de la base).
+      - storage_imagenes:/app/storage/imagenes
+  # Ollama puede aÃ±adirse mÃ¡s adelante si se aprueba la asistencia de redacciÃ³n.
   # ollama:
   #   image: ollama/ollama:latest
   #   ports:
@@ -36,3 +39,4 @@ services:
 volumes:
   db_data:
   whisper_models:
+  storage_imagenes:

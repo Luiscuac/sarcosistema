@@ -23,6 +23,13 @@ class RepositorioEspia:
         self.recibir_muestra = AsyncMock(return_value="MUE-1")
         self.recibir_muestra_solicitud = AsyncMock(return_value="MUE-1")
         self.buscar_pacientes = AsyncMock(return_value=[])
+        self.obtener_solicitud = AsyncMock(return_value={
+            "estudios": [
+                {"estudio_id": 5, "categoria_laboratorio": "hematologia", "estado": "resultado_en_preparacion"},
+                {"estudio_id": 6, "categoria_laboratorio": "hematologia", "estado": "resultado_en_preparacion"},
+                {"estudio_id": 7, "categoria_laboratorio": "bioquimica", "estado": "resultado_en_preparacion"},
+            ],
+        })
         self.obtener_resultado = AsyncMock(return_value="RES-1")
         self.guardar_borrador = AsyncMock(return_value="BOR-1")
         self.publicar_resultado = AsyncMock(return_value="PUB-1")
@@ -115,10 +122,32 @@ async def test_muestra_valida_llega_al_repositorio_con_sus_datos(servicio):
 async def test_resultado_y_borrador_delegan_en_el_repositorio(servicio):
     caso, repositorio = servicio
     assert await caso.obtener_resultado(5) == "RES-1"
-    assert await caso.publicar_resultado(5, 7) == "PUB-1"
+    assert await caso.publicar_resultado(5, 7, "María López") == "PUB-1"
     valores = (ValorResultadoEntrada(parametro_id=1, valor="90"),)
-    assert await caso.guardar_borrador(5, valores, "Observación", 7) == "BOR-1"
-    repositorio.guardar_borrador.assert_awaited_once_with(5, valores, "Observación", 7)
+    assert await caso.guardar_borrador(5, valores, "Observación", 7, "Luis Gómez") == "BOR-1"
+    repositorio.guardar_borrador.assert_awaited_once_with(5, valores, "Observación", 7, "Luis Gómez")
+
+
+async def test_guardado_por_area_solo_acepta_estudios_de_la_solicitud_y_area(servicio):
+    caso, repositorio = servicio
+    valores = (ValorResultadoEntrada(parametro_id=1, valor="90"),)
+    resultados = await caso.guardar_borrador_area(
+        9, "hematologia", ((5, valores), (6, valores)), "Sin novedades", 7, "María López",
+    )
+    assert resultados == ["BOR-1", "BOR-1"]
+    assert repositorio.guardar_borrador.await_count == 2
+
+    with pytest.raises(ValueError, match="no pertenecen"):
+        await caso.guardar_borrador_area(
+            9, "hematologia", ((7, valores),), None, 7, "María López",
+        )
+
+
+async def test_publicacion_por_area_rechaza_estudios_ajenos(servicio):
+    caso, repositorio = servicio
+    with pytest.raises(ValueError, match="no pendientes pertenecen"):
+        await caso.publicar_resultados_area(9, "hematologia", (7,), 7, "María López")
+    repositorio.publicar_resultado.assert_not_awaited()
 
 
 def _solicitud(tipo_estudio_ids=(1,), medico_solicitante_nombre="Dra. Ficticia"):
@@ -129,5 +158,5 @@ def _solicitud(tipo_estudio_ids=(1,), medico_solicitante_nombre="Dra. Ficticia")
         fecha_solicitud=datetime(2026, 10, 22, 10, 0, tzinfo=timezone.utc),
         referencia_papel_formulario=None, establecimiento_solicitante_nombre=None,
         medico_solicitante_nombre=medico_solicitante_nombre, diagnostico_principal=None,
-        prioridad="sin_prioridad", clave_idempotencia="clave",
+        prioridad="sin_prioridad", clave_idempotencia="clave", medico_solicitante_id=1,
     )

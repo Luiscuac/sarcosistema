@@ -17,7 +17,8 @@ from app.laboratorio.infrastructure.persistence import models as _laboratorio_mo
 from app.shared.entities import paciente as _paciente_models  # noqa: F401
 
 config = context.config
-fileConfig(config.config_file_name)
+if config.config_file_name:
+    fileConfig(config.config_file_name)
 target_metadata = Base.metadata
 
 
@@ -30,7 +31,18 @@ def incluir_objeto(objeto, nombre, tipo, reflejado, comparar_con):
 
 def run_migrations_offline():
     context.configure(
-        url=settings.database_url,
+        url=config.get_main_option('sqlalchemy.url') or settings.database_url,
+        target_metadata=target_metadata,
+        include_schemas=True,
+        include_object=incluir_objeto,
+    )
+    with context.begin_transaction():
+        context.run_migrations()
+
+
+def ejecutar_migraciones(connection):
+    context.configure(
+        connection=connection,
         target_metadata=target_metadata,
         include_schemas=True,
         include_object=incluir_objeto,
@@ -40,23 +52,16 @@ def run_migrations_offline():
 
 
 async def run_migrations_online():
-    connectable = create_async_engine(settings.database_url)
+    connectable = create_async_engine(config.get_main_option('sqlalchemy.url') or settings.database_url)
     async with connectable.connect() as connection:
-        def ejecutar_migraciones(sync_conn):
-            context.configure(
-                connection=sync_conn,
-                target_metadata=target_metadata,
-                include_schemas=True,
-                include_object=incluir_objeto,
-            )
-            with context.begin_transaction():
-                context.run_migrations()
-
         await connection.run_sync(ejecutar_migraciones)
     await connectable.dispose()
 
 
 if context.is_offline_mode():
     run_migrations_offline()
+elif config.attributes.get('connection') is not None:
+    # El preparador conserva ambos upgrades en una transacción y destino únicos.
+    ejecutar_migraciones(config.attributes['connection'])
 else:
     asyncio.run(run_migrations_online())

@@ -55,22 +55,7 @@ def scripts_en(tmp_path, perfil='final'):
         import re
         texto = re.sub(r"down_revision = '[^']+'", f"down_revision = '{padre}'", texto)
         rag.write_text(texto, encoding='utf-8')
-    # Entorno mínimo: URL solo de Config y ningún import de settings/.env.
-    (destino / 'env.py').write_text('''
-import asyncio
-from alembic import context
-from sqlalchemy.ext.asyncio import create_async_engine
-async def run():
-    engine = create_async_engine(context.config.get_main_option('sqlalchemy.url'))
-    async with engine.connect() as conn:
-        def migrate(sync):
-            context.configure(connection=sync)
-            with context.begin_transaction():
-                context.run_migrations()
-        await conn.run_sync(migrate)
-    await engine.dispose()
-asyncio.run(run())
-''', encoding='utf-8')
+    # Usar env.py real: el mismo que ejecutarán instalaciones y preparador.
     config = Config()
     config.set_main_option('script_location', str(destino))
     return config
@@ -240,3 +225,49 @@ async def test_no_confunde_presencia_con_contrato_valido(tmp_path, base_aislada,
     await conn.close()
     with pytest.raises(RuntimeError, match='contrato parcial'):
         await migrar(scripts_en(tmp_path), base_aislada, 'head')
+
+
+async def test_preparador_respeta_destino_config_con_env_real(tmp_path, base_aislada, monkeypatch):
+    from app.config.settings import settings
+    final = scripts_en(tmp_path)
+    destino = Path(final.get_main_option('script_location'))
+    shutil.copyfile(BACKEND / 'alembic/env.py', destino / 'env.py')
+    # Un destino distinto no disponible garantiza que no se consulta por error.
+    monkeypatch.setattr(settings, 'database_url', 'postgresql+asyncpg://nadie@127.0.0.1:1/no_usar')
+    await actualizar_final(final, base_aislada)
+    conn = await asyncpg.connect(base_aislada)
+    assert await conn.fetchval('SELECT version_num FROM alembic_version') == CORRECTIVA
+    await conn.close()
+
+
+async def test_dos_etapas_revierten_juntas_ante_contrato_incompatible(tmp_path, base_aislada):
+    anterior = scripts_en(tmp_path, 'ia_original_lab8_doble')
+    await migrar(anterior, base_aislada, '20261103_0009')
+    await migrar(anterior, base_aislada, '20261102_0008')
+    conn = await asyncpg.connect(base_aislada)
+    await conn.execute('ALTER TABLE paciente ALTER COLUMN telefono TYPE bigint USING NULL')
+    antes = await contrato(conn)
+    versiones = await conn.fetch('SELECT * FROM plantilla_examen_version ORDER BY id')
+    heads = await conn.fetch('SELECT version_num FROM alembic_version ORDER BY version_num')
+    await conn.close()
+    with pytest.raises(RuntimeError, match='contrato parcial'):
+        await actualizar_final(scripts_en(tmp_path), base_aislada)
+    conn = await asyncpg.connect(base_aislada)
+    assert await contrato(conn) == antes
+    assert await conn.fetch('SELECT * FROM plantilla_examen_version ORDER BY id') == versiones
+    assert await conn.fetch('SELECT version_num FROM alembic_version ORDER BY version_num') == heads
+    await conn.close()
+
+
+@pytest.mark.parametrize('alteracion', [
+    'DROP TRIGGER trg_revision_ia_historica ON imagen_revision_ia',
+    'ALTER TABLE incidencia_muestra ALTER COLUMN motivo DROP NOT NULL',
+    'ALTER TABLE rag_torax_fragmento DROP CONSTRAINT rag_torax_fragmento_documento_id_fkey',
+])
+async def test_rechaza_perdida_de_protecciones_historicas(tmp_path, base_aislada, alteracion):
+    await migrar(scripts_en(tmp_path, 'union_original'), base_aislada, '20261109_0012')
+    conn = await asyncpg.connect(base_aislada)
+    await conn.execute(alteracion)
+    await conn.close()
+    with pytest.raises(RuntimeError, match='contrato parcial'):
+        await actualizar_final(scripts_en(tmp_path), base_aislada)

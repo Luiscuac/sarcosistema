@@ -34,14 +34,14 @@ async def main():
     tarea = asyncio.create_task(gestor.ejecutar())
     try:
         async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),base_url='http://local',headers={'Authorization':f'Bearer {token}'}) as client:
-            detalle = (await client.get(f'/imagenes/estudios/{estudio}')).json()
-            imagen = await client.get(f'/imagenes/estudios/{estudio}/archivos/{detalle["archivo"]["id"]}')
+            detalle = (await client.get(f'/imagenes/analisis/estudios/{estudio}')).json()
+            imagen = await client.get(f'/imagenes/analisis/estudios/{estudio}/archivos/{detalle["archivo"]["id"]}')
             assert imagen.status_code==200 and imagen.content.startswith(b'\x89PNG')
             solicitud = {'confirmar_torax_frontal':True,'proyeccion':'PA','clave':'offline-'+uuid.uuid4().hex}
-            respuesta = await client.post(f'/imagenes/estudios/{estudio}/analisis',json=solicitud)
+            respuesta = await client.post(f'/imagenes/analisis/estudios/{estudio}/analisis',json=solicitud)
             assert respuesta.status_code==202, respuesta.status_code
             id = respuesta.json()['id']
-            repetido = await client.post(f'/imagenes/estudios/{estudio}/analisis',json=solicitud)
+            repetido = await client.post(f'/imagenes/analisis/estudios/{estudio}/analisis',json=solicitud)
             assert repetido.json()['id']==id
             limite = asyncio.get_running_loop().time()+360
             while True:

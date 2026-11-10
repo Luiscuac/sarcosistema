@@ -30,8 +30,28 @@ export async function crearSolicitud(solicitud) {
   return data
 }
 
+export async function obtenerSolicitud(solicitudId) {
+  const { data } = await httpClient.get(`/laboratorio/solicitudes/${solicitudId}`)
+  return data
+}
+
+export async function obtenerInformeSolicitud(solicitudId) {
+  const { data } = await httpClient.get(`/laboratorio/solicitudes/${solicitudId}/informe`)
+  return data
+}
+
+export async function buscarMedicos(termino) {
+  const { data } = await httpClient.get('/laboratorio/medicos', { params: { termino } })
+  return data
+}
+
 export async function recibirMuestraSolicitud(solicitudId, muestra) {
   const { data } = await httpClient.post(`/laboratorio/solicitudes/${solicitudId}/muestras`, muestra)
+  return data
+}
+
+export async function registrarIncidenciasSolicitud(solicitudId, incidencia) {
+  const { data } = await httpClient.post(`/laboratorio/solicitudes/${solicitudId}/incidencias`, incidencia)
   return data
 }
 
@@ -45,7 +65,17 @@ export async function guardarBorrador(estudioId, resultado) {
   return data
 }
 
-export async function publicarResultado(estudioId) {
-  const { data } = await httpClient.post(`/laboratorio/estudios/${estudioId}/resultado/publicar`)
+export async function publicarResultado(estudioId, responsablePublicacion) {
+  const { data } = await httpClient.post(`/laboratorio/estudios/${estudioId}/resultado/publicar`, { responsable_publicacion: responsablePublicacion })
+  return data
+}
+
+export async function guardarBorradorArea(solicitudId, areaCodigo, datos) {
+  const { data } = await httpClient.put(`/laboratorio/solicitudes/${solicitudId}/areas/${areaCodigo}/resultados/borrador`, datos)
+  return data
+}
+
+export async function publicarResultadosArea(solicitudId, areaCodigo, datos) {
+  const { data } = await httpClient.post(`/laboratorio/solicitudes/${solicitudId}/areas/${areaCodigo}/resultados/publicar`, datos)
   return data
 }

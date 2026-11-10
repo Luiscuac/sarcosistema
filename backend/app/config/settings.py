@@ -26,5 +26,18 @@ class Settings(BaseSettings):
     radiology_vision_min_free_mib: int = Field(default=4096,ge=2048)
     radiology_score_threshold: float = Field(default=0.5,ge=0,le=1)
 
+    # Examenes complementarios de imagen: solo imagen hoy, abierto a video/audio.
+    imagenes_tipos_permitidos: str = (
+        'image/jpeg,image/png,image/webp,image/gif,image/tiff,application/pdf,application/dicom'
+    )
+    imagenes_max_mb: int = 15
+    imagenes_dicom_max_mb: int = 100
+    imagenes_max_archivos: int = 10
+    imagenes_storage_dir: str = 'storage/imagenes'
+
+    @property
+    def imagenes_tipos_lista(self) -> tuple[str, ...]:
+        return tuple(t.strip() for t in self.imagenes_tipos_permitidos.split(',') if t.strip())
+
 
 settings = Settings()

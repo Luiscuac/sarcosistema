@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { buscarPacientes, obtenerConsulta, obtenerHistorial, obtenerPaciente } from '../api/consultasApi.js'
 
@@ -16,3 +17,9 @@ export const useHistorial = (id, pagina) => useQuery({
 export const useConsulta = (id) => useQuery({
   queryKey: ['consultas', 'detalle', id], queryFn: () => obtenerConsulta(id), enabled: Boolean(id),
 })
+
+export function usePaginaHistorial(id) {
+  const [pagina, setPagina] = useState(1)
+  useEffect(() => { setPagina(1) }, [id])
+  return { pagina, setPagina }
+}

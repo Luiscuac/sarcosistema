@@ -36,17 +36,24 @@
 - No se considera compatible una instalación arbitrariamente modificada a mano: las precondiciones rechazan contratos parciales conocidos; cualquier fallo requiere copia aislada, no ocultarlo con stamp.
 
 ## 2. Código
-- [ ] Merge local `origin/main` sin commit automático.
-- [ ] Resolver seis conflictos: trasladar jobs al router de análisis, separar páginas/estilos de Ecografía e IA, rutas y topbar compatibles, no restaurar sidebar obsoleto.
-- [ ] Revisar merges automáticos y colisión ports.py/ports/vision.py; añadir regresiones de composición/imports/permisos.
+- [x] Merge local `origin/main` sin commit automático.
+- [x] Resolver seis conflictos: trasladar jobs al router de análisis, separar páginas/estilos de Ecografía e IA, rutas y topbar compatibles, no restaurar sidebar obsoleto.
+- [x] Revisar merges automáticos y colisión ports.py/ports/vision.py; añadir regresiones de composición/imports/permisos.
 
 ## 3. Seguridad
-- [ ] Desversionar .env raíz conservando copia local, ignorarlo y documentar rotación pendiente sin revelar valores.
-- [ ] Retirar del índice temporales y bytecode sin borrar copias locales; revisar artefactos Playwright y secretos del diff.
+- [x] Desversionar .env raíz conservando copia local, ignorarlo y documentar rotación pendiente sin revelar valores.
+- [x] Retirar del índice temporales y bytecode sin borrar copias locales; revisar artefactos Playwright y secretos del diff.
 
 ## 4. Verificación y entrega
-- [ ] Import/pip check/pytest contra BD aislada; Alembic y pgvector.
-- [ ] npm test/lint/build y flujos críticos de ambos roles.
-- [ ] Inferencia/embeddings/RAG/persistencia reales y offline con modelos locales disponibles; reportar límites.
-- [ ] Revisar diff, marcadores, índice y estado original; revisión independiente si procede.
-- [ ] Commit local de integración solo con conflictos resueltos y evidencia suficiente; informe sin declarar verificaciones omitidas.
+- [x] Import/pip check/pytest contra BD aislada; Alembic y pgvector.
+- [x] npm test/lint/build y flujos críticos de ambos roles.
+- [x] Inferencia/embeddings/RAG/persistencia reales y offline con modelos locales disponibles; reportar límites.
+- [x] Revisar diff, marcadores, índice y estado original; revisión independiente si procede.
+- [x] Commit local de integración con conflictos resueltos y evidencia registrada; informe sin declarar verificaciones omitidas. Rama conservada local, sin push ni cambios a main.
+
+### Revisión final y cierre
+- Tres findings Important introducidos se reprodujeron (5 RED) y corrigieron: env.py respeta Config/conexión, las dos etapas ahora comparten transacción, huellas físicas verifican protecciones IA/RAG/incidencias. 23 GREEN de matriz y 398 passed/11 skipped de suite completa final.
+- Ruling: conservar la política clínica publicada de main sin introducir ownership nuevo no acordado; la revisión identifica descargas globales al rol médico. Coste si esa política no es la deseada: acceso médico demasiado amplio. Se informa como decisión del equipo pendiente antes de publicación, no se declara resuelta.
+- Ruling: detener solo el contenedor propio de la matriz tras respaldar integration_suite ficticia, liberando sus 2.14GiB tmpfs; ninguna base real tocada. Coste: los demás estados ficticios temporales se recrean ejecutando la matriz, no se conservan tras detener tmpfs.
+- Inferencia offline final: primer intento rechazado por recursos, segundo GREEN tras liberar matriz, sin bajar umbrales. Modelos, corpus y código montados readonly, red Docker none; cuatro citas y revisión persistida.
+- Revisión independiente realizada una vez; no segunda revisión tras fixes, verificados con regresiones y suite. Sin minors adicionales informados.

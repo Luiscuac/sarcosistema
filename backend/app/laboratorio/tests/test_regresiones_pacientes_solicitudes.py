@@ -122,14 +122,15 @@ def replay():
     entrada = SolicitudNueva(
         paciente_id=1, tipo_estudio_ids=(11, 12),
         fecha_solicitud=datetime(2026, 10, 22, 10, tzinfo=timezone.utc),
-        referencia_papel_formulario="PAP-1", establecimiento_solicitante_nombre="Centro ficticio",
-        medico_solicitante_nombre="Dra. Ficticia", diagnostico_principal="Control",
+        referencia_papel_formulario="PAP-1", establecimiento_solicitante_nombre=None,
+        medico_solicitante_id=4, medico_solicitante_nombre="Dra. Ficticia", diagnostico_principal="Control",
         prioridad="sin_prioridad", clave_idempotencia="clave-regresion",
     )
     original = Solicitud(
         id=4, referencia="SOL-4", paciente_id=1, fecha_solicitud=entrada.fecha_solicitud,
         referencia_papel_formulario="PAP-1",
-        establecimiento_solicitante_nombre_snapshot="Centro ficticio",
+        establecimiento_solicitante_nombre_snapshot=None,
+        medico_solicitante_id=4,
         medico_solicitante_nombre_snapshot="Dra. Ficticia", diagnostico_principal="Control",
         prioridad="sin_prioridad", clave_idempotencia=entrada.clave_idempotencia, created_by=7,
     )
@@ -150,9 +151,10 @@ def replay():
 @pytest.mark.parametrize("cambios", [
     {"paciente_id": 2}, {"tipo_estudio_ids": (11,)}, {"prioridad": "urgente"},
     {"medico_solicitante_nombre": "Dr. Otro"}, {"diagnostico_principal": None},
-    {"establecimiento_solicitante_nombre": "Otro centro"},
+    {"establecimiento_solicitante_nombre": "Otro centro", "procedencia": "otro_centro"},
     {"referencia_papel_formulario": "PAP-2"},
-    {"fecha_solicitud": datetime(2026, 10, 23, 10, tzinfo=timezone.utc)},
+    {"fecha_solicitud": datetime(2026, 10, 23, 10, tzinfo=timezone.utc),
+     "fecha_solicitud_explicita": True},
 ])
 async def test_replay_con_datos_distintos_rechaza_sin_modificar_original(replay, cambios):
     entrada, original, db = replay
@@ -176,7 +178,7 @@ async def test_replay_de_otro_actor_se_rechaza(replay):
 async def test_replay_identico_admite_orden_distinto_y_profesional_normalizado(replay):
     entrada, original, db = replay
     resultado = await SqlAlchemyExamenRepository(db).crear_solicitud(
-        replace(entrada, tipo_estudio_ids=(12, 11), medico_solicitante_nombre=" Dra. Ficticia "), 7,
+        replace(entrada, tipo_estudio_ids=(12, 11), medico_solicitante_id=4, medico_solicitante_nombre=" Dra. Ficticia "), 7,
     )
     assert resultado.id == 4
     assert resultado.prioridad == "sin_prioridad"
@@ -188,13 +190,13 @@ async def test_replay_identico_admite_orden_distinto_y_profesional_normalizado(r
 async def test_reintento_sin_fecha_explicita_conserva_fecha_original(replay):
     from uuid import uuid4
     from app.accesos.domain.entities import Usuario
-    from app.laboratorio.presentation.router import crear_solicitud
+    from app.laboratorio.presentation.routes.router import crear_solicitud
     from app.laboratorio.presentation.schemas import CrearSolicitudRequest
 
     entrada, original, db = replay
     datos = CrearSolicitudRequest(paciente_id=1, tipo_estudio_ids=[11, 12],
-        referencia_papel_formulario='PAP-1', establecimiento_solicitante_nombre='Centro ficticio',
-        medico_solicitante_nombre='Dra. Ficticia', diagnostico_principal='Control',
+        referencia_papel_formulario='PAP-1',
+        medico_solicitante_id=4, medico_solicitante_nombre='Dra. Ficticia', diagnostico_principal='Control',
         prioridad='sin_prioridad', clave_idempotencia=uuid4())
     assert datos.fecha_solicitud != original.fecha_solicitud
     resultado = await crear_solicitud(datos, Usuario(7, 'lab_ficticio', 'laboratorio', True),

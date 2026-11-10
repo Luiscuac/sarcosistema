@@ -1,22 +1,18 @@
 ﻿# Agente local de SarcoSistema
 
-Componente Windows que permite a SarcoSistema inspeccionar ventanas visibles y rellenar campos editables identificados por `AutomationId` mediante UI Automation (UIA).
+Puente Windows UI Automation usado desde el formulario de consulta médica. En esta primera integración automatiza únicamente el cuaderno local de demostración, con datos ficticios. No automatiza el sistema hospitalario oficial.
 
-## Alcance de esta primera version
+## Estructura
 
-- Lista ventanas visibles con titulo y PID.
-- Inspecciona campos editables de una ventana elegida.
-- Rellena campos identificados por `AutomationId` o por nombre accesible, siempre que el selector sea unico.
-- Nunca pulsa botones de guardar o publicar.
-- Solo escucha en `127.0.0.1`; CORS acepta el frontend local de Vite.
+- `app/domain/`: entidades y errores del dominio.
+- `app/application/`: puertos y casos de uso.
+- `app/infrastructure/ui_automation/`: adaptador de Windows UI Automation con pywinauto.
+- `app/presentation/`: rutas HTTP, esquemas, dependencias y traducción de errores.
+- `app/container.py` y `app/main.py`: composición de dependencias y configuración de FastAPI.
 
-Para otro origen de frontend, define `TRANSPORTADOR_ALLOWED_ORIGINS` con una lista separada por comas antes de iniciar el servicio.
+## Iniciar el agente
 
-La aplicacion destino debe exponer sus controles mediante Windows UI Automation y cada campo necesita un mapeo. Aplicaciones antiguas, escritorios remotos o controles dibujados como imagen pueden requerir otro metodo. Usa unicamente datos ficticios durante la prueba.
-
-## Iniciar en Windows
-
-Desde la carpeta `transportador` y con Python 3.11 o posterior:
+Desde la carpeta `transportador`, con Python 3.11 o posterior:
 
 ```powershell
 py -m venv .venv
@@ -25,25 +21,24 @@ python -m pip install -r requirements.txt
 uvicorn app.main:app --host 127.0.0.1 --port 8765
 ```
 
-Con el agente en marcha, la documentacion interactiva esta en <http://127.0.0.1:8765/docs>.
+El agente escucha solo en `127.0.0.1`. Su estado está disponible en <http://127.0.0.1:8765/health>.
 
-## Probar sin el software final
+## Probar el transporte de una consulta
 
-Abre otra PowerShell en la raiz del repositorio y ejecuta el formulario Windows de prueba:
+Abre otra PowerShell desde la raíz del repositorio e inicia el destino de demostración:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\transportador\demo_destino.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\transportador\cuaderno_interacciones.ps1
 ```
 
-Luego inicia el frontend SarcoSistema, entra a `/transcriptor` y pulsa **Conectar y detectar ventanas**. Selecciona **Programa destino de prueba**, asigna cada dato a su campo y pulsa **Rellenar campos en la aplicacion**. Verifica los valores y pulsa **Guardar fila de prueba** manualmente. El formulario es una ventana nativa real para probar UI Automation; no representa el software hospitalario final.
+Inicia SarcoSistema con la cuenta `medico_demo`, abre una consulta para el paciente de prueba `PAC-DEMO-CONSULTA-001` y completa motivo, diagnóstico y los demás campos deseados. Con el agente y el cuaderno demo abiertos, pulsa **Transportar a demo destino** una sola vez.
 
-## Flujo previsto
+El agente localiza la ventana del cuaderno por su título, escribe el código o la historia clínica en la búsqueda del cuaderno y selecciona la coincidencia única (con el nombre como respaldo). Después abre la pestaña de consulta, rellena los campos por sus `AutomationId` y activa **Finalizar y guardar consulta**. El paciente debe existir en el destino y tener un identificador compartido con SarcoSistema; el agente no crea pacientes. La consulta aparece en el historial: selecciónala y pulsa **Ver consulta seleccionada** o haz doble clic para revisar todos sus datos. Los datos se guardan solo en memoria y se pierden al cerrar la ventana.
 
-1. SarcoSistema obtiene el registro de prueba.
-2. El usuario elige una ventana destino desde el agente.
-3. Se inspeccionan sus campos editables y se configura el mapeo de datos.
-4. El agente rellena los campos; el usuario revisa y guarda manualmente.
+## Alcance actual
 
-El frontend de `/transcriptor` puede conectarse al agente local para listar ventanas, inspeccionar campos editables y rellenar el mapeo configurado. El usuario debe revisar y guardar manualmente en el software destino.
-
-
+- El transporte usa los valores actuales del formulario, incluso antes de guardarlo en SarcoSistema.
+- El agente valida que estén presentes los campos requeridos y que cada control destino tenga un identificador UIA único.
+- La automatización está acoplada al título, las pestañas, el control de pacientes y los identificadores definidos por `cuaderno_interacciones.ps1`.
+- Para integrar otro destino habrá que inspeccionar su árbol UIA y crear un perfil de controles específico.
+- Usa solo datos ficticios durante las pruebas.

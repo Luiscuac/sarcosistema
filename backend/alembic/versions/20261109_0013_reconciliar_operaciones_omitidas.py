@@ -7,6 +7,8 @@ fallan dentro de la transacción antes de registrar esta revisión.
 """
 from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
+import hashlib
+import json
 
 from alembic import op
 import sqlalchemy as sa
@@ -15,6 +17,16 @@ revision = '20261109_0013'
 down_revision = '20261109_0012'
 branch_labels = None
 depends_on = None
+
+# Contratos normalizados obtenidos de las revisiones históricas exactas en
+# PostgreSQL16/pgvector, sin datos ni OIDs. La matriz los contrasta en cada origen.
+CONTRATOS = {
+    'incidencia_muestra': '64614b5497da805a69743485981e14eed02b74c337c741d4e65f4970c1d6768a',
+    'rag_torax_documento': 'dd12cf2694ae560f63de8365bce489f55f82183ceeae045117ade4ebdba5cbbb',
+    'rag_torax_fragmento': 'cca033a6cbf48da90ac2ce0486ab0efffb8bc4b8e7e05810742f2b5dfed36ef7',
+    'imagen_analisis_ia': '91d538b698b769ce279d77d6cfaa48c47b237c1fb96ab7332c8fe04a69bc7606',
+    'imagen_revision_ia': 'b8309a71480b5d6cefad956a5770a6be3fc6ea53679fc965c496b73307485e49',
+}
 
 
 def historica(nombre):
@@ -81,6 +93,32 @@ def validar_formatos(bind, lab9):
                 break
         if not valido:
             detener()
+
+
+def huella_tabla(bind, tabla):
+    """Contrato PostgreSQL16 sin OIDs, datos, propietarios ni valores de secuencia.
+
+    Incluye nullability, identidad, PK/FK/checks, índices y funciones/triggers:
+    comprobar solo nombres de tablas permitiría perder inmutabilidad histórica.
+    """
+    consultas = (
+        '''SELECT a.attname,format_type(a.atttypid,a.atttypmod),a.attnotnull,
+            a.attidentity::text,pg_get_expr(d.adbin,d.adrelid)
+            FROM pg_attribute a LEFT JOIN pg_attrdef d ON d.adrelid=a.attrelid AND d.adnum=a.attnum
+            WHERE a.attrelid=to_regclass(:tabla) AND a.attnum>0 AND NOT a.attisdropped
+            ORDER BY a.attname''',
+        '''SELECT conname,contype::text,pg_get_constraintdef(oid)
+            FROM pg_constraint WHERE conrelid=to_regclass(:tabla) ORDER BY conname''',
+        '''SELECT c.relname,pg_get_indexdef(i.indexrelid)
+            FROM pg_index i JOIN pg_class c ON c.oid=i.indexrelid
+            WHERE i.indrelid=to_regclass(:tabla) ORDER BY c.relname''',
+        '''SELECT t.tgname,pg_get_triggerdef(t.oid),t.tgenabled::text,
+            pg_get_functiondef(t.tgfoid) FROM pg_trigger t
+            WHERE t.tgrelid=to_regclass(:tabla) AND NOT t.tgisinternal ORDER BY t.tgname''',
+    )
+    contrato = [[tuple(r) for r in bind.execute(sa.text(q), {'tabla': 'public.'+tabla})]
+                for q in consultas]
+    return hashlib.sha256(json.dumps(contrato, ensure_ascii=True, separators=(',', ':')).encode()).hexdigest()
 
 
 def upgrade():
@@ -172,6 +210,9 @@ def upgrade():
             detener()
     if not bind.execute(sa.text("SELECT EXISTS(SELECT 1 FROM pg_extension WHERE extname='vector')")).scalar_one():
         detener()
+    for tabla, esperado in CONTRATOS.items():
+        if huella_tabla(bind, tabla) != esperado:
+            detener()
 
 
 def downgrade():

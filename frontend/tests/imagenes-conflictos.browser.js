@@ -5,9 +5,9 @@ async (page) => {
   const config = JSON.parse(fs.readFileSync('backend/.radiologia-resultados/integracion-browser-config.json', 'utf8'))
   const datos = await page.evaluate(async api => {
     const headers = { Authorization: `Bearer ${sessionStorage.getItem('token')}` }
-    const lista = await (await fetch(`${api}/imagenes/estudios`, { headers })).json()
+    const lista = await (await fetch(`${api}/imagenes/analisis/estudios`, { headers })).json()
     const estudio = lista.estudios.find(e => e.referencia === 'RX-DEMO-IA-001')
-    const detalle = await (await fetch(`${api}/imagenes/estudios/${estudio.id}`, { headers })).json()
+    const detalle = await (await fetch(`${api}/imagenes/analisis/estudios/${estudio.id}`, { headers })).json()
     const analisis = await (await fetch(`${api}/imagenes/analisis/${detalle.analisis_reciente}`, { headers })).json()
     return { estudio: estudio.id, analisis: analisis.id, version: analisis.version_revision }
   }, config.api)
@@ -34,7 +34,7 @@ async (page) => {
   await page.getByText('Hay una revisión más reciente. Tu borrador conserva su versión original y no se guardará encima.', { exact: true }).waitFor()
   if (!await page.getByRole('button', { name: 'Guardar revisión explícita' }).isDisabled()) throw new Error('El refetch habilitó un borrador obsoleto')
   if (!await page.getByLabel('Motivo', { exact: true }).inputValue()) throw new Error('Se descartó el borrador sin permiso')
-  const path = `${config.api}/imagenes/estudios/${datos.estudio}`
+  const path = `${config.api}/imagenes/analisis/estudios/${datos.estudio}`
   await page.route(path, async route => {
     const respuesta = await route.fetch()
     const detalle = await respuesta.json()

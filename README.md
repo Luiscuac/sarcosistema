@@ -110,7 +110,7 @@ Para una base nueva, Docker Compose monta `database/schema.sql` como inicializac
 python -m alembic upgrade head
 ```
 
-La revisión inicial comprueba que el esquema base ya existe; las siguientes revisiones agregan cambios sin recrearlo. En esta rama hay catorce revisiones y la cabecera es `20261109_0012` (unión de Laboratorio e IA). La reconciliación verificada está documentada en `docs/superpowers/plans/2026-11-09-reconciliar-migraciones.md`; no ejecutar `stamp` a ciegas si una instalación registra solo una rama aunque contiene objetos de ambas. Nunca vuelvas a ejecutar `schema.sql` sobre una base existente ni borres el volumen para resolver una conexión. Las instrucciones de laboratorio están en `docs/laboratorio/migraciones.md`.
+La revisión inicial comprueba que el esquema base ya existe; las siguientes revisiones agregan cambios sin recrearlo. En esta rama hay dieciséis revisiones y la cabecera es `20261109_0013`. La correctiva verifica y materializa operaciones de Laboratorio/Ecografía omitidas por los dos historiales distribuidos de RAG. **En una instalación existente, revisar primero `python -m scripts.reconciliar_historial_imagenes` (solo lectura) y ensayar sobre una copia aislada.** Si hay dos cabezas originales de IA/Laboratorio, `upgrade head` directo no es el procedimiento compatible: el preparador completa la unión histórica mediante upgrades reales antes de la correctiva. Uso y evidencia: [`docs/integracion/2026-11-10-resultado-integracion.md`](docs/integracion/2026-11-10-resultado-integracion.md). No usar `stamp`, downgrade ni repetir `schema.sql` sobre una base existente; no borrar volúmenes. Las instrucciones de laboratorio están en `docs/laboratorio/migraciones.md`.
 
 Con el entorno activo y desde `backend`, verifica el esquema. Si necesitas una cuenta ficticia de Laboratorio, créala mediante el preparador:
 
@@ -203,7 +203,7 @@ El extractor viene deshabilitado en `.env.example`. Habilitarlo requiere configu
 
 El servicio opcional de TorchXRayVision analiza archivos locales en CPU y devuelve puntuaciones experimentales, no diagnósticos ni probabilidades clínicas calibradas. Los pesos se preparan antes de usarlo; no se descargan durante inferencia. Instalación, muestras NIH con atribución y prueba visual sin red: [`docs/imagenes/fase-2-vision-local.md`](docs/imagenes/fase-2-vision-local.md).
 
-La integración actual agrega `/imagenes` para el médico solicitante: imagen autenticada, informe publicado de solo lectura, análisis controlado con RAG local y revisión explícita separada del diagnóstico. Requiere habilitación optativa, modelos/corpus preparados y migraciones; no necesita un LLM ni carga Torch al arrancar los módulos manuales. Preparación, demostración ficticia, pruebas reales y límites de la verificación offline: [`docs/imagenes/integracion-local.md`](docs/imagenes/integracion-local.md).
+La integración conserva `/imagenes` para la bandeja de Ecografía del rol `imagenes` y agrega `/imagenes/rayos-x` para el médico solicitante: imagen autenticada, informe publicado de solo lectura, análisis controlado con RAG local y revisión explícita separada del diagnóstico. La API de asistencia está bajo `/imagenes/analisis`, separada de la clínica de Ecografía. Requiere habilitación optativa, modelos/corpus preparados y migraciones; no necesita un LLM ni carga Torch al arrancar los módulos manuales. Preparación, demostración ficticia, pruebas reales y límites de la verificación offline: [`docs/imagenes/integracion-local.md`](docs/imagenes/integracion-local.md).
 
 ## Pruebas y comprobaciones
 

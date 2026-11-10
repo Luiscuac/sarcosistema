@@ -15,9 +15,9 @@ export default function ResumenSolicitudes() {
     <div className="lab-summary" aria-label="Indicadores de laboratorio">
       {indicadores.map((indicador) => (
         <div className="lab-summary-card" key={indicador.nombre}>
-          <span>{indicador.nombre}</span>
           <strong>{isLoading ? '…' : isError ? '—' : indicador.valor}</strong>
-          <small>{isError ? 'No disponible' : 'Según la bandeja actual'}</small>
+          <span>{indicador.nombre}</span>
+          {isError && <small>No disponible</small>}
         </div>
       ))}
     </div>

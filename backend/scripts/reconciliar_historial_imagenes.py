@@ -28,9 +28,9 @@ async def revisiones(url):
         await engine.dispose()
 
 
-def actualizar(config):
-    """Consume Config con destino explícito. No invocar sobre una BD sin respaldo."""
-    actuales = asyncio.run(revisiones(config.get_main_option('sqlalchemy.url')))
+def actualizar_conexion(config, conexion):
+    existe = conexion.scalar(text("SELECT to_regclass('public.alembic_version') IS NOT NULL"))
+    actuales = tuple(conexion.execute(text('SELECT version_num FROM public.alembic_version ORDER BY version_num')).scalars()) if existe else ()
     if len(actuales) > 1:
         ia = {'20261103_0008', '20261103_0009'}
         lab = {'20261102_0008', '20261102_0009', '20261102_0010', '20261103_0011'}
@@ -54,9 +54,32 @@ def actualizar(config):
                                              "down_revision = '20261027_0007'"), encoding='utf-8')
             original = Config(config.config_file_name)
             original.set_main_option('script_location', str(destino))
-            original.set_main_option('sqlalchemy.url', config.get_main_option('sqlalchemy.url'))
+            original.set_main_option('sqlalchemy.url', config.get_main_option('sqlalchemy.url').replace('%', '%%'))
+            original.attributes['connection'] = conexion
             command.upgrade(original, '20261109_0012')
-    command.upgrade(config, 'head')
+    anterior = config.attributes.get('connection')
+    config.attributes['connection'] = conexion
+    try:
+        command.upgrade(config, 'head')
+    finally:
+        if anterior is None:
+            config.attributes.pop('connection', None)
+        else:
+            config.attributes['connection'] = anterior
+
+
+async def actualizar_transaccion(config):
+    engine = create_async_engine(config.get_main_option('sqlalchemy.url'), poolclass=NullPool)
+    try:
+        async with engine.begin() as conexion:
+            await conexion.run_sync(lambda sync: actualizar_conexion(config, sync))
+    finally:
+        await engine.dispose()
+
+
+def actualizar(config):
+    """Inspección y dos upgrades sobre el mismo destino y transacción reales."""
+    asyncio.run(actualizar_transaccion(config))
 
 
 def main():
@@ -66,7 +89,7 @@ def main():
     args = parser.parse_args()
     config = Config(str(Path(__file__).resolve().parents[1] / 'alembic.ini'))
     config.set_main_option('script_location', str(Path(__file__).resolve().parents[1] / 'alembic'))
-    config.set_main_option('sqlalchemy.url', settings.database_url)
+    config.set_main_option('sqlalchemy.url', settings.database_url.replace('%', '%%'))
     print('Revisiones registradas:', ', '.join(asyncio.run(revisiones(settings.database_url))) or '(ninguna)')
     if args.aplicar:
         actualizar(config)

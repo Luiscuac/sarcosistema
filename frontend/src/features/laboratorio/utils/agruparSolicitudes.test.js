@@ -20,6 +20,11 @@ test('la publicación parcial conserva las pruebas restantes en la solicitud', (
   assert.equal(estadoSolicitud([{ estado: 'publicado' }, { estado: 'pendiente_muestra' }]), 'Parcialmente publicado')
 })
 
+test('una incidencia cierra la solicitud y se refleja en su estado', () => {
+  assert.equal(estadoSolicitud([{ estado: 'publicado' }, { estado: 'no_realizado' }]), 'Finalizada con incidencias')
+  assert.equal(estadoSolicitud([{ estado: 'no_realizado' }, { estado: 'pendiente_muestra' }]), 'Con incidencias')
+})
+
 test('los estudios sin categoría conocida siguen visibles', () => {
   const grupos = agruparPorCategoria([{ categoria_laboratorio: 'nueva_categoria' }, { categoria_laboratorio: null }])
   assert.equal(grupos.length, 1)

@@ -1,5 +1,10 @@
 # Integración main / Rayos X: detenida por seguridad
 
+> Informe histórico de la primera auditoría. Continuación autorizada y evidencia
+> nueva: [resultado de integración](2026-11-10-resultado-integracion.md).
+> Los resultados y el estado detenido que siguen corresponden a la primera sesión,
+> no al estado posterior de la rama de integración.
+
 ## Estado y alcance
 
 No es un merge terminado ni una validación funcional de los tres módulos.
