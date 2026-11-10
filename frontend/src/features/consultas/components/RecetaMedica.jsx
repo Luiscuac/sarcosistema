@@ -4,8 +4,8 @@ import { emitirRecetaMedica } from '../api/consultasApi.js'
 import { obtenerRecetasPublicadas } from '../../enfermeria/api/enfermeriaApi.js'
 import ConfirmarAccion from '../../laboratorio/components/ConfirmarAccion.jsx'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
-import { formatearFecha } from '../../../shared/utils/formatearFecha.js'
 import { fechaLocalDe } from '../utils/paciente.js'
+import RecetaFicha from '../../enfermeria/components/RecetaFicha.jsx'
 
 const medicamentoVacio = () => ({ nombre_generico: '', forma_concentracion: '', indicaciones: '', cantidad_recetada: '' })
 
@@ -68,11 +68,7 @@ export default function RecetaMedica({ paciente }) {
     {recetas.isPending && <p role="status" className="med-message">Cargando recetas…</p>}
     {recetas.isError && <p role="alert" className="med-error">No se pudieron cargar las recetas emitidas.</p>}
     {recetas.data?.length === 0 && <p className="med-message">Todavía no hay recetas emitidas.</p>}
-    {recetas.data?.map(r => <article className="med-nursing-record" key={r.id}>
-      <header><strong>Receta {r.numero_receta || `#${r.id}`} · emitida por {r.registrado_por}</strong><span>{formatearFecha(r.fecha)} · {new Date(r.publicado_en).toLocaleString('es-BO')}</span></header>
-      <p><strong>Diagnóstico:</strong> {r.diagnostico_principal || 'No indicado'}</p>
-      <ul>{r.medicamentos.map((m, i) => <li key={`${r.id}-${i}`}><strong>{m.nombre_generico}</strong> · {m.forma_concentracion}<br />{m.indicaciones}<br />Cantidad: {m.cantidad_recetada || 'No especificada'}</li>)}</ul>
-    </article>)}
+    {recetas.data?.map(receta => <RecetaFicha key={receta.id} receta={receta} estado="Emitida a farmacia" />)}
 
     {confirmando && <ConfirmarAccion titulo="Emitir receta" textoConfirmar="Emitir y enviar a farmacia" textoCancelar="Seguir editando"
       pendiente={mutation.isPending} onCancelar={() => setConfirmando(false)} onConfirmar={emitir}>

@@ -34,6 +34,9 @@ class LaboratorioService:
             return None
         return await self.obtener_informe(solicitud_id)
 
+    async def obtener_resultado_medico(self, estudio_id: int, usuario_id: int):
+        return await self.repository.obtener_resultado_medico(estudio_id, usuario_id)
+
     async def obtener_solicitud(self, solicitud_id: int):
         return await self.repository.obtener_solicitud(solicitud_id)
 

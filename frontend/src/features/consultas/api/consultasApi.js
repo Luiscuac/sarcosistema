@@ -10,6 +10,8 @@ export const obtenerSolicitudesLaboratorio = async (pacienteId) =>
   (await api.get(`/laboratorio/pacientes/${pacienteId}/solicitudes`)).data
 export const obtenerInformeLaboratorio = async (solicitudId) =>
   (await api.get(`/laboratorio/medicos/solicitudes/${solicitudId}/informe`)).data
+export const obtenerResultadoPublicadoLaboratorio = async (estudioId) =>
+  (await api.get(`/laboratorio/medicos/estudios/${estudioId}/resultado`)).data
 export const crearConsulta = async (datos) => (await api.post('/consultas', datos)).data
 export const emitirRecetaMedica = async (pacienteId, datos) =>
   (await api.post(`/enfermeria/pacientes/${pacienteId}/recetas-medicas`, datos)).data

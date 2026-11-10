@@ -46,6 +46,12 @@ export function formularioAPayload(formulario, pacienteId, clave) {
   return payload
 }
 
+/** Payload del cuaderno demo: incluye los campos clínicos y excluye campos auxiliares de UI. */
+export function formularioATransporte(formulario) {
+  return Object.fromEntries(grupos.flatMap(({ campos }) => campos)
+    .map(([nombre]) => [nombre, formulario[nombre] ?? null]))
+}
+
 export function confirmarSalida(sucio, confirmar) {
   return !sucio || confirmar('Hay cambios sin guardar. ¿Quieres salir de esta consulta?')
 }

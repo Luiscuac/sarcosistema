@@ -54,6 +54,11 @@
 .med-lab-request-details li strong { font-weight: 500; }
 .med-lab-request-details li span, .med-lab-request-details li p { color: var(--muted); }
 .med-lab-request-details li p { margin: 6px 0 0; }
+.med-lab-result-details { margin-top:8px; padding:9px 11px; border:1px solid #d9e7e4; border-radius:6px; background:#f8fbfa; }
+.med-lab-result-details summary { color:var(--brand); font-size:11px; font-weight:700; cursor:pointer; }
+.med-lab-result-meta { margin:10px 0; color:var(--muted); font-size:11px; }
+.med-lab-result-details .med-table-wrap { margin-top:8px; }
+.med-lab-result-observations { margin:10px 0 0; font-size:12px; line-height:1.5; white-space:pre-wrap; }
 @media (max-width: 620px) { .med-lab-request-row { grid-template-columns: minmax(0,1fr) auto; gap: 10px; } .med-lab-status { justify-self: end; } .med-lab-report-button { grid-column: 1 / -1; justify-self: stretch; } }
 .med-pagination { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 14px 22px; font-size: 11px; color: var(--muted); }
 .med-pagination button, .med-form-actions > button:not(.primary-button), .med-link-button { border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--brand); padding: 8px 11px; font: inherit; font-size: 11px; text-decoration: none; }
