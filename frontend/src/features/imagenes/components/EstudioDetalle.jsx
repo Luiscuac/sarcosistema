@@ -73,7 +73,7 @@ export default function EstudioDetalle({ id, usuario, habilitada }) {
         <button className="primary-button" disabled={revision.isPending || conflicto || !revisionVigente(versionBorrador, analisis.data.version_revision) || !validarRevision(decision, motivo, correccion)}>Guardar revisión explícita</button>
       </form>
       {conflicto && <p role="alert">Hay una revisión más reciente. Tu borrador conserva su versión original y no se guardará encima.</p>}
-      <button type="button" onClick={() => { if (window.confirm('¿Descartar el borrador y cargar la revisión actual?')) { setDecision(''); setMotivo(''); setCorreccion(''); setVersionBorrador(null); analisis.refetch() } }}>Descartar borrador y recargar revisión</button>
+      <button type="button" className="lab-secondary-button" onClick={() => { if (window.confirm('¿Descartar el borrador y cargar la revisión actual?')) { setDecision(''); setMotivo(''); setCorreccion(''); setVersionBorrador(null); analisis.refetch() } }}>Descartar borrador y recargar revisión</button>
       {revision.error && <p role="alert">{mensajeError(revision.error)}</p>}{revision.isSuccess && <p role="status">Revisión guardada; el informe clínico permanece sin cambios.</p>}
       <h4>Historial de revisiones</h4><ul>{(analisis.data.revisiones || []).map(r => <li key={r.version}>Versión {r.version}: {r.decision} · {new Date(r.fecha).toLocaleString('es-BO')} · actor {r.usuario_id}<p>{r.motivo}</p>{r.correccion && <p>{r.correccion}</p>}</li>)}</ul>
     </>}
