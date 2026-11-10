@@ -8,6 +8,7 @@ import SolicitarEcografia from './SolicitarEcografia.jsx'
 import ExamenesComplementarios from './ExamenesComplementarios.jsx'
 import RegistrosPublicados from '../../enfermeria/components/RegistrosPublicados.jsx'
 import DatosDemoClinicos from './DatosDemoClinicos.jsx'
+import RecetaMedica from './RecetaMedica.jsx'
 
 export function IdentidadPaciente({ paciente }) {
   return <div className="med-patient">
@@ -69,12 +70,13 @@ export default function PacienteFicha({ id, usuario }) {
     <IdentidadPaciente paciente={paciente.data} />
     <nav className="med-patient-tabs" role="tablist" aria-label="Secciones de la ficha del paciente">
       {[
-        ['consultas', 'Consultas'], ['enfermeria', 'Enfermería y recetas'],
+        ['consultas', 'Consultas'], ['enfermeria', 'Enfermería'], ['receta', 'Receta médica'],
         ['laboratorio', 'Laboratorio'], ['imagenes', 'Ecografías'],
       ].map(([key, label]) => <button key={key} type="button" role="tab" aria-selected={seccion === key} className={seccion === key ? 'active' : ''} onClick={() => setSeccion(key)}>{label}</button>)}
     </nav>
     {seccion === 'consultas' && <HistorialConsultas historial={historial} pagina={pagina} pacienteId={id} />}
-    {seccion === 'enfermeria' && <>{esDemo && <DatosDemoClinicos seccion="receta" />}<RegistrosPublicados pacienteId={id} /></>}
+    {seccion === 'enfermeria' && <RegistrosPublicados pacienteId={id} />}
+    {seccion === 'receta' && <RecetaMedica paciente={paciente.data} />}
     {seccion === 'laboratorio' && <section className="med-panel"><div className="med-panel-header"><h2>Solicitudes de laboratorio</h2></div>
       {laboratorio.isPending && <p className="med-message">Cargando solicitudes de laboratorio…</p>}
       {laboratorio.isError && <p role="alert" className="med-message">No se pudieron cargar las solicitudes de laboratorio.</p>}

@@ -11,6 +11,7 @@ import ProtectedRoute from '../features/accesos/auth/ProtectedRoute.jsx'
 import ConsultasPage from '../features/consultas/pages/ConsultasPage.jsx'
 import ImagenesPage from '../features/imagenes/pages/ImagenesPage.jsx'
 import EnfermeriaPage from '../features/enfermeria/pages/EnfermeriaPage.jsx'
+import FarmaciaPage from '../features/enfermeria/pages/FarmaciaPage.jsx'
 const router = createBrowserRouter(createRoutesFromElements(
   <>
         <Route path="/" element={<Navigate to="/inicio" replace />} />
@@ -72,6 +73,11 @@ const router = createBrowserRouter(createRoutesFromElements(
         <Route path="/enfermeria" element={
           <ProtectedRoute rolesPermitidos={['enfermeria']}>
             {({ usuario, logout }) => <EnfermeriaPage usuario={usuario} logout={logout} />}
+          </ProtectedRoute>
+        } />
+        <Route path="/farmacia" element={
+          <ProtectedRoute rolesPermitidos={['farmacia']}>
+            {({ usuario, logout }) => <FarmaciaPage usuario={usuario} logout={logout} />}
           </ProtectedRoute>
         } />
   </>

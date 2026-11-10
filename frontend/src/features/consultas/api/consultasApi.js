@@ -11,6 +11,8 @@ export const obtenerSolicitudesLaboratorio = async (pacienteId) =>
 export const obtenerInformeLaboratorio = async (solicitudId) =>
   (await api.get(`/laboratorio/medicos/solicitudes/${solicitudId}/informe`)).data
 export const crearConsulta = async (datos) => (await api.post('/consultas', datos)).data
+export const emitirRecetaMedica = async (pacienteId, datos) =>
+  (await api.post(`/enfermeria/pacientes/${pacienteId}/recetas-medicas`, datos)).data
 export const extraerDatosClinicos = async (pacienteId, transcripcion, signal) =>
   (await api.post('/consultas/extraer-datos-clinicos', { paciente_id: Number(pacienteId), transcripcion }, { signal, timeout: 200000 })).data
 

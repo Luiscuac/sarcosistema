@@ -233,3 +233,4 @@ npm run build
 ```
 
 No confundas “el entorno se activó” con “el backend y la base están funcionando”: son comprobaciones distintas.
+

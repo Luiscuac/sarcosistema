@@ -91,48 +91,51 @@ async def listar_publicados_para_medico(
     return await repo.listar_publicados(paciente_id)
 
 
-@router.post('/pacientes/{paciente_id}/recetas', status_code=201,
-             dependencies=[Depends(requiere_rol('enfermeria'))])
-async def crear_receta(paciente_id: int, datos: RecetaRequest,
-                       usuario: Usuario = Depends(usuario_actual),
-                       db: AsyncSession = Depends(get_db)):
-    existe = (await db.execute(text("SELECT 1 FROM public.paciente WHERE id=:id AND estado='activo'"), {'id': paciente_id})).scalar_one_or_none()
-    if not existe:
-        raise HTTPException(404, 'Paciente no encontrado.')
-    campos = ['establecimiento','programas','numero_receta','venta','historia_clinica','tipo_atencion','fecha','diagnostico_principal','diagnostico_secundario','prestaciones','medicamentos','dispensador','prescriptor','costo_total','paciente_firma']
-    valores = datos.model_dump(mode='json')
-    params = {k: valores[k] for k in campos}
-    params.update(paciente=paciente_id, usuario=usuario.id)
-    for campo in ('prestaciones','medicamentos'):
-        params[campo] = json.dumps(params[campo], ensure_ascii=False, allow_nan=False)
-    receta_id = (await db.execute(text('''INSERT INTO public.receta_enfermeria
-        (paciente_id, registrado_por, establecimiento, programas, numero_receta, venta,
-         historia_clinica, tipo_atencion, fecha, diagnostico_principal, diagnostico_secundario,
-         prestaciones, medicamentos, dispensador, prescriptor, costo_total, paciente_firma)
-        VALUES (:paciente,:usuario,:establecimiento,:programas,:numero_receta,:venta,
-         :historia_clinica,:tipo_atencion,:fecha,:diagnostico_principal,:diagnostico_secundario,
-         CAST(:prestaciones AS jsonb),CAST(:medicamentos AS jsonb),:dispensador,:prescriptor,:costo_total,:paciente_firma)
-        RETURNING id'''), params)).scalar_one()
-    await db.execute(text("INSERT INTO public.auditoria_accion (fecha_hora,usuario_id,accion,entidad_afectada,referencia_registro) VALUES(now(),:u,'crear','receta_enfermeria',:r)"), {'u': usuario.id, 'r': str(receta_id)})
-    return {'id': receta_id, 'estado': 'borrador'}
-
-
-@router.get('/pacientes/{paciente_id}/recetas', dependencies=[Depends(requiere_rol('enfermeria'))])
-async def listar_recetas_enfermeria(paciente_id: int, usuario: Usuario = Depends(usuario_actual), db: AsyncSession = Depends(get_db)):
-    rows = (await db.execute(text('''SELECT r.*, u.identificador_acceso AS registrado_por FROM public.receta_enfermeria r JOIN public.usuario u ON u.id=r.registrado_por WHERE r.paciente_id=:p AND r.registrado_por=:u ORDER BY r.creado_en DESC'''), {'p': paciente_id, 'u': usuario.id})).mappings().all()
-    return [dict(row) for row in rows]
-
-
-@router.post('/recetas/{receta_id}/publicar', dependencies=[Depends(requiere_rol('enfermeria'))])
-async def publicar_receta(receta_id: int, usuario: Usuario = Depends(usuario_actual), db: AsyncSession = Depends(get_db)):
-    result = (await db.execute(text("UPDATE public.receta_enfermeria SET estado='publicado', publicado_por=:u, publicado_en=now() WHERE id=:id AND registrado_por=:u AND estado='borrador' RETURNING id"), {'id': receta_id, 'u': usuario.id})).scalar_one_or_none()
-    if result is None:
-        raise HTTPException(409, 'El borrador no existe, no te pertenece o ya fue publicado.')
-    await db.execute(text("INSERT INTO public.auditoria_accion (fecha_hora,usuario_id,accion,entidad_afectada,referencia_registro) VALUES(now(),:u,'publicar','receta_enfermeria',:r)"), {'u': usuario.id, 'r': str(result)})
-    return {'id': result, 'estado': 'publicado'}
-
-
 @router.get('/pacientes/{paciente_id}/recetas-publicadas', dependencies=[Depends(requiere_rol('medico'))])
 async def recetas_publicadas_medico(paciente_id: int, db: AsyncSession = Depends(get_db)):
     rows = (await db.execute(text("SELECT r.*, u.identificador_acceso AS registrado_por, up.identificador_acceso AS publicado_por FROM public.receta_enfermeria r JOIN public.usuario u ON u.id=r.registrado_por LEFT JOIN public.usuario up ON up.id=r.publicado_por WHERE r.paciente_id=:p AND r.estado='publicado' ORDER BY r.publicado_en DESC"), {'p': paciente_id})).mappings().all()
+    return [dict(row) for row in rows]
+
+
+@router.get('/pacientes/{paciente_id}/recetas-recibidas', dependencies=[Depends(requiere_rol('enfermeria'))])
+async def recetas_recibidas_enfermeria(paciente_id: int, db: AsyncSession = Depends(get_db)):
+    rows = (await db.execute(text("""SELECT r.*, u.identificador_acceso AS registrado_por
+        FROM public.receta_enfermeria r JOIN public.usuario u ON u.id=r.registrado_por
+        WHERE r.paciente_id=:p AND r.estado='publicado' ORDER BY r.publicado_en DESC"""), {'p': paciente_id})).mappings().all()
+    return [dict(row) for row in rows]
+
+
+@router.post('/pacientes/{paciente_id}/recetas-medicas', status_code=201,
+             dependencies=[Depends(requiere_rol('medico'))])
+async def crear_receta_medica(paciente_id: int, datos: RecetaRequest,
+                              usuario: Usuario = Depends(usuario_actual),
+                              db: AsyncSession = Depends(get_db)):
+    existe = (await db.execute(text("SELECT 1 FROM public.paciente WHERE id=:id AND estado='activo'"), {'id': paciente_id})).scalar_one_or_none()
+    if not existe:
+        raise HTTPException(404, 'Paciente no encontrado.')
+    # Mantener `fecha` como datetime.date: asyncpg no acepta texto para una columna date.
+    valores = datos.model_dump()
+    for campo in ('prestaciones', 'medicamentos'):
+        valores[campo] = json.dumps(valores[campo], ensure_ascii=False, allow_nan=False)
+    valores.update(paciente=paciente_id, usuario=usuario.id,
+                   prescriptor=datos.prescriptor or usuario.identificador_acceso)
+    receta_id = (await db.execute(text('''INSERT INTO public.receta_enfermeria
+        (paciente_id, registrado_por, publicado_por, estado, establecimiento, programas,
+         numero_receta, venta, historia_clinica, tipo_atencion, fecha, diagnostico_principal,
+         diagnostico_secundario, prestaciones, medicamentos, prescriptor, costo_total, publicado_en)
+        VALUES (:paciente,:usuario,:usuario,'publicado',:establecimiento,:programas,
+         :numero_receta,:venta,:historia_clinica,:tipo_atencion,:fecha,:diagnostico_principal,
+         :diagnostico_secundario,CAST(:prestaciones AS jsonb),CAST(:medicamentos AS jsonb),
+         :prescriptor,:costo_total,now()) RETURNING id'''), valores)).scalar_one()
+    await db.execute(text("INSERT INTO public.auditoria_accion (fecha_hora,usuario_id,accion,entidad_afectada,referencia_registro) VALUES(now(),:u,'crear','receta_enfermeria',:r)"), {'u': usuario.id, 'r': str(receta_id)})
+    return {'id': receta_id, 'estado': 'enviada_a_farmacia'}
+
+
+@router.get('/farmacia/recetas', dependencies=[Depends(requiere_rol('farmacia'))])
+async def listar_recetas_para_farmacia(db: AsyncSession = Depends(get_db)):
+    rows = (await db.execute(text('''SELECT r.*, p.nombre_completo AS paciente,
+        u.identificador_acceso AS prescriptor FROM public.receta_enfermeria r
+        JOIN public.paciente p ON p.id=r.paciente_id
+        JOIN public.usuario u ON u.id=r.registrado_por
+        WHERE r.estado='publicado' ORDER BY r.publicado_en DESC'''))).mappings().all()
     return [dict(row) for row in rows]
