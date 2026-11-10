@@ -20,3 +20,31 @@
 .lab-study-link { flex: none; display: inline-block; padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px; color: var(--brand); font-size: 11px; font-weight: 600; text-decoration: none; }
 .lab-study-link:hover { border-color: var(--brand); background: #f7fbfa; }
 @media (max-width: 700px) { .lab-detail-grid { grid-template-columns: 1fr; } .lab-detail-heading, .lab-detail-group-heading, .lab-report-access { align-items: flex-start; flex-direction: column; } }
+
+/* Encabezado con avance y acción principal */
+.lab-detail-page .lab-title-actions { gap: 16px; }
+.lab-detail-page .lab-title-actions .lab-request-progress { min-width: 160px; }
+.lab-request-progress { display: grid; gap: 6px; }
+.lab-request-progress > span { color: var(--muted); font-size: 12px; }
+.lab-study-link.is-primary { border-color: var(--brand); background: var(--brand); color: #fff; }
+.lab-study-link.is-primary:hover { background: #0b625b; }
+
+/* Recorrido del estudio: Muestra -> Resultado -> Publicado */
+.lab-steps { display: flex; flex: none; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.lab-step { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px 5px 6px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: 11px; }
+.lab-request-study .lab-step > span[aria-hidden] { display: inline-grid; place-items: center; width: 18px; height: 18px; margin: 0; border-radius: 50%; background: #eef1f4; font-size: 10px; font-weight: 600; }
+.lab-step--done { border-color: #b9ddd7; color: #0f5f58; }
+.lab-request-study .lab-step--done > span[aria-hidden] { background: var(--brand); color: #fff; }
+.lab-step--current { border-color: #c8dafb; background: #f3f7ff; color: #285a9e; font-weight: 600; }
+.lab-request-study .lab-step--current > span[aria-hidden] { background: #285a9e; color: #fff; }
+.lab-request-study .lab-steps--closed { display: inline-block; flex: none; margin: 0; padding: 5px 10px; border: 1px solid #ecd2bf; border-radius: 999px; background: #fff7f2; color: #8a4b16; font-size: 11px; font-weight: 600; }
+
+/* Muestras registradas */
+.lab-simple-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+.lab-simple-table th { padding: 10px 12px; border-bottom: 1px solid var(--line); background: #fafbfc; color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.lab-simple-table td { padding: 12px; border-bottom: 1px solid var(--line); }
+.lab-simple-table small { color: var(--muted); }
+@media (max-width: 700px) {
+  .lab-steps { flex-wrap: wrap; }
+  .lab-detail-page .lab-title-actions { flex-wrap: wrap; margin-left: 15px; }
+}

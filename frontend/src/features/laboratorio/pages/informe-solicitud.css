@@ -41,3 +41,15 @@
   .lab-report-study-title, .lab-report-section h3, .lab-report-section tr { break-inside: avoid; }
   .lab-report-section thead { display: table-header-group; }
 }
+
+.lab-report-legend { margin: -14px 0 8px; color: #617180; font-size: 11px; }
+.lab-report-section tr.is-out-of-range td:nth-child(2) { color: #a33b16; }
+.lab-report-flag { font-weight: 700; }
+.lab-report-signature { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin-top: 56px; break-inside: avoid; }
+.lab-report-signature > div { width: 260px; text-align: center; }
+.lab-report-signature > div span { display: block; border-top: 1px solid #26323c; }
+.lab-report-signature p { margin: 8px 0 0; color: #617180; font-size: 11px; }
+@media print {
+  @page { @bottom-right { content: "Página " counter(page) " de " counter(pages); font-size: 9pt; color: #617180; } }
+  .lab-report-section tr.is-out-of-range td:nth-child(2) { color: #000; }
+}

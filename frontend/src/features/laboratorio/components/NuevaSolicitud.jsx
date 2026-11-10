@@ -1,12 +1,19 @@
 import { useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { buscarMedicos, buscarPacientes, crearPaciente, crearSolicitud, listarEstudiosCatalogo } from '../api/laboratorioApi.js'
+import { buscarMedicos, buscarPacientes, crearPaciente, crearSolicitud } from '../api/laboratorioApi.js'
+import { useEstudiosCatalogo } from '../hooks/useEstudiosCatalogo.js'
+import ConfirmarAccion from './ConfirmarAccion.jsx'
+import Dialogo from './Dialogo.jsx'
 import DatosPedido from './nueva-solicitud/DatosPedido.jsx'
 import EstudiosSolicitados from './nueva-solicitud/EstudiosSolicitados.jsx'
 import PacienteSolicitud from './nueva-solicitud/PacienteSolicitud.jsx'
-import './nueva-solicitud/NuevaSolicitud.css'
+import { AREAS_LABORATORIO } from '../utils/catalogos.js'
+import { mensajeError } from '../utils/mensajeError.js'
+import { useValorDiferido } from '../../../shared/hooks/useValorDiferido.js'
+import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
+import './formularios.css'
 
-const pacienteVacio = {
+const PACIENTE_VACIO = {
   nombre_completo: '',
   fecha_nacimiento: '',
   sexo: 'no_especificado',
@@ -18,57 +25,62 @@ const pacienteVacio = {
   telefono: '',
 }
 
-const gruposEstudios = [
-  { codigo: 'hematologia', nombre: 'Hematología' },
-  { codigo: 'bioquimica', nombre: 'Bioquímica' },
-  { codigo: 'serologia', nombre: 'Serología' },
-  { codigo: 'copro_orina', nombre: 'Copro y orina' },
-]
+// Función, no constante: la fecha de hoy se calcula al abrir el formulario.
+const pedidoInicial = () => ({
+  referencia_papel_formulario: '',
+  fecha_solicitud: new Date().toLocaleDateString('en-CA'),
+  procedencia: 'este_centro',
+  establecimiento_solicitante_nombre: '',
+  medico_solicitante_nombre: '',
+  medico_solicitante_id: null,
+  diagnostico_principal: '',
+  prioridad: 'sin_prioridad',
+})
 
-function mensajeDeError(error, mensajePredeterminado) {
-  const detalle = error.response?.data?.detail
-  if (typeof detalle === 'string') return detalle
-  if (Array.isArray(detalle)) {
-    return detalle.map((item) => item?.msg).filter(Boolean).join(' · ') || mensajePredeterminado
+const GRUPOS_ESTUDIOS = [...AREAS_LABORATORIO, { codigo: null, nombre: 'Prestaciones por clasificar' }]
+
+function validarPaciente(datos) {
+  if (datos.nombre_completo.trim().length < 2) return 'Escribe el nombre completo del paciente.'
+  if (!datos.fecha_nacimiento) return 'Selecciona la fecha de nacimiento del paciente.'
+  if (!datos.sin_documento && (!datos.tipo_documento.trim() || !datos.numero_documento.trim())) {
+    return 'Ingresa el documento o marca “Persona sin documento”.'
   }
-  return mensajePredeterminado
+  return null
+}
+
+function validarSolicitud(paciente, estudioIds, pedido) {
+  if (!paciente) return 'Busca y selecciona un paciente antes de continuar.'
+  if (pedido.procedencia === 'este_centro' && !pedido.medico_solicitante_id) return 'Selecciona un médico de Sarcobamba de la lista.'
+  if (!estudioIds.length) return 'Selecciona al menos un estudio.'
+  return null
 }
 
 export default function NuevaSolicitud({ onClose, onCreated }) {
   const queryClient = useQueryClient()
+  const { notificar } = useNotificacion()
   const claveIdempotencia = useRef(crypto.randomUUID())
   const [termino, setTermino] = useState('')
   const [paciente, setPaciente] = useState(null)
   const [nuevoPaciente, setNuevoPaciente] = useState(false)
-  const [datosPaciente, setDatosPaciente] = useState(pacienteVacio)
+  const [datosPaciente, setDatosPaciente] = useState(PACIENTE_VACIO)
   const [estudioIds, setEstudioIds] = useState([])
   const [busquedaEstudio, setBusquedaEstudio] = useState('')
-  const [datosSolicitud, setDatosSolicitud] = useState({
-    referencia_papel_formulario: '',
-    fecha_solicitud: new Date().toLocaleDateString('en-CA'),
-    procedencia: 'este_centro',
-    establecimiento_solicitante_nombre: '',
-    medico_solicitante_nombre: '',
-    medico_solicitante_id: null,
-    diagnostico_principal: '',
-    prioridad: 'sin_prioridad',
-  })
+  const [pedido, setPedido] = useState(pedidoInicial)
   const [errorLocal, setErrorLocal] = useState('')
+  const [confirmarCierre, setConfirmarCierre] = useState(false)
+  const terminoPaciente = useValorDiferido(termino.trim())
+  const terminoMedico = useValorDiferido(pedido.medico_solicitante_nombre.trim())
 
-  const catalogoQuery = useQuery({
-    queryKey: ['laboratorio', 'catalogo-estudios'],
-    queryFn: listarEstudiosCatalogo,
-  })
+  const catalogoQuery = useEstudiosCatalogo()
   const pacientesQuery = useQuery({
-    queryKey: ['laboratorio', 'pacientes', termino],
-    queryFn: () => buscarPacientes(termino.trim()),
-    enabled: termino.trim().length >= 2 && !nuevoPaciente,
+    queryKey: ['laboratorio', 'pacientes', terminoPaciente],
+    queryFn: () => buscarPacientes(terminoPaciente),
+    enabled: terminoPaciente.length >= 2 && !nuevoPaciente,
   })
   const medicosQuery = useQuery({
-    queryKey: ['laboratorio', 'medicos', datosSolicitud.medico_solicitante_nombre],
-    queryFn: () => buscarMedicos(datosSolicitud.medico_solicitante_nombre.trim()),
-    enabled: datosSolicitud.procedencia === 'este_centro' && !datosSolicitud.medico_solicitante_id
-      && datosSolicitud.medico_solicitante_nombre.trim().length >= 2,
+    queryKey: ['laboratorio', 'medicos', terminoMedico],
+    queryFn: () => buscarMedicos(terminoMedico),
+    enabled: pedido.procedencia === 'este_centro' && !pedido.medico_solicitante_id && terminoMedico.length >= 2,
   })
   const crearPacienteMutation = useMutation({
     mutationFn: crearPaciente,
@@ -79,77 +91,57 @@ export default function NuevaSolicitud({ onClose, onCreated }) {
       setErrorLocal('')
       queryClient.invalidateQueries({ queryKey: ['laboratorio', 'pacientes'] })
     },
-    onError: (error) => setErrorLocal(mensajeDeError(error, 'No se pudo registrar el paciente. Comprueba los datos e inténtalo nuevamente.')),
+    onError: (error) => setErrorLocal(mensajeError(error, 'No se pudo registrar el paciente. Comprueba los datos e inténtalo nuevamente.')),
   })
   const crearSolicitudMutation = useMutation({
     mutationFn: crearSolicitud,
     onSuccess: async (solicitud) => {
       await queryClient.invalidateQueries({ queryKey: ['examenes'] })
       await queryClient.invalidateQueries({ queryKey: ['laboratorio'] })
+      notificar(`Solicitud ${solicitud.referencia} registrada.`, 'exito')
       onCreated?.(solicitud)
       onClose()
     },
-    onError: (error) => setErrorLocal(mensajeDeError(error, 'No se pudo registrar la solicitud.')),
+    onError: (error) => setErrorLocal(mensajeError(error, 'No se pudo registrar la solicitud.')),
   })
 
-  const cambiarSolicitud = (campo, valor) => setDatosSolicitud((actual) => ({
+  const hayDatos = Boolean(paciente || nuevoPaciente || termino.trim() || estudioIds.length
+    || pedido.medico_solicitante_nombre.trim() || pedido.referencia_papel_formulario.trim() || pedido.diagnostico_principal.trim())
+  const ocupado = crearSolicitudMutation.isPending || crearPacienteMutation.isPending
+  const solicitarCierre = () => (hayDatos ? setConfirmarCierre(true) : onClose())
+
+  const cambiarPedido = (campo, valor) => setPedido((actual) => ({
     ...actual, [campo]: valor,
     ...(campo === 'procedencia' || campo === 'medico_solicitante_nombre' ? { medico_solicitante_id: null } : {}),
   }))
-  const cambiarPaciente = (campo, valor) => setDatosPaciente((actual) => {
-    if (campo === 'sin_documento' && valor) {
-      return { ...actual, sin_documento: true, tipo_documento: '', numero_documento: '' }
-    }
-    return { ...actual, [campo]: valor }
-  })
+  const cambiarPaciente = (campo, valor) => setDatosPaciente((actual) => (campo === 'sin_documento' && valor
+    ? { ...actual, sin_documento: true, tipo_documento: '', numero_documento: '' }
+    : { ...actual, [campo]: valor, ...(campo === 'sin_documento' ? { tipo_documento: 'CI' } : {}) }))
   const alternarEstudio = (id) => setEstudioIds((actual) =>
-    actual.includes(id) ? actual.filter((item) => item !== id) : [...actual, id],
-  )
+    actual.includes(id) ? actual.filter((item) => item !== id) : [...actual, id])
 
-  const enviar = (event) => {
-    event.preventDefault()
-    setErrorLocal('')
-    if (!paciente) {
-      setErrorLocal('Busca y selecciona un paciente antes de continuar.')
-      return
-    }
-    if (!estudioIds.length) {
-      setErrorLocal('Selecciona al menos un estudio.')
-      return
-    }
-    if (datosSolicitud.procedencia === 'este_centro' && !datosSolicitud.medico_solicitante_id) {
-      setErrorLocal('Selecciona un médico de Sarcobamba de la lista.')
-      return
-    }
+  function enviar(evento) {
+    evento.preventDefault()
+    const error = validarSolicitud(paciente, estudioIds, pedido)
+    setErrorLocal(error ?? '')
+    if (error) return
     crearSolicitudMutation.mutate({
-      ...datosSolicitud,
-      fecha_solicitud: new Date(`${datosSolicitud.fecha_solicitud}T12:00:00`).toISOString(),
+      ...pedido,
+      fecha_solicitud: new Date(`${pedido.fecha_solicitud}T12:00:00`).toISOString(),
       paciente_id: paciente.id,
       tipo_estudio_ids: estudioIds,
       clave_idempotencia: claveIdempotencia.current,
     })
   }
 
-  const crearPacienteAhora = (event) => {
-    event.preventDefault()
-    setErrorLocal('')
-    const nombre = datosPaciente.nombre_completo.trim()
-    if (nombre.length < 2) {
-      setErrorLocal('Escribe el nombre completo del paciente.')
-      return
-    }
-    if (!datosPaciente.fecha_nacimiento) {
-      setErrorLocal('Selecciona la fecha de nacimiento del paciente.')
-      return
-    }
-    if (!datosPaciente.sin_documento
-        && (!datosPaciente.tipo_documento.trim() || !datosPaciente.numero_documento.trim())) {
-      setErrorLocal('Ingresa el documento o marca “Persona sin documento”.')
-      return
-    }
+  function registrarPaciente(evento) {
+    evento.preventDefault()
+    const error = validarPaciente(datosPaciente)
+    setErrorLocal(error ?? '')
+    if (error) return
     crearPacienteMutation.mutate({
       ...datosPaciente,
-      nombre_completo: nombre,
+      nombre_completo: datosPaciente.nombre_completo.trim(),
       tipo_documento: datosPaciente.sin_documento ? null : datosPaciente.tipo_documento.trim(),
       numero_documento: datosPaciente.sin_documento ? null : datosPaciente.numero_documento.trim(),
       historia_clinica: datosPaciente.historia_clinica.trim() || null,
@@ -158,59 +150,55 @@ export default function NuevaSolicitud({ onClose, onCreated }) {
     })
   }
 
+  const catalogo = catalogoQuery.data ?? []
   const terminoEstudio = busquedaEstudio.trim().toLocaleLowerCase()
-  const estudiosVisibles = (catalogoQuery.data ?? []).filter((item) =>
-    item.nombre.toLocaleLowerCase().includes(terminoEstudio))
-  const gruposVisibles = [
-    ...gruposEstudios,
-    { codigo: null, nombre: 'Prestaciones por clasificar' },
-  ].map((grupo) => ({
-    ...grupo,
-    estudios: estudiosVisibles.filter((item) => item.categoria_laboratorio === grupo.codigo),
-  })).filter((grupo) => grupo.estudios.length > 0)
+  const estudiosVisibles = catalogo.filter((item) => item.nombre.toLocaleLowerCase().includes(terminoEstudio))
+  const grupos = GRUPOS_ESTUDIOS
+    .map((grupo) => ({ ...grupo, estudios: estudiosVisibles.filter((item) => item.categoria_laboratorio === grupo.codigo) }))
+    .filter((grupo) => grupo.estudios.length > 0)
+  const seleccionados = estudioIds.map((id) => catalogo.find((estudio) => estudio.id === id)).filter(Boolean)
 
-  return (
-    <div className="lab-dialog-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-      <section className="lab-dialog" role="dialog" aria-modal="true" aria-labelledby="new-request-title">
-        <header className="lab-dialog-header">
-          <div>
-            <span className="lab-eyebrow">D-8 · SOLICITUD DE EXÁMENES</span>
-            <h2 id="new-request-title">Nueva solicitud</h2>
-            <p>Identifica al paciente y registra los estudios que llegaron en el pedido.</p>
-          </div>
-          <button className="lab-dialog-close" type="button" onClick={onClose} aria-label="Cerrar">×</button>
-        </header>
-
-        <form onSubmit={enviar}>
-          <div className="lab-dialog-body">
-            <PacienteSolicitud
-              paciente={paciente} nuevoPaciente={nuevoPaciente} datosPaciente={datosPaciente}
-              termino={termino} pacientesQuery={pacientesQuery} crearPacientePendiente={crearPacienteMutation.isPending}
-              onSelect={(seleccionado) => { setPaciente(seleccionado); setErrorLocal('') }}
-              onTerminoChange={setTermino} onStartCreate={() => setNuevoPaciente(true)}
-              onCancelCreate={() => setNuevoPaciente(false)} onPacienteChange={cambiarPaciente}
-              onCreatePaciente={crearPacienteAhora}
-            />
-            <DatosPedido datos={datosSolicitud} onChange={cambiarSolicitud} medicosQuery={medicosQuery}
-              onSeleccionarMedico={(medico) => setDatosSolicitud((actual) => ({
-                ...actual, medico_solicitante_id: medico.id, medico_solicitante_nombre: medico.nombre,
-              }))} />
-            <EstudiosSolicitados
-              cargando={catalogoQuery.isLoading} error={catalogoQuery.isError} catalogo={catalogoQuery.data ?? []}
-              busqueda={busquedaEstudio} onBusquedaChange={setBusquedaEstudio}
-              cantidadSeleccionada={estudioIds.length} idsSeleccionados={estudioIds}
-              grupos={gruposVisibles} estudiosVisibles={estudiosVisibles} onToggle={alternarEstudio}
-            />
-            {errorLocal && <p className="lab-form-error" role="alert">{errorLocal}</p>}
-          </div>
-          <footer className="lab-dialog-footer">
-            <button type="button" onClick={onClose}>Cancelar</button>
-            <button className="primary-button" type="submit" disabled={crearSolicitudMutation.isPending || !catalogoQuery.data?.length}>
-              {crearSolicitudMutation.isPending ? 'Registrando…' : 'Registrar solicitud'}
-            </button>
-          </footer>
-        </form>
-      </section>
-    </div>
-  )
+  return <>
+    <Dialogo eyebrow="D-8 · SOLICITUD DE EXÁMENES" titulo="Nueva solicitud" bloqueado={ocupado}
+      descripcion="Identifica al paciente y registra los estudios que llegaron en el pedido." onCerrar={solicitarCierre}>
+      <form onSubmit={enviar}>
+        <div className="lab-dialog-body">
+          <PacienteSolicitud
+            paciente={paciente} nuevoPaciente={nuevoPaciente} datosPaciente={datosPaciente}
+            termino={termino} buscando={termino.trim() !== terminoPaciente || pacientesQuery.isFetching}
+            pacientesQuery={pacientesQuery} crearPacientePendiente={crearPacienteMutation.isPending}
+            onSelect={(seleccionado) => { setPaciente(seleccionado); setErrorLocal('') }}
+            onTerminoChange={setTermino} onStartCreate={() => setNuevoPaciente(true)}
+            onCancelCreate={() => setNuevoPaciente(false)} onPacienteChange={cambiarPaciente}
+            onCreatePaciente={registrarPaciente}
+          />
+          <DatosPedido datos={pedido} onChange={cambiarPedido} medicosQuery={medicosQuery}
+            onSeleccionarMedico={(medico) => setPedido((actual) => ({
+              ...actual, medico_solicitante_id: medico.id, medico_solicitante_nombre: medico.nombre,
+            }))} />
+          <EstudiosSolicitados
+            cargando={catalogoQuery.isLoading} error={catalogoQuery.isError} catalogo={catalogo}
+            busqueda={busquedaEstudio} onBusquedaChange={setBusquedaEstudio}
+            seleccionados={seleccionados} idsSeleccionados={estudioIds}
+            grupos={grupos} hayResultados={estudiosVisibles.length > 0} onToggle={alternarEstudio}
+          />
+          {errorLocal && <p className="lab-form-error" role="alert">{errorLocal}</p>}
+        </div>
+        <footer className="lab-dialog-footer">
+          <p className="lab-dialog-summary">
+            {paciente ? <strong>{paciente.nombre_completo}</strong> : 'Sin paciente'} · {estudioIds.length} {estudioIds.length === 1 ? 'estudio' : 'estudios'}
+            {pedido.prioridad === 'urgente' && <strong className="lab-priority"> · Urgente</strong>}
+          </p>
+          <button type="button" onClick={solicitarCierre} disabled={ocupado}>Cancelar</button>
+          <button className="primary-button" type="submit" disabled={ocupado || !catalogo.length}>
+            {crearSolicitudMutation.isPending ? 'Registrando…' : 'Registrar solicitud'}
+          </button>
+        </footer>
+      </form>
+    </Dialogo>
+    {confirmarCierre && <ConfirmarAccion titulo="¿Descartar la solicitud?" textoConfirmar="Descartar" textoCancelar="Seguir editando" peligro
+      onConfirmar={onClose} onCancelar={() => setConfirmarCierre(false)}>
+      <p>Los datos que ingresaste en esta solicitud se perderán.</p>
+    </ConfirmarAccion>}
+  </>
 }

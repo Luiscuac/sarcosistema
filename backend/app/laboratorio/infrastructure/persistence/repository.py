@@ -153,6 +153,8 @@ class SqlAlchemyExamenRepository:
             "referencia": solicitud.referencia,
             "paciente_nombre": paciente.nombre_completo,
             "paciente_documento": paciente.numero_documento,
+            "paciente_fecha_nacimiento": paciente.fecha_nacimiento,
+            "paciente_sexo": paciente.sexo,
             "fecha_solicitud": solicitud.fecha_solicitud,
             "fecha_registro": solicitud.created_at,
             "referencia_papel_formulario": solicitud.referencia_papel_formulario,

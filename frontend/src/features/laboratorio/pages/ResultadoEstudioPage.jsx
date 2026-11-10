@@ -1,5 +1,6 @@
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import LaboratorioTopbar from '../components/LaboratorioTopbar.jsx'
+import NavegacionLab from '../components/NavegacionLab.jsx'
 import ResultadoEstudio from '../components/ResultadoEstudio.jsx'
 import './laboratorio.css'
 import './resultado-estudio.css'
@@ -10,8 +11,12 @@ export default function ResultadoEstudioPage({ usuario, logout }) {
     <div className="lab-main">
       <LaboratorioTopbar usuario={usuario} onLogout={logout} />
       <section className="lab-content lab-result-page">
-        <Link className="lab-back-link" to={`/laboratorio/solicitudes/${solicitudId}`}>← Volver a la solicitud</Link>
-        <ResultadoEstudio estudioId={estudioId} />
+        <NavegacionLab volverA={`/laboratorio/solicitudes/${solicitudId}`} textoVolver="Volver a la solicitud" migas={[
+          { texto: 'Solicitudes', ruta: '/laboratorio' },
+          { texto: 'Solicitud', ruta: `/laboratorio/solicitudes/${solicitudId}` },
+          { texto: 'Resultado' },
+        ]} />
+        <ResultadoEstudio estudioId={estudioId} usuario={usuario} />
       </section>
     </div>
   </main>

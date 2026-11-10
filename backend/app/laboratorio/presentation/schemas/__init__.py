@@ -207,6 +207,8 @@ class SolicitudDetalleResponse(BaseModel):
     referencia: str
     paciente_nombre: str
     paciente_documento: str | None
+    paciente_fecha_nacimiento: date | None = None
+    paciente_sexo: str | None = None
     fecha_solicitud: datetime
     fecha_registro: datetime | None
     referencia_papel_formulario: str | None
@@ -252,6 +254,8 @@ class InformeSolicitudResponse(BaseModel):
     referencia: str
     paciente_nombre: str
     paciente_documento: str | None
+    paciente_fecha_nacimiento: date | None = None
+    paciente_sexo: str | None = None
     fecha_solicitud: datetime
     referencia_papel_formulario: str | None
     procedencia: str
