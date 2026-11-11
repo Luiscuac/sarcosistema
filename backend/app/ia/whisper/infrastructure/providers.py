@@ -13,6 +13,7 @@ def proveer_servicio_transcripcion() -> FasterWhisperService:
         compute_type=settings.whisper_compute_type,
         model_dir=settings.whisper_model_dir,
         cpu_threads=settings.whisper_cpu_threads,
+        beam_size=settings.whisper_beam_size,
     )
 
 

@@ -65,6 +65,33 @@ Al guardar con el `POST /consultas` existente, el frontend puede enviar `revisio
 
 ## Audio y privacidad
 
+### Velocidad de Whisper en CPU
+
+Whisper reutiliza el modelo cargado durante la vida del backend; reiniciar uvicorn
+obliga a cargarlo de nuevo. La transcripción y la extracción de campos con Ollama
+son etapas distintas: acelerar Whisper no reduce necesariamente «Analizando».
+
+`WHISPER_BEAM_SIZE` permite controlar cuántas alternativas explora el decodificador
+(1–10; predeterminado 5). Un perfil local más rápido, manteniendo `small` e `int8`, es:
+
+```dotenv
+WHISPER_CPU_THREADS=8
+WHISPER_BEAM_SIZE=1
+```
+
+Reiniciar el backend después de cambiar `.env`. Menos alternativas pueden cambiar
+el texto reconocido; comprobar especialmente cifras, negaciones y términos médicos.
+Para recuperar el perfil anterior: hilos 4 y beam 5. El filtro de silencios y el
+reintento sin filtro para voz baja se conservan. No se cambia de motor ni se envía
+audio a servicios externos.
+
+Medición exploratoria local del 11/11/2026: WAV sintético de 21,03 s, voz SAPI Zira
+en-US leyendo texto ficticio en español, `small` CPU int8. Cuatro hilos/beam 5:
+8,63 y 7,55 s; ocho hilos/beam 1: 4,22 y 4,19 s. El texto de ambos perfiles difirió.
+Estas pocas ejecuciones no validan precisión en español ni rendimiento clínico y no
+incluyen extracción Ollama. Audio, script y métricas locales están en
+`backend/.storage/benchmarks/`, fuera de Git; no se registró la transcripción.
+
 - Confirmar autorización/consentimiento antes de grabar; una casilla de interfaz no sustituye los procedimientos y autorizaciones institucionales.
 - Backend: el upload existente se cierra y sus bytes se descartan al completar la transcripción, sin conservación clínica en disco/BD. El archivo temporal de transporte de FastAPI también se cierra; no se implementa archivo histórico de audio.
 - Navegador: el Blob y su URL se eliminan tras transcribir, al salir o al vencer `VITE_CLINICAL_AUDIO_TTL_SECONDS` (300 s por defecto; configurar en `frontend/.env`). Una grabación se detiene al alcanzar `VITE_CLINICAL_AUDIO_MAX_SECONDS` (180 s por defecto). No hay `localStorage`/`sessionStorage` de transcripciones. El texto original permanece en memoria para comparación hasta abandonar la consulta.

@@ -17,12 +17,14 @@ class FasterWhisperService:
         compute_type: str,
         model_dir: str,
         cpu_threads: int,
+        beam_size: int = 5,
     ):
         self.model_size = model_size
         self.device = device
         self.compute_type = compute_type
         self.model_dir = model_dir
         self.cpu_threads = cpu_threads
+        self.beam_size = beam_size
         self._inference_lock = Lock()
 
     @cached_property
@@ -57,6 +59,7 @@ class FasterWhisperService:
             BytesIO(audio_bytes),
             language="es",
             task="transcribe",
+            beam_size=self.beam_size,
             vad_filter=filtrar_voz,
             initial_prompt=PROMPT_TRANSCRIPCION,
         )
