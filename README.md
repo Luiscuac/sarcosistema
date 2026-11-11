@@ -120,11 +120,13 @@ Con el entorno activo y desde `backend`, verifica el esquema. Si necesitas una c
 python -m scripts.verificar_esquema_accesos
 python -m scripts.preparar_usuario_prueba laboratorio_prueba
 python -m scripts.preparar_enfermeria_demo
+python -m scripts.preparar_imagenes_demo
 ```
 
 El preparador de Laboratorio solicita contraseña y guarda su hash Argon2id; si la cuenta ya existe, puede renovar su contraseña. No lo ejecutes sobre una cuenta ajena sin autorización. Para crear el médico, su especialidad y el paciente **ficticios** de demostración:
 
 El preparador de enfermería solicita un identificador y contraseña interactivos; crea una cuenta con rol `enfermeria` y no modifica cuentas existentes.
+El preparador de Imágenes/Ecografía también solicita las credenciales de forma interactiva; crea una cuenta con rol `imagenes` y no modifica cuentas existentes.
 
 ```powershell
 python -m scripts.preparar_medico_demo
