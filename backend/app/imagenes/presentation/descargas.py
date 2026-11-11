@@ -26,7 +26,7 @@ async def descargar_archivo(
     almacen: AlmacenLocal = Depends(lambda: AlmacenLocal()),
 ):
     """Solo el medico (su paciente) o el radiologo (su trabajo) descargan."""
-    if usuario.rol not in ('medico', 'imagenes'):
+    if usuario.rol not in ('medico', 'imagenes', 'rayos_x'):
         raise HTTPException(status.HTTP_403_FORBIDDEN, 'Sin acceso a este archivo.')
 
     try:
@@ -36,10 +36,15 @@ async def descargar_archivo(
     if archivo is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, 'Archivo no encontrado.')
 
-    # El radiologo solo baja lo de su bandeja; el medico solo lo publicado de su paciente.
+    # El personal solo baja archivos de su modalidad; el medico ve solo publicados.
     estudio = await repositorio.obtener_estudio_de_archivo(archivo_id)
-    if usuario.rol == 'imagenes' and estudio.estado not in (
+    modalidad = 'ecografia' if usuario.rol == 'imagenes' else 'rayos_x'
+    if usuario.rol in ('imagenes', 'rayos_x') and (
+        not (estudio.tipo_estudio_nombre.casefold().startswith('ecograf') if modalidad == 'ecografia'
+             else estudio.tipo_estudio_nombre.casefold().startswith('radiograf'))
+        or estudio.estado not in (
         'pendiente_muestra', 'resultado_en_preparacion', 'publicado',
+        )
     ):
         raise HTTPException(status.HTTP_403_FORBIDDEN, 'Sin acceso a este archivo.')
     if usuario.rol == 'medico' and estudio.estado != 'publicado':

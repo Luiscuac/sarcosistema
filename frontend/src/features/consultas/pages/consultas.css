@@ -251,6 +251,11 @@
 .med-eco-results .med-eco-estudio { margin: 0 22px; padding: 16px 0; }
 .med-eco-results .med-eco-estudio:first-of-type { border-top: 0; }
 .med-eco-results .med-eco-estudio:last-child { padding-bottom: 20px; }
+.med-eco-estudio { padding: 18px; margin: 12px 22px !important; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+.med-eco-estudio header { align-items: flex-start; }
+.med-eco-acciones { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 14px; color: var(--muted); font-size: 12px; }
+.med-eco-acciones a { text-decoration: none; }
+.img-medico-descripcion { margin: 16px 0; font-size: 14px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
 .med-eco-results .med-eco-archivos li { flex-wrap: wrap; }
 .med-eco-results .med-demo-clinical { margin: 0 22px 20px; padding: 14px; border: 1px dashed #e0c48a; border-radius: 6px; background: #fffaf0; }
 

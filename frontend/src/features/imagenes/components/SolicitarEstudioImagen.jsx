@@ -1,10 +1,12 @@
 import { useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { obtenerCatalogoImagenes, solicitarEcografia } from '../api/consultasApi.js'
+import { obtenerCatalogoImagenes, solicitarEcografia } from '../../consultas/api/consultasApi.js'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
 
 /** El médico pide una o varias ecografías desde la ficha del paciente. */
-export default function SolicitarEcografia({ pacienteId, usuario }) {
+export default function SolicitarEstudioImagen({ pacienteId, usuario, modalidad = 'ecografia' }) {
+  const rayosX = modalidad === 'rayos_x'
+  const nombreModalidad = rayosX ? 'Rayos X' : 'ecografía'
   const { notificar } = useNotificacion()
   const [abierto, setAbierto] = useState(false)
   const [seleccion, setSeleccion] = useState([])
@@ -15,8 +17,8 @@ export default function SolicitarEcografia({ pacienteId, usuario }) {
   const clave = useRef(null)
 
   const catalogo = useQuery({
-    queryKey: ['consultas', 'catalogo-imagenes'],
-    queryFn: obtenerCatalogoImagenes,
+    queryKey: ['consultas', 'catalogo-imagenes', modalidad],
+    queryFn: () => obtenerCatalogoImagenes(modalidad),
     enabled: abierto,
   })
 
@@ -35,9 +37,9 @@ export default function SolicitarEcografia({ pacienteId, usuario }) {
     setEnviando(true); setError('')
     try {
       await solicitarEcografia(pacienteId, seleccion, usuario.identificador_acceso, {
-        prioridad: urgente ? 'urgente' : 'sin_prioridad', claveIdempotencia: clave.current,
+        prioridad: urgente ? 'urgente' : 'sin_prioridad', claveIdempotencia: clave.current, modalidad,
       })
-      notificar(`${seleccion.length === 1 ? 'Ecografía solicitada' : `${seleccion.length} ecografías solicitadas`}${urgente ? ' con prioridad urgente' : ''}. El servicio de imagen la recibió en su bandeja.`, 'exito')
+      notificar(`${seleccion.length} ${rayosX ? 'estudio(s) de Rayos X solicitado(s)' : seleccion.length === 1 ? 'ecografía solicitada' : 'ecografías solicitadas'}${urgente ? ' con prioridad urgente' : ''}. El servicio de imagen la recibió en su bandeja.`, 'exito')
       setAbierto(false)
     } catch (err) {
       const detalle = err.response?.data?.detail
@@ -49,7 +51,7 @@ export default function SolicitarEcografia({ pacienteId, usuario }) {
 
   if (!abierto) {
     return <div className="med-eco-request-bar">
-      <button type="button" className="med-secondary-button" onClick={abrir}>+ Solicitar ecografía</button>
+      <button type="button" className="med-secondary-button" onClick={abrir}>+ Solicitar {nombreModalidad}</button>
     </div>
   }
 
@@ -57,13 +59,13 @@ export default function SolicitarEcografia({ pacienteId, usuario }) {
   return (
     <form className="med-panel med-eco-form" onSubmit={enviar}>
       <div className="med-panel-header">
-        <div><h2>Solicitar ecografía</h2><span>El servicio de imagen la recibirá en su bandeja.</span></div>
+        <div><h2>Solicitar {nombreModalidad}</h2><span>El servicio de imagen la recibirá en su bandeja.</span></div>
       </div>
       <div className="med-eco-form-body">
         <fieldset className="med-eco-group">
           <legend>Estudios <small>puedes elegir varios</small></legend>
           {catalogo.isPending && <p className="med-message">Cargando estudios disponibles…</p>}
-          {catalogo.isError && <p role="alert" className="med-error">No se pudo cargar el catálogo de ecografías.</p>}
+          {catalogo.isError && <p role="alert" className="med-error">No se pudo cargar el catálogo de {nombreModalidad}.</p>}
           {catalogo.data?.length === 0 && <p className="med-message">El servicio de imagen no tiene estudios configurados.</p>}
           {catalogo.data?.length > 0 && <div className="med-eco-options">
             {catalogo.data.map((estudio) => <label key={estudio.id} className={`med-eco-option${seleccion.includes(estudio.id) ? ' is-selected' : ''}`}>

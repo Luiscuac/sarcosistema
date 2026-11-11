@@ -117,10 +117,13 @@ async def solicitar_ecografia(
 
 @router.get('/catalogo-imagenes')
 async def catalogo_imagenes(
+    modalidad: str = Query(default='ecografia', pattern='^(ecografia|rayos_x)$'),
     repo_imagen: RepositorioImagenSql = Depends(get_repositorio_imagen),
 ):
-    """Estudios de imagen que el medico puede solicitar."""
-    return await repo_imagen.listar_catalogo_imagen()
+    """Tipos activos de ecografía o Rayos X que el médico puede solicitar."""
+    if modalidad == 'ecografia':
+        return await repo_imagen.listar_catalogo_imagen()
+    return await repo_imagen.listar_catalogo_imagen(modalidad)
 
 
 @router.get('/{consulta_id}')

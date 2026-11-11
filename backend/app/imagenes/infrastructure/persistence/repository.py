@@ -100,18 +100,20 @@ class RepositorioImagenSql:
 
     # ---------- bandeja del radiologo ----------
 
-    async def listar_catalogo_imagen(self) -> list[dict]:
-        """Tipos de estudio de imagen activos que el medico puede solicitar."""
+    async def listar_catalogo_imagen(self, modalidad: str | None = 'ecografia') -> list[dict]:
+        """Tipos de imagen activos, opcionalmente filtrados por modalidad clínica."""
+        prefijo = {'ecografia': 'ECO_', 'rayos_x': 'RX_'}.get(modalidad)
+        filtros = [
+            TipoEstudio.activo.is_(True), Servicio.activo.is_(True),
+            Servicio.codigo == 'IMG', TipoEstudio.requiere_archivos.is_(True),
+        ]
+        if prefijo:
+            filtros.append(TipoEstudio.codigo.startswith(prefijo))
         filas = (
             await self.db.execute(
                 select(TipoEstudio.id, TipoEstudio.codigo, TipoEstudio.nombre)
                 .join(Servicio, Servicio.id == TipoEstudio.servicio_id)
-                .where(
-                    TipoEstudio.activo.is_(True),
-                    Servicio.activo.is_(True),
-                    Servicio.codigo == 'IMG',
-                    TipoEstudio.requiere_archivos.is_(True),
-                )
+                .where(*filtros)
                 .order_by(TipoEstudio.nombre)
             )
         ).all()
@@ -130,7 +132,6 @@ class RepositorioImagenSql:
                 .join(Servicio, Servicio.id == EstudioSolicitado.servicio_id)
                 .where(
                     Servicio.codigo == 'IMG',
-                    EstudioSolicitado.estado.in_(['pendiente_muestra', 'resultado_en_preparacion']),
                 )
                 .order_by(EstudioSolicitado.id.desc())
             )

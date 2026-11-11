@@ -8,10 +8,13 @@ import AreaResultadosPage from '../features/laboratorio/pages/AreaResultadosPage
 import InformeSolicitudPage from '../features/laboratorio/pages/InformeSolicitudPage.jsx'
 import ProtectedRoute from '../features/accesos/auth/ProtectedRoute.jsx'
 import ConsultasPage from '../features/consultas/pages/ConsultasPage.jsx'
-import ImagenesPage from '../features/imagenes/pages/ImagenesPage.jsx'
+import EcografiaPage from '../features/ecografia/pages/EcografiaPage.jsx'
+import InformeEcografiaPage from '../features/ecografia/pages/InformeEcografiaPage.jsx'
+import RayosXImagenesPage from '../features/rayos_x/pages/RayosXImagenesPage.jsx'
+import InformeRayosXPage from '../features/rayos_x/pages/InformeRayosXPage.jsx'
 import EnfermeriaPage from '../features/enfermeria/pages/EnfermeriaPage.jsx'
 import FarmaciaPage from '../features/enfermeria/pages/FarmaciaPage.jsx'
-import RayosXPage from '../features/imagenes/pages/RayosXPage.jsx'
+import RayosXPage from '../features/rayos_x/pages/RayosXPage.jsx'
 const router = createBrowserRouter(createRoutesFromElements(
   <>
         <Route path="/" element={<Navigate to="/inicio" replace />} />
@@ -51,6 +54,8 @@ const router = createBrowserRouter(createRoutesFromElements(
           ['/consultas/pacientes/:pacienteId', 'ficha'],
           ['/consultas/pacientes/:pacienteId/nueva', 'nueva'],
           ['/consultas/pacientes/:pacienteId/laboratorio/:solicitudId/informe', 'informe_laboratorio'],
+          ['/consultas/pacientes/:pacienteId/ecografias/:estudioId/informe', 'informe_ecografia'],
+          ['/consultas/pacientes/:pacienteId/rayos-x/:estudioId/informe', 'informe_rayos_x'],
           ['/consultas/:consultaId', 'detalle'],
         ].map(([path, vista]) => <Route key={path} path={path} element={
           <ProtectedRoute rolesPermitidos={['medico']}>
@@ -63,9 +68,31 @@ const router = createBrowserRouter(createRoutesFromElements(
         <Route path="/transcriptor" element={
           <Navigate to="/consultas" replace />
         } />
-        <Route path="/imagenes" element={
+        <Route path="/ecografia" element={
           <ProtectedRoute rolesPermitidos={['imagenes']}>
-            {({ usuario, logout }) => <ImagenesPage usuario={usuario} logout={logout} />}
+            {({ usuario, logout }) => <EcografiaPage usuario={usuario} logout={logout} />}
+          </ProtectedRoute>
+        } />
+        <Route path="/ecografia/estudios/:estudioId/informe" element={
+          <ProtectedRoute rolesPermitidos={['imagenes']}>
+            {({ usuario, logout }) => <InformeEcografiaPage usuario={usuario} logout={logout} />}
+          </ProtectedRoute>
+        } />
+        <Route path="/rayos-x/gestion" element={
+          <ProtectedRoute rolesPermitidos={['rayos_x']}>
+            {({ usuario, logout }) => <RayosXImagenesPage usuario={usuario} logout={logout} />}
+          </ProtectedRoute>
+        } />
+        <Route path="/rayos-x/gestion/estudios/:estudioId/informe" element={
+          <ProtectedRoute rolesPermitidos={['rayos_x']}>
+            {({ usuario, logout }) => <InformeRayosXPage usuario={usuario} logout={logout} />}
+          </ProtectedRoute>
+        } />
+        <Route path="/imagenes" element={<Navigate to="/ecografia" replace />} />
+        <Route path="/imagenes/rayos-x-informes" element={<Navigate to="/rayos-x/gestion" replace />} />
+        <Route path="/imagenes/estudios/:estudioId/informe" element={
+          <ProtectedRoute rolesPermitidos={['imagenes']}>
+            {({ usuario, logout }) => <InformeEcografiaPage usuario={usuario} logout={logout} />}
           </ProtectedRoute>
         } />
         <Route path="/imagenes/rayos-x" element={

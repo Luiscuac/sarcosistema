@@ -1,10 +1,9 @@
 """Endpoints del radiologo: bandeja, subida de imagenes/informe y publicacion."""
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.accesos.domain.entities import Usuario
 from app.accesos.presentation.dependencies.current_user import usuario_actual
-from app.accesos.presentation.dependencies.role_required import requiere_rol
 from app.config.database import get_db
 from app.config.settings import settings
 from app.imagenes.application.use_cases.trabajar_estudio import (
@@ -33,7 +32,19 @@ from app.imagenes.presentation.schemas import (
 )
 
 # El prefijo /imagenes lo aplica app.imagenes.router (composición única del módulo).
-router = APIRouter(tags=['imagenes'], dependencies=[Depends(requiere_rol('imagenes'))])
+router = APIRouter(tags=['imagenes'])
+
+ROL_POR_MODALIDAD = {'ecografia': 'imagenes', 'rayos_x': 'rayos_x'}
+
+
+def _validar_rol(usuario: Usuario, modalidad: str) -> None:
+    if usuario.rol != ROL_POR_MODALIDAD[modalidad]:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, 'Sin acceso a esta área de imágenes.')
+
+
+def _estudio_de_modalidad(estudio, modalidad: str) -> bool:
+    nombre = estudio.tipo_estudio_nombre.casefold()
+    return nombre.startswith('ecograf') if modalidad == 'ecografia' else nombre.startswith('radiograf')
 
 
 def get_repositorio(db: AsyncSession = Depends(get_db)) -> RepositorioImagenSql:
@@ -46,18 +57,30 @@ def _limite_para(mime: str) -> int:
 
 
 @router.get('/bandeja', response_model=list[EstudioPendienteResponse])
-async def bandeja(repositorio: RepositorioImagenSql = Depends(get_repositorio)):
-    return await ListarBandeja(repositorio).ejecutar()
+async def bandeja(
+    modalidad: str = Query(default='ecografia', pattern='^(ecografia|rayos_x)$'),
+    usuario: Usuario = Depends(usuario_actual),
+    repositorio: RepositorioImagenSql = Depends(get_repositorio),
+):
+    _validar_rol(usuario, modalidad)
+    estudios = await ListarBandeja(repositorio).ejecutar()
+    return [e for e in estudios if _nombre_modalidad(e.tipo_estudio_nombre, modalidad)]
 
 
 @router.get('/estudios/{estudio_id}', response_model=EstudioDetalleResponse)
 async def detalle_estudio(
-    estudio_id: int, repositorio: RepositorioImagenSql = Depends(get_repositorio),
+    estudio_id: int,
+    modalidad: str = Query(default='ecografia', pattern='^(ecografia|rayos_x)$'),
+    usuario: Usuario = Depends(usuario_actual),
+    repositorio: RepositorioImagenSql = Depends(get_repositorio),
 ):
+    _validar_rol(usuario, modalidad)
     try:
         estudio = await ObtenerEstudioImagen(repositorio).ejecutar(estudio_id)
     except EstudioNoEncontrado:
         raise HTTPException(status.HTTP_404_NOT_FOUND, 'El estudio no existe.') from None
+    if not _estudio_de_modalidad(estudio, modalidad):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, 'El estudio no existe.')
     return EstudioDetalleResponse(
         estudio_id=estudio.estudio_id,
         referencia_estudio=estudio.referencia_estudio,
@@ -73,11 +96,14 @@ async def detalle_estudio(
 @router.post('/estudios/{estudio_id}/informes', response_model=InformeImagenResponse)
 async def guardar_informe(
     estudio_id: int,
+    modalidad: str = Query(default='ecografia', pattern='^(ecografia|rayos_x)$'),
     usuario: Usuario = Depends(usuario_actual),
     repositorio: RepositorioImagenSql = Depends(get_repositorio),
     descripcion: str | None = Form(default=None, max_length=8000),
     archivos: list[UploadFile] = File(default=[]),
 ):
+    _validar_rol(usuario, modalidad)
+    await _comprobar_estudio(estudio_id, modalidad, repositorio)
     caso = GuardarInforme(
         repositorio, AlmacenLocal(), settings.imagenes_tipos_lista,
         settings.imagenes_max_mb * 1024 * 1024, settings.imagenes_max_archivos,
@@ -106,9 +132,12 @@ async def guardar_informe(
 @router.post('/estudios/{estudio_id}/informes/publicar', response_model=ResultadoAccionResponse)
 async def publicar_informe(
     estudio_id: int,
+    modalidad: str = Query(default='ecografia', pattern='^(ecografia|rayos_x)$'),
     usuario: Usuario = Depends(usuario_actual),
     repositorio: RepositorioImagenSql = Depends(get_repositorio),
 ):
+    _validar_rol(usuario, modalidad)
+    await _comprobar_estudio(estudio_id, modalidad, repositorio)
     try:
         informe = await PublicarInforme(repositorio).ejecutar(estudio_id, usuario.id)
     except EstudioNoEncontrado:
@@ -129,3 +158,17 @@ def _informe(informe):
         fecha_hora_publicacion=informe.fecha_hora_publicacion,
         archivos=[ArchivoImagenResponse.model_validate(a) for a in informe.archivos],
     )
+
+
+def _nombre_modalidad(nombre: str, modalidad: str) -> bool:
+    texto = nombre.casefold()
+    return texto.startswith('ecograf') if modalidad == 'ecografia' else texto.startswith('radiograf')
+
+
+async def _comprobar_estudio(estudio_id: int, modalidad: str, repositorio: RepositorioImagenSql) -> None:
+    try:
+        estudio = await ObtenerEstudioImagen(repositorio).ejecutar(estudio_id)
+    except EstudioNoEncontrado:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, 'El estudio no existe.') from None
+    if not _estudio_de_modalidad(estudio, modalidad):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, 'El estudio no existe.')

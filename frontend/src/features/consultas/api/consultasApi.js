@@ -19,9 +19,9 @@ export const extraerDatosClinicos = async (pacienteId, transcripcion, signal) =>
   (await api.post('/consultas/extraer-datos-clinicos', { paciente_id: Number(pacienteId), transcripcion }, { signal, timeout: 200000 })).data
 
 // Examenes complementarios de imagen (ecografias)
-export const obtenerCatalogoImagenes = async () => (await api.get('/consultas/catalogo-imagenes')).data
+export const obtenerCatalogoImagenes = async (modalidad = 'ecografia') => (await api.get('/consultas/catalogo-imagenes', { params: { modalidad } })).data
 export const solicitarEcografia = async (pacienteId, tipoEstudioIds, medicoSolicitanteNombre,
-  { prioridad = 'sin_prioridad', claveIdempotencia = null } = {}) =>
+  { prioridad = 'sin_prioridad', claveIdempotencia = null, modalidad = 'ecografia' } = {}) =>
   (await api.post('/consultas/estudios-imagen', {
     paciente_id: Number(pacienteId), tipo_estudio_ids: tipoEstudioIds.map(Number),
     medico_solicitante_nombre: medicoSolicitanteNombre, prioridad, clave_idempotencia: claveIdempotencia,

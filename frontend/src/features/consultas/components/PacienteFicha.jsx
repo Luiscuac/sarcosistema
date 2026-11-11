@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useHistorial, usePaginaHistorial, usePaciente } from '../hooks/useConsultas.js'
 import { obtenerResultadoPublicadoLaboratorio, obtenerSolicitudesLaboratorio } from '../api/consultasApi.js'
 import { edad, fecha } from '../utils/paciente.js'
-import SolicitarEcografia from './SolicitarEcografia.jsx'
+import SolicitudEcografia from '../../ecografia/components/SolicitudEcografia.jsx'
+import SolicitudRayosX from '../../rayos_x/components/SolicitudRayosX.jsx'
 import ExamenesComplementarios from './ExamenesComplementarios.jsx'
 import RegistrosPublicados from '../../enfermeria/components/RegistrosPublicados.jsx'
 import DatosDemoClinicos from './DatosDemoClinicos.jsx'
@@ -83,10 +84,11 @@ function HistorialConsultas({ historial, pagina, pacienteId }) {
 }
 
 export default function PacienteFicha({ id, usuario }) {
-  const [seccion, setSeccion] = useState('consultas')
+  const [parametros] = useSearchParams()
+  const [seccion, setSeccion] = useState(['imagenes', 'rayos_x'].includes(parametros.get('seccion')) ? parametros.get('seccion') : 'consultas')
   const pagina = usePaginaHistorial(id)
   const paciente = usePaciente(id)
-  const historial = useHistorial(id, pagina.pagina, seccion === 'consultas' || seccion === 'imagenes')
+  const historial = useHistorial(id, pagina.pagina, seccion === 'consultas' || seccion === 'imagenes' || seccion === 'rayos_x')
   const laboratorio = useQuery({ queryKey: ['consultas', 'laboratorio', id], queryFn: () => obtenerSolicitudesLaboratorio(id), enabled: seccion === 'laboratorio', refetchInterval: 15000 })
   if (paciente.isPending) return <p role="status">Cargando ficha del paciente…</p>
   if (paciente.isError) return <p role="alert">No se pudo cargar el paciente. Comprueba el acceso y vuelve a intentarlo.</p>
@@ -97,7 +99,7 @@ export default function PacienteFicha({ id, usuario }) {
     <nav className="med-patient-tabs" role="tablist" aria-label="Secciones de la ficha del paciente">
       {[
         ['consultas', 'Consultas'], ['enfermeria', 'Enfermería'], ['receta', 'Receta médica'],
-        ['laboratorio', 'Laboratorio'], ['imagenes', 'Ecografías'],
+        ['laboratorio', 'Laboratorio'], ['imagenes', 'Ecografías'], ['rayos_x', 'Rayos X'],
       ].map(([key, label]) => <button key={key} type="button" role="tab" aria-selected={seccion === key} className={seccion === key ? 'active' : ''} onClick={() => setSeccion(key)}>{label}</button>)}
     </nav>
     {seccion === 'consultas' && <HistorialConsultas historial={historial} pagina={pagina} pacienteId={id} />}
@@ -110,8 +112,12 @@ export default function PacienteFicha({ id, usuario }) {
       {laboratorio.data?.map(solicitud => <SolicitudLaboratorioItem key={solicitud.id} solicitud={solicitud} pacienteId={id} />)}
     </section>}
     {seccion === 'imagenes' && <div className="med-patient-tab-content">
-      <SolicitarEcografia pacienteId={id} usuario={usuario} />
-      <ExamenesComplementarios historial={historial} ejemplo={esDemo ? <DatosDemoClinicos /> : null} />
+      <SolicitudEcografia pacienteId={id} usuario={usuario} />
+      <ExamenesComplementarios historial={historial} pacienteId={id} ejemplo={esDemo ? <DatosDemoClinicos /> : null} />
+    </div>}
+    {seccion === 'rayos_x' && <div className="med-patient-tab-content">
+      <SolicitudRayosX pacienteId={id} usuario={usuario} />
+      <ExamenesComplementarios historial={historial} pacienteId={id} modalidad="rayos_x" />
     </div>}
   </>
 }

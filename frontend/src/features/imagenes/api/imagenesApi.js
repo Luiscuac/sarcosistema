@@ -4,6 +4,9 @@ export const listarBandeja = async () => (await api.get('/imagenes/bandeja')).da
 
 export const obtenerEstudio = async (id) => (await api.get(`/imagenes/estudios/${id}`)).data
 
+export const obtenerArchivoImagen = async (archivoId) =>
+  (await api.get(`/imagenes/archivos/${archivoId}`, { responseType: 'blob' })).data
+
 export const subirInforme = async (estudioId, descripcion, archivos) => {
   const datos = new FormData()
   datos.append('descripcion', descripcion)

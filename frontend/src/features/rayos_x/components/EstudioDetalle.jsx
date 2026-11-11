@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { obtenerEstudio, obtenerArchivo, solicitarAnalisis, obtenerAnalisis, guardarRevision } from '../api/imagenes.js'
+import { obtenerEstudio, obtenerArchivo, solicitarAnalisis, obtenerAnalisis, guardarRevision } from '../api/rayosXAiApi.js'
 import { enProceso, validarRevision, mensajeError, erroresAnalisis, snapshotCompatible, revisionVigente } from '../analisis.js'
 
 const nombres = { Consolidation: 'Consolidación', Effusion: 'Derrame pleural', Cardiomegaly: 'Cardiomegalia' }
