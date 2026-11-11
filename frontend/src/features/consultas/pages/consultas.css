@@ -4,7 +4,8 @@
 .med-sidebar-heading strong { font-size: 16px; font-weight: 600; letter-spacing: -.02em; }
 .med-sidebar-heading span { font-size: 10px; color: var(--muted); letter-spacing: .06em; }
 .med-sidebar nav { display: grid; gap: 4px; padding: 22px 12px; }
-.med-sidebar a { padding: 12px 14px; border-radius: 6px; font-size: 12px; color: #53606b; text-decoration: none; }
+.med-sidebar nav > :is(a,span) { display: flex; align-items: center; min-height: 42px; padding: 12px 14px; border-radius: 6px; font-size: 12px; color: #53606b; text-decoration: none; }
+.med-sidebar nav a:hover { background: #f5f6f8; color: var(--brand); }
 .med-sidebar .med-nav-active { background: #edf6f4; color: var(--brand); font-weight: 600; }
 .med-signout { margin-top: auto; width: 100%; min-height: 58px; padding: 0 22px; border: 0; border-top: 1px solid var(--line); background: #fff; text-align: left; font-size: 12px; color: #53606b; }
 .med-topbar { min-height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 0 32px; border-bottom: 1px solid var(--line); background: #fff; }

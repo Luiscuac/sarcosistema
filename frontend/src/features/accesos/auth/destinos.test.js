@@ -9,9 +9,11 @@ test('cada rol entra a su módulo y los roles sin módulo van a Inicio', () => {
   assert.equal(destinoDeRol('rrhh'), '/inicio')
 })
 
-test('Inicio redirige a los roles de un solo módulo, no al médico ni a roles sin módulo', () => {
+test('Inicio lleva al médico a Consultas y a cada rol a su área disponible', () => {
   assert.equal(redireccionDesdeInicio('enfermeria'), '/enfermeria')
   assert.equal(redireccionDesdeInicio('laboratorio'), '/laboratorio')
-  assert.equal(redireccionDesdeInicio('medico'), null)
+  assert.equal(redireccionDesdeInicio('medico'), '/consultas')
+  assert.equal(redireccionDesdeInicio('imagenes'), '/imagenes')
+  assert.equal(redireccionDesdeInicio('farmacia'), '/farmacia')
   assert.equal(redireccionDesdeInicio('rrhh'), null)
 })

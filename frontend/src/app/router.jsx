@@ -6,7 +6,6 @@ import SolicitudDetallePage from '../features/laboratorio/pages/SolicitudDetalle
 import ResultadoEstudioPage from '../features/laboratorio/pages/ResultadoEstudioPage.jsx'
 import AreaResultadosPage from '../features/laboratorio/pages/AreaResultadosPage.jsx'
 import InformeSolicitudPage from '../features/laboratorio/pages/InformeSolicitudPage.jsx'
-import IaPage from '../features/ia/whisper/pages/IaPage.jsx'
 import ProtectedRoute from '../features/accesos/auth/ProtectedRoute.jsx'
 import ConsultasPage from '../features/consultas/pages/ConsultasPage.jsx'
 import ImagenesPage from '../features/imagenes/pages/ImagenesPage.jsx'
@@ -59,9 +58,7 @@ const router = createBrowserRouter(createRoutesFromElements(
           </ProtectedRoute>
         } />)}
         <Route path="/ia" element={
-          <ProtectedRoute>
-            {({ usuario, logout }) => <IaPage usuario={usuario} logout={logout} />}
-          </ProtectedRoute>
+          <Navigate to="/inicio" replace />
         } />
         <Route path="/transcriptor" element={
           <Navigate to="/consultas" replace />

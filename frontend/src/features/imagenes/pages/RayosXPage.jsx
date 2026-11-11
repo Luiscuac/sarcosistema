@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
-import LaboratorioTopbar from '../../laboratorio/components/LaboratorioTopbar.jsx'
+import ConsultasLayout from '../../consultas/components/ConsultasLayout.jsx'
 import EstudioDetalle from '../components/EstudioDetalle.jsx'
 import { listarEstudios } from '../api/imagenes.js'
 import { mensajeError } from '../analisis.js'
@@ -12,15 +11,7 @@ export default function RayosXPage({ usuario, logout }) {
   const [pagina, setPagina] = useState(1)
   const [seleccion, setSeleccion] = useState(null)
   const consulta = useQuery({ queryKey: ['imagenes', usuario.id, 'estudios', pagina], queryFn: ({ signal }) => listarEstudios(pagina, signal) })
-  return <main className="lab-page rx-page">
-    <div className="lab-main">
-      <LaboratorioTopbar usuario={usuario} titulo="Rayos X · Tórax" inicio="/imagenes/rayos-x" onLogout={logout} />
-      <nav className="rx-nav" aria-label="Módulo de rayos X">
-        <span aria-current="page">Estudios</span>
-        <Link to="/consultas">Consulta médica</Link>
-        <Link to="/inicio">Inicio</Link>
-      </nav>
-      <section className="lab-content">
+  return <ConsultasLayout usuario={usuario} logout={logout} area="rayos-x">
         <div className="lab-title-row"><div><p className="lab-eyebrow">RAYOS X</p><h1>Estudios radiológicos</h1><p className="lab-intro">Informes publicados de tus solicitudes y asistencia experimental local.</p></div></div>
         <p className="rx-advertencia">Prototipo universitario. La IA no diagnostica, no publica informes y no sustituye la revisión médica.</p>
         {consulta.isPending && <p role="status">Cargando estudios…</p>}
@@ -33,7 +24,5 @@ export default function RayosXPage({ usuario, logout }) {
           <div className="lab-actions"><button type="button" className="lab-secondary-button" disabled={pagina === 1} onClick={() => setPagina(p => p - 1)}>Anterior</button><span>Página {pagina}</span><button type="button" className="lab-secondary-button" disabled={consulta.data.estudios.length < 20} onClick={() => setPagina(p => p + 1)}>Siguiente</button></div>
         </>}
         {seleccion && <EstudioDetalle key={`${usuario.id}:${seleccion}`} id={seleccion} usuario={usuario} habilitada={consulta.data?.ia_habilitada} />}
-      </section>
-    </div>
-  </main>
+  </ConsultasLayout>
 }
