@@ -1,0 +1,100 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in deploy/hospital.env}
+      POSTGRES_USER: ${POSTGRES_ADMIN_USER:?Set POSTGRES_ADMIN_USER in deploy/hospital.env}
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:?Set POSTGRES_ADMIN_PASSWORD in deploy/hospital.env}
+      APP_DB_USER: ${APP_DB_USER:?Set APP_DB_USER in deploy/hospital.env}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?Set APP_DB_PASSWORD in deploy/hospital.env}
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+    volumes:
+      - hospital_db_data:/var/lib/postgresql/data
+      - ../database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./create-app-role.sh:/docker-entrypoint-initdb.d/02-create-app-role.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    networks:
+      - database
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    environment:
+      APP_ENV: production
+      DATABASE_URL: postgresql+asyncpg://${APP_DB_USER:?Set APP_DB_USER}:${APP_DB_PASSWORD:?Set APP_DB_PASSWORD}@db:5432/${POSTGRES_DB:?Set POSTGRES_DB}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?Set JWT_SECRET_KEY in deploy/hospital.env}
+      DEBUG: "false"
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
+      ALLOWED_ROLES: "medico,laboratorio,enfermeria"
+      API_DOCS_ENABLED: "false"
+      CLINICAL_EXTRACTOR_ENABLED: "false"
+      RADIOLOGY_AI_ENABLED: "false"
+      WHISPER_MODEL_DIR: /app/.models/whisper
+      IMAGENES_STORAGE_DIR: /app/storage/imagenes
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - hospital_whisper_models:/app/.models/whisper
+      - hospital_storage_imagenes:/app/storage/imagenes
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/db', timeout=3).read()"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    networks:
+      - app
+      - database
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile.hospital
+      args:
+        VITE_API_URL: /api
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    networks:
+      - app
+
+volumes:
+  hospital_db_data:
+  hospital_whisper_models:
+  hospital_storage_imagenes:
+
+networks:
+  app:
+  database:
+    internal: true

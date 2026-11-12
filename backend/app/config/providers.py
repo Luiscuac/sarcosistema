@@ -18,6 +18,7 @@ def proveer_inicio_sesion(db: AsyncSession = Depends(get_db)) -> IniciarSesion:
         SqlAlchemyUsuarioRepository(db),
         Argon2PasswordHasher(),
         JwtTokenService(settings.jwt_secret_key),
+        roles_permitidos=settings.allowed_role_codes,
     )
 
 

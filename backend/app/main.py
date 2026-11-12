@@ -37,11 +37,18 @@ async def lifespan(_app):
             await tarea
 
 
-app = FastAPI(title="Sistema Hospital Sarcobamba", version="0.1.0",lifespan=lifespan)
+app = FastAPI(
+    title="Sistema Hospital Sarcobamba",
+    version="0.1.0",
+    lifespan=lifespan,
+    docs_url="/docs" if settings.api_docs_enabled else None,
+    redoc_url="/redoc" if settings.api_docs_enabled else None,
+    openapi_url="/openapi.json" if settings.api_docs_enabled else None,
+)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # frontend Vite en desarrollo
+    allow_origins=settings.cors_allowed_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

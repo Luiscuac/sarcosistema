@@ -11,10 +11,12 @@ class IniciarSesion:
         usuarios: UsuarioRepository,
         password: PasswordVerifier,
         tokens: TokenService,
+        roles_permitidos: frozenset[str] | None = None,
     ):
         self.usuarios = usuarios
         self.password = password
         self.tokens = tokens
+        self.roles_permitidos = roles_permitidos
 
     async def ejecutar(self, identificador: str, password: str) -> Sesion:
         usuario = await self.usuarios.buscar_por_identificador(identificador)
@@ -24,5 +26,7 @@ class IniciarSesion:
             or usuario.contrasena_hash is None
             or not self.password.verificar(password, usuario.contrasena_hash)
         ):
+            raise CredencialesInvalidas
+        if self.roles_permitidos is not None and usuario.rol not in self.roles_permitidos:
             raise CredencialesInvalidas
         return Sesion(self.tokens.emitir(str(usuario.id), usuario.rol))

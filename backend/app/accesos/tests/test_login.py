@@ -2,6 +2,7 @@
 import pytest
 
 from app.accesos.infrastructure.security.password_hasher import Argon2PasswordHasher
+from app.config.settings import settings
 
 
 @pytest.mark.asyncio
@@ -30,11 +31,35 @@ async def test_credenciales_incorrectas(client, usuarios):
 
 
 @pytest.mark.asyncio
+async def test_login_rechaza_rol_fuera_de_la_lista_configurada(client, usuarios, monkeypatch):
+    monkeypatch.setattr(settings, "allowed_roles", "medico,enfermeria")
+    respuesta = await client.post("/accesos/login", json={
+        "identificador_acceso": "laboratorio_prueba", "password": "clave-de-prueba",
+    })
+    assert respuesta.status_code == 401
+    assert respuesta.json()["detail"] == "Credenciales incorrectas"
+
+
+@pytest.mark.asyncio
 async def test_sin_token_o_token_invalido(client, usuarios):
     assert (await client.get("/accesos/yo")).status_code == 401
     respuesta = await client.get("/accesos/yo", headers={"Authorization": "Bearer invalido"})
     assert respuesta.status_code == 401
     assert (await client.get("/laboratorio/catalogo/estudios")).status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_token_existente_de_rol_no_permitido_se_rechaza(client, usuarios, monkeypatch):
+    respuesta = await client.post("/accesos/login", json={
+        "identificador_acceso": "laboratorio_prueba", "password": "clave-de-prueba",
+    })
+    assert respuesta.status_code == 200
+    monkeypatch.setattr(settings, "allowed_roles", "medico,enfermeria")
+    perfil = await client.get(
+        "/accesos/yo",
+        headers={"Authorization": f"Bearer {respuesta.json()['access_token']}"},
+    )
+    assert perfil.status_code == 401
 
 
 @pytest.mark.asyncio

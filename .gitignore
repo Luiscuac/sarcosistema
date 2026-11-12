@@ -16,3 +16,5 @@ __pycache__/
 !.env.example
 /.playwright-mcp/
 /backend/_ellos_cola.tmp
+/deploy/hospital.env
+/deploy/tls/

@@ -5,6 +5,7 @@ from app.accesos.application.errors.access_denied import AccesoNoAutorizado
 from app.accesos.application.use_cases.obtener_usuario_actual import ObtenerUsuarioActual
 from app.accesos.domain.entities import Usuario
 from app.config.providers import proveer_usuario_actual
+from app.config.settings import settings
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/accesos/login")
 
@@ -14,7 +15,11 @@ async def usuario_actual(
     caso_uso: ObtenerUsuarioActual = Depends(proveer_usuario_actual),
 ) -> Usuario:
     try:
-        return await caso_uso.ejecutar(token)
+        usuario = await caso_uso.ejecutar(token)
+        roles_permitidos = settings.allowed_role_codes
+        if roles_permitidos is not None and usuario.rol not in roles_permitidos:
+            raise AccesoNoAutorizado
+        return usuario
     except AccesoNoAutorizado:
         raise HTTPException(
             status.HTTP_401_UNAUTHORIZED,

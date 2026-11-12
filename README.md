@@ -2,6 +2,8 @@
 
 Piloto académico con **datos ficticios**. Monolito modular: cada módulo mantiene sus reglas, casos de uso y adaptadores. El backend sigue arquitectura limpia: el router recibe HTTP, delega al caso de uso y convierte la respuesta. El dominio y la aplicación no dependen de FastAPI ni SQLAlchemy. No es una implementación clínica operativa ni una aprobación institucional.
 
+Guía de referencia para un despliegue en intranet hospitalaria (requiere configuración y aprobación de TI): [`docs/despliegue/servidor-hospital.md`](docs/despliegue/servidor-hospital.md).
+
 ## Stack
 
 - **Backend:** Python 3.12 + FastAPI + PostgreSQL (pgvector) — ver `backend/`
