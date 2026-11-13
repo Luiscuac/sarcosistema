@@ -65,10 +65,7 @@ function ResumenCopiable({ informe }) {
   }
   return <section className="lab-report-copy" aria-labelledby="lab-report-copy-title">
     <div className="lab-report-copy-head">
-      <div>
-        <h2 id="lab-report-copy-title">Resumen para la nota clínica</h2>
-        <p>Texto plano para pegar en el SOAP. No se imprime.</p>
-      </div>
+      <h2 id="lab-report-copy-title">Resumen para la nota clínica</h2>
       <button className="lab-secondary-button" type="button" onClick={copiar}>{estado === 'copiado' ? 'Copiado ✓' : 'Copiar'}</button>
     </div>
     <textarea ref={campo} readOnly value={texto} rows={Math.min(8, texto.split('\n').length + 1)} onFocus={(evento) => evento.target.select()} />
