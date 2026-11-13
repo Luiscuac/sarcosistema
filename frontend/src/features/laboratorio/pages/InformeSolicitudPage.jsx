@@ -1,107 +1,117 @@
+import { useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import { obtenerInformeSolicitud } from '../api/laboratorioApi.js'
 import { obtenerInformeLaboratorio } from '../../consultas/api/consultasApi.js'
 import LaboratorioTopbar from '../components/LaboratorioTopbar.jsx'
 import NavegacionLab from '../components/NavegacionLab.jsx'
-import { agruparPorSeccion } from '../utils/captura.js'
 import { nombreArea, nombreMotivoIncidencia, nombreSexo } from '../utils/catalogos.js'
-import { evaluarValor } from '../utils/rangoReferencia.js'
+import { agruparInformePorArea, fueraDeRango, resumenParaCopiar } from '../utils/informe.js'
 import { describirEdad } from '../../../shared/utils/edad.js'
 import { formatearFecha } from '../../../shared/utils/formatearFecha.js'
 import './laboratorio.css'
 import './informe-solicitud.css'
 
-/** Responsables por área y el último estudio de cada área (donde se imprime la firma). */
-function resumenPorArea(resultados) {
-  const ultimo = new Map()
-  const responsables = new Map()
-  for (const resultado of resultados) {
-    ultimo.set(resultado.categoria, resultado.referencia)
-    if (!resultado.responsable_publicacion) continue
-    if (!responsables.has(resultado.categoria)) responsables.set(resultado.categoria, new Set())
-    responsables.get(resultado.categoria).add(resultado.responsable_publicacion)
-  }
-  return { ultimo, responsables }
+function FilaInforme({ fila, columnas }) {
+  if (fila.tipo === 'estudio') return <tr className="lab-report-row-study"><th scope="rowgroup" colSpan={columnas}>{fila.nombre}</th></tr>
+  if (fila.tipo === 'seccion') return <tr className="lab-report-row-section"><th scope="rowgroup" colSpan={columnas}>{fila.nombre}</th></tr>
+  if (fila.tipo === 'vacio') return <tr><th scope="row">{fila.nombre}</th><td colSpan={columnas - 1} className="lab-report-empty">Sin parámetros informados</td></tr>
+  const { parametro } = fila
+  const fuera = fueraDeRango(parametro)
+  const clases = [fuera && 'is-out-of-range', fila.enSeccion && 'is-indented'].filter(Boolean).join(' ')
+  return <tr className={clases || undefined}>
+    <th scope="row">{parametro.nombre}</th>
+    <td>{parametro.valor}{fuera && <span className="sr-only"> (fuera del rango de referencia)</span>}</td>
+    {columnas > 2 && <td>{parametro.unidad || ''}</td>}
+    {columnas > 3 && <td>{parametro.rango_referencia || ''}</td>}
+  </tr>
 }
 
-/** El informe no trae el tipo de entrada: solo se evalúan valores que son números. */
-function fueraDeRango(parametro) {
-  return /^\d[\d.,]*$/.test(String(parametro.valor).trim())
-    && Boolean(evaluarValor(parametro.valor, parametro.rango_referencia, 'decimal'))
-}
-
-function TablaSeccion({ seccion, parametros }) {
-  const tieneUnidad = parametros.some((parametro) => parametro.unidad)
-  const tieneReferencia = parametros.some((parametro) => parametro.rango_referencia)
-  return <div className="lab-report-section">
-    <h3>{seccion}</h3>
+function TablaArea({ area }) {
+  const nombre = nombreArea(area.categoria)
+  // Unidad y referencia van juntas para que la columna de referencia no se corra.
+  const columnas = area.tieneReferencia ? 4 : area.tieneUnidad ? 3 : 2
+  return <section className="lab-report-area">
     <table>
-      <thead><tr><th scope="col">Parámetro</th><th scope="col">Resultado</th>{tieneUnidad && <th scope="col">Unidad</th>}{tieneReferencia && <th scope="col">Referencia</th>}</tr></thead>
-      <tbody>{parametros.map((parametro, indice) => {
-        const fuera = fueraDeRango(parametro)
-        return <tr key={`${seccion}-${indice}`} className={fuera ? 'is-out-of-range' : undefined}>
-          <th scope="row">{parametro.nombre}</th>
-          <td>{parametro.valor}{fuera && <span className="sr-only"> (fuera del rango de referencia)</span>}</td>
-          {tieneUnidad && <td>{parametro.unidad || '—'}</td>}
-          {tieneReferencia && <td>{parametro.rango_referencia || '—'}</td>}
-        </tr>
-      })}</tbody>
+      <caption>{nombre}</caption>
+      <thead><tr><th scope="col">Estudio / parámetro</th><th scope="col">Resultado</th>{columnas > 2 && <th scope="col">Unidad</th>}{columnas > 3 && <th scope="col">Referencia</th>}</tr></thead>
+      <tbody>{area.filas.map((fila, indice) => <FilaInforme key={indice} fila={fila} columnas={columnas} />)}</tbody>
     </table>
-  </div>
+    {area.observaciones.length > 0 && <p className="lab-report-observation"><strong>Obs.:</strong> {area.observaciones.join(' · ')}</p>}
+    <p className="lab-report-responsible">Autorizó y publicó {nombre}: {area.responsables.join(', ') || 'No registrado'}</p>
+  </section>
+}
+
+async function copiarTexto(texto, campo) {
+  try {
+    await navigator.clipboard.writeText(texto)
+    return true
+  } catch {
+    // Sin permiso de portapapeles: se selecciona el texto para copiarlo a mano.
+    campo?.focus()
+    campo?.select()
+    return false
+  }
+}
+
+function ResumenCopiable({ informe }) {
+  const campo = useRef(null)
+  const [estado, setEstado] = useState(null)
+  const texto = resumenParaCopiar(informe, {
+    nombreArea, nombreMotivo: nombreMotivoIncidencia, fecha: formatearFecha(informe.fecha_solicitud),
+  })
+  async function copiar() {
+    setEstado(await copiarTexto(texto, campo.current) ? 'copiado' : 'manual')
+  }
+  return <section className="lab-report-copy" aria-labelledby="lab-report-copy-title">
+    <div className="lab-report-copy-head">
+      <div>
+        <h2 id="lab-report-copy-title">Resumen para la nota clínica</h2>
+        <p>Texto plano para pegar en el SOAP. No se imprime.</p>
+      </div>
+      <button className="lab-secondary-button" type="button" onClick={copiar}>{estado === 'copiado' ? 'Copiado ✓' : 'Copiar'}</button>
+    </div>
+    <textarea ref={campo} readOnly value={texto} rows={Math.min(8, texto.split('\n').length + 1)} onFocus={(evento) => evento.target.select()} />
+    {estado === 'manual' && <p role="status" className="lab-report-copy-hint">No se pudo copiar automáticamente: el texto quedó seleccionado, usa Ctrl + C.</p>}
+  </section>
 }
 
 function Informe({ informe }) {
-  const { ultimo, responsables } = resumenPorArea(informe.resultados)
-  const areasConObservaciones = new Set()
+  const areas = agruparInformePorArea(informe.resultados)
   const edad = describirEdad(informe.paciente_fecha_nacimiento)
+  const sexo = informe.paciente_sexo ? nombreSexo(informe.paciente_sexo) : null
   const hayFueraDeRango = informe.resultados.some((resultado) => resultado.parametros.some(fueraDeRango))
+  const procedencia = informe.procedencia === 'otro_centro' ? informe.establecimiento_solicitante_nombre : 'Sarcobamba'
 
-  return <article className="lab-report-document">
+  return <article className="lab-report-document is-compact">
     <header className="lab-report-header">
-      <div><p className="lab-report-institution">SarcoSistema · Laboratorio clínico</p><h1>Informe de resultados de laboratorio</h1></div>
+      <div><p className="lab-report-institution">SarcoSistema · Laboratorio clínico</p><h1>Informe de laboratorio</h1></div>
       <strong>{informe.referencia}</strong>
     </header>
     <dl className="lab-report-meta">
-      <div><dt>Paciente</dt><dd>{informe.paciente_nombre}</dd></div>
-      <div><dt>Documento</dt><dd>{informe.paciente_documento || 'No registrado'}</dd></div>
-      <div><dt>Edad</dt><dd>{edad || 'No registrada'}</dd></div>
-      <div><dt>Sexo</dt><dd>{informe.paciente_sexo ? nombreSexo(informe.paciente_sexo) : 'No registrado'}</dd></div>
-      <div><dt>Fecha de solicitud</dt><dd>{formatearFecha(informe.fecha_solicitud)}</dd></div>
-      <div><dt>N.º de formulario D-8</dt><dd>{informe.referencia_papel_formulario || 'No registrado'}</dd></div>
-      <div><dt>Procedencia</dt><dd>{informe.procedencia === 'otro_centro' ? informe.establecimiento_solicitante_nombre : 'Sarcobamba'}</dd></div>
-      <div><dt>Profesional solicitante</dt><dd>{informe.medico_solicitante_nombre || 'No registrado'}</dd></div>
+      <div className="is-wide"><dt>Paciente</dt><dd>{informe.paciente_nombre}</dd></div>
+      <div><dt>Documento</dt><dd>{informe.paciente_documento || '—'}</dd></div>
+      <div><dt>Edad / sexo</dt><dd>{[edad, sexo].filter(Boolean).join(' · ') || '—'}</dd></div>
+      <div><dt>Solicitud</dt><dd>{formatearFecha(informe.fecha_solicitud)}</dd></div>
+      <div className="is-wide"><dt>Solicitante</dt><dd>{informe.medico_solicitante_nombre || '—'}</dd></div>
+      <div><dt>Procedencia</dt><dd>{procedencia}</dd></div>
+      <div><dt>Form. D-8</dt><dd>{informe.referencia_papel_formulario || '—'}</dd></div>
     </dl>
-    {hayFueraDeRango && <p className="lab-report-legend">Los valores en <strong>rojo</strong> están fuera del rango de referencia impreso. La interpretación corresponde al profesional tratante.</p>}
-    {informe.resultados.map((resultado) => {
-      const area = nombreArea(resultado.categoria)
-      const mostrarObservaciones = Boolean(resultado.observaciones) && !areasConObservaciones.has(resultado.categoria)
-      if (mostrarObservaciones) areasConObservaciones.add(resultado.categoria)
-      return <section className="lab-report-study" key={resultado.referencia}>
-        <div className="lab-report-study-title"><div><span>{area}</span><h2>{resultado.nombre}</h2></div><small>{resultado.referencia}</small></div>
-        {resultado.parametros.length === 0 && <p className="lab-report-empty">Sin parámetros informados.</p>}
-        {agruparPorSeccion(resultado.parametros).map(([seccion, parametros]) => <TablaSeccion key={seccion} seccion={seccion} parametros={parametros} />)}
-        {mostrarObservaciones && <p className="lab-report-observation"><strong>Observaciones de {area}:</strong> {resultado.observaciones}</p>}
-        {ultimo.get(resultado.categoria) === resultado.referencia && <p className="lab-report-responsible">
-          Autorizó y publicó {area}: {[...(responsables.get(resultado.categoria) ?? [])].join(', ') || 'No registrado'}
-        </p>}
-      </section>
-    })}
+    {hayFueraDeRango && <p className="lab-report-legend">Valores en <strong>rojo</strong>: fuera del rango de referencia.</p>}
+    {areas.map((area) => <TablaArea key={area.categoria} area={area} />)}
     {informe.estudios_no_realizados?.length > 0 && <section className="lab-report-not-performed">
-      <h2>Estudios no realizados</h2>
-      <p>Los siguientes estudios se cerraron sin resultado y conservan la justificación registrada por el laboratorio.</p>
-      <table><thead><tr><th>Estudio</th><th>Motivo y detalle</th><th>Responsable</th><th>Fecha</th></tr></thead>
-        <tbody>{informe.estudios_no_realizados.map((estudio) => <tr key={estudio.referencia}>
-          <th scope="row"><span>{nombreArea(estudio.categoria)}</span>{estudio.nombre}</th>
-          <td><strong>{nombreMotivoIncidencia(estudio.motivo)}</strong><br />{estudio.descripcion}</td>
-          <td>{estudio.responsable}</td>
-          <td>{new Date(estudio.fecha_hora).toLocaleString('es-BO')}</td>
-        </tr>)}</tbody>
-      </table>
+      <h2>No realizados</h2>
+      <ul>{informe.estudios_no_realizados.map((estudio) => <li key={estudio.referencia}>
+        <strong>{estudio.nombre}</strong> ({nombreArea(estudio.categoria)}): {nombreMotivoIncidencia(estudio.motivo)}
+        {estudio.descripcion && <> — {estudio.descripcion}</>}
+        <span> · {estudio.responsable}, {new Date(estudio.fecha_hora).toLocaleString('es-BO')}</span>
+      </li>)}</ul>
     </section>}
     <footer className="lab-report-signature">
-      <div><span /><p>Firma y sello del responsable de laboratorio</p></div>
-      <p>Emitido el {new Date().toLocaleString('es-BO')} · Documento generado por SarcoSistema</p>
+      <div>
+        <p>Emitido el {new Date().toLocaleString('es-BO')} · SarcoSistema</p>
+      </div>
+      <div className="lab-report-sign-line"><span /><p>Firma y sello</p></div>
     </footer>
   </article>
 }
@@ -128,6 +138,7 @@ export default function InformeSolicitudPage({ usuario, logout, modoMedico = fal
     {isError && <p role="alert" className="lab-report-error">{error?.response?.status === 409
       ? 'El informe final estará disponible cuando todos los estudios estén publicados o cerrados como no realizados.'
       : error?.response?.status === 404 ? 'El informe no está disponible.' : 'No se pudo cargar el informe.'}</p>}
+    {informe && <ResumenCopiable informe={informe} />}
     {informe && <Informe informe={informe} />}
   </>
 
