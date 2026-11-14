@@ -38,7 +38,7 @@ export default function RecetaMedica({ paciente }) {
     <div className="med-panel-header"><h2>Receta médica</h2><span>Al emitirla, farmacia recibe la receta.</span></div>
     <form className="med-form med-prescription-form" onSubmit={revisar}>
       <div className="med-fields med-fields--single">
-        <label>Diagnóstico <abbr title="Obligatorio">*</abbr>
+        <label><span>Diagnóstico <abbr title="Obligatorio">*</abbr></span>
           <input required maxLength={1000} value={diagnostico} onChange={e => setDiagnostico(e.target.value)} placeholder="Ej.: Faringoamigdalitis aguda" />
         </label>
       </div>
@@ -51,9 +51,9 @@ export default function RecetaMedica({ paciente }) {
               onClick={() => setMedicamentos(actual => actual.filter((_, n) => n !== i))} aria-label={`Quitar medicamento ${i + 1}`}>Quitar</button>}
           </div>
           <div className="med-fields">
-            <label>Nombre genérico <abbr title="Obligatorio">*</abbr><input required value={m.nombre_generico} onChange={e => actualizar(i, 'nombre_generico', e.target.value)} placeholder="Ej.: Amoxicilina" /></label>
-            <label>Forma y concentración <abbr title="Obligatorio">*</abbr><input required value={m.forma_concentracion} onChange={e => actualizar(i, 'forma_concentracion', e.target.value)} placeholder="Ej.: Cápsula 500 mg" /></label>
-            <label className="med-field-wide">Indicaciones (dosis, frecuencia, duración y vía) <abbr title="Obligatorio">*</abbr><textarea required rows={2} value={m.indicaciones} onChange={e => actualizar(i, 'indicaciones', e.target.value)} placeholder="Ej.: 1 cápsula cada 8 horas por 10 días, vía oral" /></label>
+            <label><span>Nombre genérico <abbr title="Obligatorio">*</abbr></span><input required value={m.nombre_generico} onChange={e => actualizar(i, 'nombre_generico', e.target.value)} placeholder="Ej.: Amoxicilina" /></label>
+            <label><span>Forma y concentración <abbr title="Obligatorio">*</abbr></span><input required value={m.forma_concentracion} onChange={e => actualizar(i, 'forma_concentracion', e.target.value)} placeholder="Ej.: Cápsula 500 mg" /></label>
+            <label className="med-field-wide"><span>Indicaciones (dosis, frecuencia, duración y vía) <abbr title="Obligatorio">*</abbr></span><textarea required rows={2} value={m.indicaciones} onChange={e => actualizar(i, 'indicaciones', e.target.value)} placeholder="Ej.: 1 cápsula cada 8 horas por 10 días, vía oral" /></label>
             <label>Cantidad recetada<input value={m.cantidad_recetada} onChange={e => actualizar(i, 'cantidad_recetada', e.target.value)} placeholder="Ej.: 30 cápsulas" /></label>
           </div>
         </fieldset>)}

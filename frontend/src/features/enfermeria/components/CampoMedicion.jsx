@@ -25,7 +25,7 @@ export default function CampoMedicion({ campo, valor, edad, deshabilitado, onCam
     <span className="enf-measure-input">
       <input data-campo-admision type="text" autoComplete="off" disabled={deshabilitado}
         inputMode={campo === 'presion' ? 'text' : 'decimal'} value={valor}
-        placeholder={campo === 'presion' ? PRESION.ejemplo : '—'}
+        placeholder={campo === 'presion' ? `ej. ${PRESION.ejemplo}` : '—'}
         aria-invalid={Boolean(error)} aria-describedby={error || aviso ? ayudaId : undefined}
         onChange={(evento) => onCambiar(campo, evento.target.value)} />
       <small>{definicion.unidad}</small>
