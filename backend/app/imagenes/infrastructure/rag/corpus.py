@@ -38,8 +38,14 @@ def extraer_articulo(contenido: bytes) -> dict:
     licencia = ' '.join(' '.join(e.itertext()) for e in root.findall('.//permissions/license'))
     permiso = ' '.join(licencia.lower().split())
     reconocido = ('creative commons attribution-noncommercial-sharealike 4.0' in permiso
-                  or 'permits unrestricted noncommercial use' in permiso)
-    if not reconocido or re.search(r'\bnot\b|\bno permission\b|\bprohibited\b', permiso):
+                  or 'permits unrestricted noncommercial use' in permiso
+                  # CC BY 4.0 (más permisiva): redacciones habituales de Springer/BMC/PLOS en PMC.
+                  or 'creative commons attribution 4.0 international licen' in permiso
+                  or ('creative commons attribution license' in permiso and 'permits unrestricted use' in permiso))
+    # Rechaza negaciones de la licencia, no frases condicionales del texto CC BY
+    # ("if material is not included..." / "if your intended use is not permitted by statutory regulation...").
+    negada = r'\bnot licen[cs]ed\b|\bno permission\b|\bprohibited\b|\ball rights reserved\b'
+    if not reconocido or re.search(negada, permiso):
         raise ValueError('No se encontró una licencia de uso local permitida.')
     titulo = root.find('.//article-title')
     secciones = []

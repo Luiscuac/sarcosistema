@@ -9,7 +9,9 @@ from app.imagenes.infrastructure.rag.embeddings import MODEL_ID
 from app.imagenes.infrastructure.rag.ingesta import cargar_corpus
 
 BASE = Path(__file__).resolve().parents[1]
-SOURCES = ('PMC6958895', 'PMC4753987')
+SOURCES = ('PMC6958895', 'PMC4753987',
+           # v3: signos radiográficos generales y tuberculosis (acceso abierto, licencia verificada al descargar).
+           'PMC6893008', 'PMC10421797', 'PMC5961483')
 
 
 def validar_snapshot(carpeta: Path) -> dict[str, str]:
@@ -34,12 +36,14 @@ def main():
     destino = BASE / '.datasets' / 'rag-torax'
     destino.mkdir(parents=True, exist_ok=True)
     manifest = destino / 'manifest.json'
-    if manifest.exists():
-        cargar_corpus(destino)
-    else:
-        fuentes = []
+    previas = json.loads(manifest.read_text(encoding='utf-8'))['fuentes'] if manifest.exists() else []
+    if previas:
+        cargar_corpus(destino)  # verifica hashes de lo ya preparado antes de agregar fuentes
+    faltantes = [id for id in SOURCES if id not in {f['id'] for f in previas}]
+    if faltantes:
+        fuentes = list(previas)
         with httpx.Client(timeout=60, follow_redirects=True) as client:
-            for id in SOURCES:
+            for id in faltantes:
                 url = f'https://www.ebi.ac.uk/europepmc/webservices/rest/{id}/fullTextXML'
                 response = client.get(url)
                 response.raise_for_status()
