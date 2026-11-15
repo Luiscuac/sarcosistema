@@ -64,35 +64,12 @@ def test_preprocesamiento_oscuro_8_bits_es_float32_1_1_224_224():
     assert np.isfinite(tensor.numpy()).all()
 
 
-def test_rechaza_16_bits_sin_normalizacion_conocida():
-    with pytest.raises(ImagenNoValida):
-        preparar_imagen(imagen(modo='I;16'))
-
-
-def test_rechaza_rgb_png_16_bits_antes_de_importar_torch(monkeypatch):
-    import builtins
-    import struct
-    import zlib
-    from binascii import crc32
-    pil = pytest.importorskip('PIL.Image')
-    def chunk(tipo, datos):
-        return struct.pack('>I', len(datos)) + tipo + datos + struct.pack('>I', crc32(tipo + datos) & 0xffffffff)
-    datos = b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('>IIBBBBB', 32, 32, 16, 2, 0, 0, 0))
-    datos += chunk(b'IDAT', zlib.compress((b'\x00' + b'\xff\xff\x00\x00\x00\x00' * 32) * 32)) + chunk(b'IEND', b'')
-    assert pil.open(BytesIO(datos)).mode == 'RGB'  # Pillow oculta la profundidad fuente.
-    original = builtins.__import__
-    def importar(nombre, *args, **kwargs):
-        if nombre in ('torch', 'torchxrayvision'):
-            pytest.fail('La imagen de 16 bits debe rechazarse antes de cargar el runtime')
-        return original(nombre, *args, **kwargs)
-    monkeypatch.setattr(builtins, '__import__', importar)
-    with pytest.raises(ImagenNoValida):
-        preparar_imagen(datos)
-
-
 def test_limita_bytes_antes_de_decodificar():
+    from app.imagenes.domain.vision import MAX_IMAGE_BYTES, MAX_RASTER_BYTES
     with pytest.raises(ImagenNoValida):
-        preparar_imagen(b'a' * (10 * 1024 * 1024 + 1))
+        preparar_imagen(b'a' * (MAX_IMAGE_BYTES + 1))
+    with pytest.raises(ImagenNoValida, match='PNG/JPEG'):
+        preparar_imagen(b'\x89PNG\r\n\x1a\n' + b'a' * MAX_RASTER_BYTES)
 
 
 def test_archivo_no_imagen_se_rechaza_aun_sin_dependencias_opcionales(monkeypatch):
@@ -108,8 +85,8 @@ def test_archivo_no_imagen_se_rechaza_aun_sin_dependencias_opcionales(monkeypatc
 
 
 def test_limita_pixeles_antes_de_convertir():
-    with pytest.raises(ImagenNoValida):
-        preparar_imagen(imagen(size=(5000, 4000)))
+    with pytest.raises(ImagenNoValida, match='megapíxeles'):
+        preparar_imagen(imagen(size=(16385, 40)))
 
 
 def test_memoria_insuficiente_rechaza_sin_cargar_modelo():

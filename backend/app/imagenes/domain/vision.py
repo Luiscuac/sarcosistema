@@ -14,7 +14,18 @@ TARGETS = (
     'Lung Opacity', 'Enlarged Cardiomediastinum',
 )
 SELECTED_TARGETS = ('Consolidation', 'Effusion', 'Cardiomegaly')
-MAX_IMAGE_BYTES = 10 * 1024**2
+NOMBRES_ES = {
+    'Atelectasis': 'atelectasia', 'Consolidation': 'consolidación', 'Infiltration': 'infiltrado',
+    'Pneumothorax': 'neumotórax', 'Edema': 'edema pulmonar', 'Emphysema': 'enfisema', 'Fibrosis': 'fibrosis',
+    'Effusion': 'derrame pleural', 'Pneumonia': 'neumonía', 'Pleural_Thickening': 'engrosamiento pleural',
+    'Cardiomegaly': 'cardiomegalia', 'Nodule': 'nódulo', 'Mass': 'masa', 'Hernia': 'hernia',
+    'Lung Lesion': 'lesión pulmonar', 'Fracture': 'fractura', 'Lung Opacity': 'opacidad pulmonar',
+    'Enlarged Cardiomediastinum': 'ensanchamiento cardiomediastínico',
+}
+# Alineado con la subida (IMAGENES_MAX_MB=15 / IMAGENES_DICOM_MAX_MB=100): PNG/JPEG de equipos
+# reales superan los 10 MiB y el DICOM de tórax suele estar entre 5 y 60 MiB.
+MAX_RASTER_BYTES = 30 * 1024**2
+MAX_IMAGE_BYTES = 100 * 1024**2
 
 
 class ErrorVision(Exception):
@@ -47,6 +58,8 @@ class VisionConfig:
     min_free_bytes: int = 4 * 1024**3
     threads: int = 4
     timeout_seconds: float = 120
+    # Limitar mapas de calor a los pulmones si la segmentación local está preparada (mejora medida en TB).
+    mascara_pulmonar: bool = True
 
     def __post_init__(self):
         if not 1 <= self.threads <= 4 or not 1 <= self.timeout_seconds <= 600 or self.min_free_bytes < 512 * 1024**2:
