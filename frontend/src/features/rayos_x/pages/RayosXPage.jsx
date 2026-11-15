@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import ConsultasLayout from '../../consultas/components/ConsultasLayout.jsx'
 import EstudioDetalle from '../components/EstudioDetalle.jsx'
+import DesempenoAsistente from '../components/DesempenoAsistente.jsx'
 import { listarEstudios } from '../api/rayosXAiApi.js'
 import { mensajeError } from '../analisis.js'
 import '../../laboratorio/pages/laboratorio.css'
@@ -9,10 +11,14 @@ import './rayos-x.css'
 
 export default function RayosXPage({ usuario, logout }) {
   const [pagina, setPagina] = useState(1)
-  const [seleccion, setSeleccion] = useState(null)
+  const [parametros] = useSearchParams()
+  const [verDesempeno, setVerDesempeno] = useState(false)
+  // Desde el informe del paciente se llega con ?estudio=ID: abrir directamente ese estudio.
+  const [seleccion, setSeleccion] = useState(() => Number(parametros.get('estudio')) || null)
   const consulta = useQuery({ queryKey: ['imagenes', usuario.id, 'estudios', pagina], queryFn: ({ signal }) => listarEstudios(pagina, signal) })
   return <ConsultasLayout usuario={usuario} logout={logout} area="rayos-x">
-        <div className="lab-title-row"><div><p className="lab-eyebrow">RAYOS X</p><h1>Estudios radiológicos</h1><p className="lab-intro">Informes publicados de tus solicitudes y asistencia experimental local.</p></div></div>
+        <div className="lab-title-row"><div><p className="lab-eyebrow">RAYOS X</p><h1>Estudios radiológicos</h1><p className="lab-intro">Informes publicados de tus solicitudes y asistencia experimental local.</p></div><button type="button" className="lab-secondary-button" aria-pressed={verDesempeno} onClick={() => setVerDesempeno(v => !v)}>{verDesempeno ? 'Ocultar desempeño' : 'Desempeño del asistente'}</button></div>
+        {verDesempeno && <DesempenoAsistente usuario={usuario} />}
         <p className="rx-advertencia">Prototipo universitario. La IA no diagnostica, no publica informes y no sustituye la revisión médica.</p>
         {consulta.isPending && <p role="status">Cargando estudios…</p>}
         {consulta.error && <p role="alert">{mensajeError(consulta.error)}</p>}
