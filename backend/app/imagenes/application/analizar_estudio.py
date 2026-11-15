@@ -2,7 +2,7 @@ import asyncio
 import hashlib
 
 from app.imagenes.application.fusionar_hallazgos import fusionar
-from app.imagenes.domain.vision import ErrorVision
+from app.imagenes.domain.vision import ErrorVision, NOMBRES_ES
 
 
 def validar_snapshot(trabajo: dict, snapshot: dict | None):
@@ -13,6 +13,17 @@ def validar_snapshot(trabajo: dict, snapshot: dict | None):
             or snapshot['archivo']['hash_sha256'] != trabajo['archivo_sha256']
             or hashlib.sha256(snapshot['informe_texto'].encode()).hexdigest() != trabajo['informe_sha256']):
         raise ValueError('El estudio, informe o archivo cambió; solicita otro análisis.')
+
+
+def pregunta_documental(visual: dict) -> str:
+    aportes = (visual.get('indice_pulmonar') or {}).get('contribuciones') or []
+    nombres = [NOMBRES_ES.get(c['name'], c['name']) for c in aportes[:3]]
+    for fijo in ('consolidación pulmonar', 'derrame pleural', 'cardiomegalia'):
+        if len(nombres) >= 3:
+            break
+        if not any(fijo.startswith(n) or n.startswith(fijo.split()[0]) for n in nombres):
+            nombres.append(fijo)
+    return f"Radiografía de tórax: {', '.join(nombres[:-1])} y {nombres[-1]}. Hallazgos radiográficos."
 
 
 class AnalizarEstudio:
@@ -27,8 +38,8 @@ class AnalizarEstudio:
         contenido = await asyncio.to_thread(self.leer_archivo, snapshot['archivo'])
         visual = await asyncio.to_thread(self.vision.analizar, contenido, proyeccion=trabajo['proyeccion'])
         combinado = fusionar(visual,trabajo['informe_texto'],self.umbral)
-        # No convertir scores a diagnósticos: consulta documental de las tres categorías.
-        pregunta = 'Radiografía de tórax: consolidación pulmonar, derrame pleural y cardiomegalia. Hallazgos radiográficos.'
+        # No convertir scores a diagnósticos: consulta documental de las categorías que más pesan.
+        pregunta = pregunta_documental(visual)
         try:
             evidencia = await self.rag.consultar(pregunta)
         except Exception:
