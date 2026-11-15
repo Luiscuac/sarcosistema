@@ -12,7 +12,31 @@ from app.imagenes.infrastructure.archivos import leer_archivo_local
 from app.imagenes.infrastructure.persistence.repository import EstudiosRepository
 
 
-async def ejecutar_trabajo(trabajo, sesiones, analizador, repositorio=EstudiosRepository, vigente=None, liderazgo=None):
+async def ejecutar_triaje(trabajo, sesiones, triador, repositorio=EstudiosRepository, vigente=None, liderazgo=None):
+    if vigente and not await vigente():
+        return
+    resultado, error = None, None
+    try:
+        async with sesiones.begin() as db:
+            archivo = await repositorio(db).archivo_de_triaje(trabajo)
+        resultado = await triador.ejecutar(archivo)
+    except ValueError:
+        resultado, error = None, 'archivo_no_disponible'
+    except ErrorVision as exc:
+        resultado, error = None, type(exc).__name__
+    except Exception:
+        resultado, error = None, 'fallo_local'
+    if vigente and not await vigente():
+        return
+    async with sesiones.begin() as db:
+        await repositorio(db).finalizar_triaje(trabajo['id'], resultado, error, liderazgo=liderazgo)
+
+
+async def ejecutar_trabajo(trabajo, sesiones, analizador, repositorio=EstudiosRepository, vigente=None, liderazgo=None, triador=None):
+    if trabajo.get('tipo') == 'triaje':
+        if triador is None:
+            return
+        return await ejecutar_triaje(trabajo, sesiones, triador, repositorio, vigente, liderazgo)
     if vigente and not await vigente():
         return
     resultado, error = None,None
@@ -93,8 +117,8 @@ class Liderazgo:
 
 
 class GestorTrabajos:
-    def __init__(self, engine, sesiones, analizador):
-        self.engine,self.sesiones,self.analizador = engine,sesiones,analizador
+    def __init__(self, engine, sesiones, analizador, triador=None):
+        self.engine,self.sesiones,self.analizador,self.triador = engine,sesiones,analizador,triador
         self.detener = asyncio.Event()
 
     async def esperar(self):
@@ -123,7 +147,7 @@ class GestorTrabajos:
                             trabajo = await vigencia.reclamar()
                             if trabajo:
                                 await ejecutar_trabajo(trabajo,self.sesiones,self.analizador,
-                                    vigente=vigencia.comprobar,liderazgo=vigencia.datos)
+                                    vigente=vigencia.comprobar,liderazgo=vigencia.datos,triador=self.triador)
                             else:
                                 await self.esperar()
                     finally:
@@ -141,12 +165,14 @@ def construir_gestor():
     from app.config.settings import settings
     from app.imagenes.infrastructure.rag.servicio import ServicioRag
     from app.imagenes.infrastructure.vision.servicio import AnalizadorTorax
+    from app.imagenes.application.triaje import TriarRadiografia
+    from app.imagenes.infrastructure.archivos import raices_archivos
     base = Path(__file__).resolve().parents[3]
-    raiz = Path(settings.radiology_storage_dir)
-    if not raiz.is_absolute():
-        raiz = base/raiz
+    raices = raices_archivos()
     vision = AnalizadorTorax(VisionConfig(base/'.models/radiologia',
-        min_free_bytes=settings.radiology_vision_min_free_mib*1024**2))
+        min_free_bytes=settings.radiology_vision_min_free_mib*1024**2,
+        mascara_pulmonar=settings.radiology_lung_mask_enabled))
     rag = ServicioRag(base/'.models/rag-torax',base/'.datasets/rag-torax',SessionLocal)
-    analizador = AnalizarEstudio(vision,rag,lambda archivo:leer_archivo_local(raiz,archivo)[0],settings.radiology_score_threshold)
-    return GestorTrabajos(engine,SessionLocal,analizador)
+    leer = lambda archivo: leer_archivo_local(raices,archivo)[0]  # noqa: E731
+    analizador = AnalizarEstudio(vision,rag,leer,settings.radiology_score_threshold)
+    return GestorTrabajos(engine,SessionLocal,analizador,TriarRadiografia(vision,leer))

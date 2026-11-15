@@ -27,8 +27,8 @@ def get_repository(db=Depends(get_db)):
 
 
 def raiz_archivos():
-    ruta = Path(settings.radiology_storage_dir)
-    return ruta if ruta.is_absolute() else BASE / ruta
+    from app.imagenes.infrastructure.archivos import raices_archivos
+    return raices_archivos()
 
 
 def analisis_publico(a):
@@ -71,6 +71,29 @@ async def archivo(estudio_id: int, archivo_id: int, usuario: Usuario = Depends(u
                     headers={'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff'})
 
 
+@router.get('/estudios/{estudio_id}/archivos/{archivo_id}/vista')
+async def vista(estudio_id: int, archivo_id: int, usuario: Usuario = Depends(usuario_actual),
+                repo=Depends(get_repository)):
+    """PNG 8 bits generado localmente para el visor: DICOM, 16 bits o paleta no se ven directo en el navegador."""
+    import asyncio
+    from app.imagenes.domain.vision import ErrorVision, ImagenNoValida
+    from app.imagenes.infrastructure.vision.preprocesamiento import vista_previa_png
+    dato = await repo.obtener(estudio_id, usuario.id)
+    if not dato or not dato['archivo'] or dato['archivo']['id'] != archivo_id:
+        raise HTTPException(404, 'Archivo no encontrado.')
+    try:
+        contenido, _ = leer_archivo_local(raiz_archivos(), dato['archivo'])
+        png = await asyncio.to_thread(vista_previa_png, contenido)
+    except ValueError:
+        raise HTTPException(409, 'El archivo local no está disponible o no supera la comprobación de integridad.') from None
+    except ImagenNoValida:
+        raise HTTPException(422, 'La imagen no tiene un formato de radiografía admitido para la vista previa.') from None
+    except ErrorVision:
+        raise HTTPException(503, 'Faltan dependencias locales para generar la vista previa.') from None
+    return Response(png, media_type='image/png',
+                    headers={'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff'})
+
+
 @router.post('/estudios/{estudio_id}/analisis', status_code=202)
 async def solicitar(estudio_id: int, datos: AnalisisNuevo, usuario: Usuario = Depends(usuario_actual),
                     repo=Depends(get_repository)):
@@ -83,6 +106,17 @@ async def solicitar(estudio_id: int, datos: AnalisisNuevo, usuario: Usuario = De
         return analisis_publico(await repo.crear_analisis(snapshot, usuario.id, datos.clave, datos.proyeccion))
     except ValueError:
         raise HTTPException(409, 'Solicitud incompatible: revisa archivo, informe o análisis activo y no reutilices una clave con otros datos.') from None
+
+
+@router.get('/concordancia')
+async def concordancia(repo=Depends(get_repository)):
+    """Desempeño del asistente en este hospital: solo agregados, sin pacientes ni identificadores."""
+    from app.imagenes.application.calibracion import resumir_concordancia
+    from app.imagenes.presentation.router_clinico import _umbrales_triaje
+    alta, media = _umbrales_triaje()
+    return resumir_concordancia(await repo.filas_concordancia()) | {
+        'umbrales_actuales': {'alta': alta, 'media': media,
+                              'origen': 'configuración local' if settings.radiology_triage_umbral_alta is not None else 'provisional, fijado con datos de Shenzhen'}}
 
 
 @router.get('/{analisis_id}')
@@ -108,7 +142,8 @@ async def revisar(analisis_id: UUID, datos: RevisionNueva, usuario: Usuario = De
                   repo=Depends(get_repository)):
     try:
         return analisis_publico(await repo.registrar_revision(
-            analisis_id, usuario.id, datos.version, datos.decision, datos.motivo, datos.correccion))
+            analisis_id, usuario.id, datos.version, datos.decision, datos.motivo, datos.correccion,
+            datos.anormal_confirmado))
     except LookupError:
         raise HTTPException(404, 'Análisis no encontrado.') from None
     except ValueError:

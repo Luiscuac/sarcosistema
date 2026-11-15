@@ -10,6 +10,7 @@ from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.imagenes.application.triaje import resumir_triaje
 from app.imagenes.domain.entities import (
     ArchivoImagen,
     EstudioImagenDetalle,
@@ -39,7 +40,7 @@ class RepositorioImagenSql:
     async def crear_solicitud(self, solicitud: SolicitudEcografia, usuario_id: int) -> int:
         paciente = await self.db.get(Paciente, solicitud.paciente_id)
         if paciente is None or paciente.estado != 'activo':
-            raise ValueError('El paciente no existe o estÃƒÂ¡ inactivo')
+            raise ValueError('El paciente no existe o está inactivo')
 
         tipos = (
             await self.db.execute(
@@ -54,7 +55,7 @@ class RepositorioImagenSql:
             )
         ).all()
         if len(tipos) != len(solicitud.tipo_estudio_ids):
-            raise ValueError('Uno o mÃƒÂ¡s estudios no estÃƒÂ¡n en el catÃƒÂ¡logo de imagen')
+            raise ValueError('Uno o más estudios no están en el catálogo de imagen')
 
         if solicitud.clave_idempotencia:
             existente = (
@@ -67,8 +68,12 @@ class RepositorioImagenSql:
             if existente is not None:
                 return existente
 
+        # Vincular al médico real (no solo su nombre): la asistencia IA filtra por médico solicitante.
+        medico_id = await self.db.scalar(text('''SELECT m.id FROM public.medico m
+            JOIN public.usuario u ON u.trabajador_id=m.trabajador_id WHERE u.id=:u'''), {'u': usuario_id})
         referencia = f"IMG-{datetime.now(timezone.utc):%y%m%d}-{uuid4().hex[:6].upper()}"
         modelo = Solicitud(
+            medico_solicitante_id=medico_id,
             referencia=referencia,
             paciente_id=solicitud.paciente_id,
             fecha_solicitud=datetime.now(timezone.utc),
@@ -271,6 +276,31 @@ class RepositorioImagenSql:
         await self.db.flush()
         return await self._presentar_informe(informe), True
 
+    async def encolar_triaje(self, estudio_id: int, archivos) -> int:
+        """Encola el triaje visual de cada radiografía nueva (deduplicado por estudio + hash)."""
+        from app.imagenes.infrastructure.archivos import MIMES_RADIOGRAFIA
+        encolados = 0
+        for archivo in archivos:
+            if archivo.mime_type not in MIMES_RADIOGRAFIA.values():
+                continue
+            fila = await self.db.execute(text('''INSERT INTO public.imagen_triaje_ia
+                (id,estudio_id,archivo_id,archivo_sha256) VALUES (CAST(:id AS uuid),:e,:a,:h)
+                ON CONFLICT (estudio_id,archivo_sha256) DO NOTHING RETURNING id'''),
+                {'id': str(uuid4()), 'e': estudio_id, 'a': archivo.id, 'h': archivo.hash_sha256})
+            encolados += fila.first() is not None
+        return encolados
+
+    async def triaje_por_estudio(self, estudio_ids: list[int]) -> dict[int, dict]:
+        """Resumen por estudio: índice máximo entre sus radiografías y estado de la cola."""
+        if not estudio_ids:
+            return {}
+        filas = (await self.db.execute(text('''SELECT estudio_id, estado,
+            (resultado->'indice_pulmonar'->>'valor')::float AS indice,
+            resultado->'calidad'->>'estado' AS calidad,
+            resultado->'indice_pulmonar'->'contribuciones' AS contribuciones
+            FROM public.imagen_triaje_ia WHERE estudio_id = ANY(:ids)'''), {'ids': list(estudio_ids)})).mappings().all()
+        return resumir_triaje([dict(f) for f in filas])
+
     async def publicar_informe(self, estudio_id: int, usuario_id: int) -> InformeImagen:
         informe = (
             await self.db.execute(
@@ -370,14 +400,18 @@ def tipos_ids_to_servicio(tipos, tipo_id) -> int:
     return next(t.servicio_id for t in tipos if t.id == tipo_id)
 # ---------- asistencia radiológica local (RAG) ----------
 
+# Solicitudes antiguas guardaron solo el nombre del médico (medico_solicitante_id nulo):
+# en ese caso se reconoce al médico por el usuario que creó la solicitud.
 PROPIETARIO = '''FROM public.estudio_solicitado e
     JOIN public.solicitud s ON s.id=e.solicitud_id
-    JOIN public.medico m ON m.id=s.medico_solicitante_id
-    JOIN public.usuario u ON u.trabajador_id=m.trabajador_id AND u.id=:usuario
+    JOIN public.usuario u ON u.id=:usuario
+    JOIN public.medico m ON m.trabajador_id=u.trabajador_id
     JOIN public.servicio v ON v.id=e.servicio_id AND v.codigo='IMG'
     JOIN public.tipo_estudio t ON t.id=e.tipo_estudio_id
     JOIN public.paciente p ON p.id=e.paciente_id
-    WHERE u.estado='activo' '''
+    WHERE u.estado='activo' AND (s.medico_solicitante_id=m.id
+        OR (s.medico_solicitante_id IS NULL AND s.created_by=u.id))
+    AND t.nombre NOT ILIKE 'ecograf%' '''
 
 
 class EstudiosRepository:
@@ -387,17 +421,48 @@ class EstudiosRepository:
     async def recuperar_interrumpidos(self):
         # Solo llamar tras adquirir liderazgo exclusivo de trabajos en PostgreSQL.
         await self.db.execute(text("UPDATE public.imagen_analisis_ia SET estado='interrumpido',error_codigo='reinicio',actualizado_en=now() WHERE estado='procesando'"))
+        # El triaje interrumpido vuelve a la cola: nadie lo pidió y no tiene revisiones asociadas.
+        await self.db.execute(text("UPDATE public.imagen_triaje_ia SET estado='en_cola',actualizado_en=now() WHERE estado='procesando'"))
 
     async def reclamar(self):
+        """Primero lo que pidió un médico (interactivo); después el triaje automático."""
         row = (await self.db.execute(text('''UPDATE public.imagen_analisis_ia
             SET estado='procesando',actualizado_en=now()
             WHERE id=(SELECT id FROM public.imagen_analisis_ia WHERE estado='en_cola'
             ORDER BY creado_en,id FOR UPDATE SKIP LOCKED LIMIT 1) RETURNING *'''))).mappings().first()
-        return dict(row) if row else None
+        if row:
+            return dict(row) | {'tipo': 'analisis'}
+        row = (await self.db.execute(text('''UPDATE public.imagen_triaje_ia
+            SET estado='procesando',actualizado_en=now()
+            WHERE id=(SELECT id FROM public.imagen_triaje_ia WHERE estado='en_cola'
+            ORDER BY creado_en,id FOR UPDATE SKIP LOCKED LIMIT 1) RETURNING *'''))).mappings().first()
+        return dict(row) | {'tipo': 'triaje'} if row else None
+
+    async def archivo_de_triaje(self, trabajo: dict):
+        row = (await self.db.execute(text('''SELECT a.id,a.nombre_original,a.url_archivo,a.mime_type,
+            a.tamano_bytes,a.hash_sha256,a.activo FROM public.archivo_imagen a
+            JOIN public.informe_imagen i ON i.id=a.informe_id
+            WHERE a.id=:archivo AND i.estudio_id=:estudio'''),
+            {'archivo': trabajo['archivo_id'], 'estudio': trabajo['estudio_id']})).mappings().first()
+        if row is None or not row['activo'] or row['hash_sha256'] != trabajo['archivo_sha256']:
+            raise ValueError('El archivo del triaje cambió o ya no está activo.')
+        return dict(row)
+
+    async def finalizar_triaje(self, triaje_id, resultado: dict | None, error: str | None, liderazgo=None):
+        fence = ''' AND EXISTS (SELECT 1 FROM pg_locks l JOIN pg_stat_activity a ON a.pid=l.pid
+            WHERE l.locktype='advisory' AND l.classid=0 AND l.objid=2111009 AND l.objsubid=1
+            AND l.granted AND l.pid=:lider_pid AND a.backend_start=:lider_inicio)''' if liderazgo else ''
+        await self.db.execute(text('''UPDATE public.imagen_triaje_ia SET estado=:estado,
+            resultado=CAST(:resultado AS jsonb),error_codigo=:error,actualizado_en=now()
+            WHERE id=CAST(:id AS uuid) AND estado IN ('en_cola','procesando')''' + fence),
+            {'id':str(triaje_id),'estado':'error' if error else 'completado',
+             'resultado':json.dumps(resultado) if resultado is not None else None,'error':error,
+             'lider_pid':liderazgo['pid'] if liderazgo else None,
+             'lider_inicio':liderazgo['inicio'] if liderazgo else None})
 
     async def listar(self, usuario_id: int, pagina: int = 1):
         if pagina < 1:
-            raise ValueError('PÃ¡gina invÃ¡lida.')
+            raise ValueError('Página inválida.')
         rows = await self.db.execute(text('''SELECT e.id,e.referencia,e.estado,t.nombre AS estudio,
             p.codigo_paciente,p.nombre_completo AS paciente ''' + PROPIETARIO + '''
             AND e.estado='publicado' ORDER BY e.id DESC LIMIT 20 OFFSET :offset'''),
@@ -426,7 +491,7 @@ class EstudiosRepository:
 
     async def crear_analisis(self, snapshot: dict, usuario_id: int, clave: str, proyeccion: str):
         if not clave or len(clave)>100 or proyeccion not in ('PA','AP','frontal_no_especificada'):
-            raise ValueError('Solicitud de anÃ¡lisis invÃ¡lida.')
+            raise ValueError('Solicitud de análisis inválida.')
         if not snapshot.get('archivo') or not snapshot.get('informe_id'):
             raise ValueError('El estudio necesita informe publicado y archivo activo.')
         await self.db.execute(text('SELECT pg_advisory_xact_lock(:id)'), {'id': snapshot['id']})
@@ -439,7 +504,7 @@ class EstudiosRepository:
             return dict(existente)
         activo = await self.db.scalar(text("SELECT 1 FROM public.imagen_analisis_ia WHERE estudio_id=:id AND estado IN ('en_cola','procesando')"), {'id':snapshot['id']})
         if activo:
-            raise ValueError('Ya hay un anÃ¡lisis activo para este estudio.')
+            raise ValueError('Ya hay un análisis activo para este estudio.')
         row = (await self.db.execute(text('''INSERT INTO public.imagen_analisis_ia
             (id,estudio_id,informe_id,archivo_id,solicitado_por,clave,proyeccion,informe_texto,informe_sha256,archivo_sha256)
             VALUES (CAST(:id AS uuid),:e,:i,:a,:u,:c,:p,:texto,:sha,:ah) RETURNING *'''),
@@ -447,11 +512,24 @@ class EstudiosRepository:
              'u':usuario_id,'c':clave,'p':proyeccion,'texto':snapshot['informe_texto'],'sha':sha,'ah':snapshot['archivo']['hash_sha256']})).mappings().one()
         return dict(row)
 
+    async def filas_concordancia(self) -> list[dict]:
+        """Un registro por análisis con su última revisión. Solo agregables: sin pacientes ni texto."""
+        filas = await self.db.execute(text('''WITH ultima AS (
+                SELECT DISTINCT ON (analisis_id) analisis_id, decision, anormal_confirmado
+                FROM public.imagen_revision_ia ORDER BY analisis_id, version DESC)
+            SELECT a.estado, u.decision, u.anormal_confirmado,
+                (a.resultado->'vision'->'indice_pulmonar'->>'valor')::float AS indice,
+                jsonb_array_length(COALESCE(a.resultado->'fusion'->'discrepancias','[]'::jsonb)) AS discrepancias,
+                jsonb_array_length(COALESCE(a.resultado->'fusion'->'posibles_omisiones','[]'::jsonb)) AS omisiones,
+                jsonb_array_length(COALESCE(a.resultado->'fusion'->'coincidencias','[]'::jsonb)) AS coincidencias
+            FROM public.imagen_analisis_ia a LEFT JOIN ultima u ON u.analisis_id=a.id'''))
+        return [dict(f) for f in filas.mappings()]
+
     async def obtener_analisis(self, analisis_id, usuario_id: int):
         row = (await self.db.execute(text('SELECT * FROM public.imagen_analisis_ia WHERE id=CAST(:id AS uuid)'), {'id':str(analisis_id)})).mappings().first()
         if row is None or await self.obtener(row['estudio_id'], usuario_id) is None:
             return None
-        revisiones = (await self.db.execute(text('''SELECT version,decision,motivo,correccion,fecha,usuario_id
+        revisiones = (await self.db.execute(text('''SELECT version,decision,motivo,correccion,anormal_confirmado,fecha,usuario_id
             FROM public.imagen_revision_ia WHERE analisis_id=CAST(:id AS uuid) ORDER BY version'''), {'id':str(analisis_id)})).mappings()
         return dict(row) | {'revisiones':[dict(r) for r in revisiones]}
 
@@ -467,21 +545,22 @@ class EstudiosRepository:
              'lider_pid':liderazgo['pid'] if liderazgo else None,
              'lider_inicio':liderazgo['inicio'] if liderazgo else None})
 
-    async def registrar_revision(self, analisis_id, usuario_id, version, decision, motivo, correccion):
+    async def registrar_revision(self, analisis_id, usuario_id, version, decision, motivo, correccion, anormal_confirmado=None):
         analisis = await self.obtener_analisis(analisis_id, usuario_id)
         if analisis is None:
-            raise LookupError('AnÃ¡lisis no encontrado.')
+            raise LookupError('Análisis no encontrado.')
         if (analisis['estado'] != 'completado' or decision not in ('aceptada_como_propuesta','corregida','rechazada')
                 or (decision != 'aceptada_como_propuesta' and not motivo.strip())
                 or (decision == 'corregida' and not (correccion or '').strip())):
-            raise ValueError('La revisiÃ³n requiere anÃ¡lisis completo y datos obligatorios.')
+            raise ValueError('La revisión requiere análisis completo y datos obligatorios.')
         version_nueva = await self.db.scalar(text('''UPDATE public.imagen_analisis_ia
             SET version_revision=version_revision+1,actualizado_en=now()
             WHERE id=CAST(:id AS uuid) AND version_revision=:v RETURNING version_revision'''), {'id':str(analisis_id),'v':version})
         if version_nueva is None:
-            raise ValueError('La revisiÃ³n cambiÃ³; recarga antes de guardar.')
+            raise ValueError('La revisión cambió; recarga antes de guardar.')
         await self.db.execute(text('''INSERT INTO public.imagen_revision_ia
-            (analisis_id,usuario_id,version,decision,motivo,correccion)
-            VALUES (CAST(:id AS uuid),:u,:v,:d,:m,:c)'''),
-            {'id':str(analisis_id),'u':usuario_id,'v':version_nueva,'d':decision,'m':motivo,'c':correccion})
+            (analisis_id,usuario_id,version,decision,motivo,correccion,anormal_confirmado)
+            VALUES (CAST(:id AS uuid),:u,:v,:d,:m,:c,:anormal)'''),
+            {'id':str(analisis_id),'u':usuario_id,'v':version_nueva,'d':decision,'m':motivo,'c':correccion,
+             'anormal':anormal_confirmado})
         return await self.obtener_analisis(analisis_id, usuario_id)

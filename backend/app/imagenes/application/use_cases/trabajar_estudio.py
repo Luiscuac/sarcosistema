@@ -61,7 +61,8 @@ class GuardarInforme:
             contenido = entrada.get('contenido') or b''
             if not contenido:
                 raise ArchivoVacio('El archivo llego vacio')
-            if len(contenido) > self.max_bytes:
+            limite = self.max_bytes(mime) if callable(self.max_bytes) else self.max_bytes
+            if len(contenido) > limite:
                 raise ArchivoDemasiadoGrande(mime)
             hash_sha256 = hashlib.sha256(contenido).hexdigest()
             extension = self._extension(mime, entrada.get('nombre'))

@@ -16,7 +16,7 @@ class SolicitudEcografiaRequest(BaseModel):
 
     def validar_estudios(self) -> None:
         if any(tipo_id <= 0 for tipo_id in self.tipo_estudio_ids):
-            raise SolicitudInvalida('Cada estudio debe tener un identificador vÃ¡lido')
+            raise SolicitudInvalida('Cada estudio debe tener un identificador válido')
         if len(self.tipo_estudio_ids) != len(set(self.tipo_estudio_ids)):
             raise SolicitudInvalida('No repitas el mismo estudio en una solicitud')
 
@@ -56,6 +56,21 @@ class InformeImagenResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class ContribucionTriaje(BaseModel):
+    name: str
+    aporte: float
+
+
+class TriajeResumen(BaseModel):
+    """Prioridad visual experimental para ordenar la bandeja; no es diagnóstico."""
+    estado: str
+    indice: float | None = None
+    nivel: str | None = None
+    calidad: str | None = None
+    contribuciones: list[ContribucionTriaje] = []
+    radiografias: int = 0
+
+
 class EstudioPendienteResponse(BaseModel):
     estudio_id: int
     referencia_estudio: str
@@ -66,6 +81,7 @@ class EstudioPendienteResponse(BaseModel):
     prioridad: str
     estado: str
     fecha_solicitud: datetime
+    triaje: TriajeResumen | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -117,11 +133,13 @@ class RevisionNueva(BaseModel):
     decision: Literal['aceptada_como_propuesta','corregida','rechazada']
     motivo: str = Field(default='',max_length=2000)
     correccion: str | None = Field(default=None,max_length=4000)
+    # Lectura del médico (opcional): ¿la radiografía es anormal? Alimenta la calibración local.
+    anormal_confirmado: bool | None = None
 
     @model_validator(mode='after')
     def datos_obligatorios(self):
         if self.decision != 'aceptada_como_propuesta' and not self.motivo.strip():
             raise ValueError('Se requiere motivo para corregir o rechazar.')
         if self.decision == 'corregida' and not (self.correccion or '').strip():
-            raise ValueError('Se requiere el texto de correcciÃ³n.')
+            raise ValueError('Se requiere el texto de corrección.')
         return self

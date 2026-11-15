@@ -23,7 +23,9 @@ from app.imagenes.domain.errors import (
 )
 from app.imagenes.infrastructure.persistence.repository import RepositorioImagenSql
 from app.imagenes.infrastructure.storage.almacen_local import AlmacenLocal
+from app.imagenes.application.triaje import nivel_prioridad
 from app.imagenes.presentation.schemas import (
+    TriajeResumen,
     ArchivoImagenResponse,
     EstudioDetalleResponse,
     EstudioPendienteResponse,
@@ -51,6 +53,24 @@ def get_repositorio(db: AsyncSession = Depends(get_db)) -> RepositorioImagenSql:
     return RepositorioImagenSql(db)
 
 
+def _mime_declarado(content_type: str | None, nombre: str | None) -> str:
+    """Los navegadores suelen enviar .dcm como octet-stream o vacío: se usa la extensión."""
+    mime = (content_type or '').lower()
+    if mime in ('', 'application/octet-stream') and (nombre or '').lower().endswith(('.dcm', '.dicom')):
+        return 'application/dicom'
+    return mime
+
+
+def _mime_por_firma(mime: str, contenido: bytes) -> str:
+    """La firma del archivo manda sobre el tipo declarado para radiografías (PNG/JPEG/DICOM)."""
+    from app.imagenes.infrastructure.archivos import MIMES_RADIOGRAFIA
+    from app.imagenes.infrastructure.vision.preprocesamiento import detectar_formato
+    detectado = MIMES_RADIOGRAFIA.get(detectar_formato(contenido))
+    if detectado and (mime in MIMES_RADIOGRAFIA.values() or mime in ('', 'application/octet-stream')):
+        return detectado
+    return mime
+
+
 def _limite_para(mime: str) -> int:
     limite = settings.imagenes_dicom_max_mb if 'dicom' in mime else settings.imagenes_max_mb
     return limite * 1024 * 1024
@@ -64,7 +84,27 @@ async def bandeja(
 ):
     _validar_rol(usuario, modalidad)
     estudios = await ListarBandeja(repositorio).ejecutar()
-    return [e for e in estudios if _nombre_modalidad(e.tipo_estudio_nombre, modalidad)]
+    filtrados = [e for e in estudios if _nombre_modalidad(e.tipo_estudio_nombre, modalidad)]
+    if modalidad != 'rayos_x':
+        return filtrados
+    resumen = await repositorio.triaje_por_estudio([e.estudio_id for e in filtrados])
+    alta, media = _umbrales_triaje()
+    salida = []
+    for e in filtrados:
+        fila = EstudioPendienteResponse.model_validate(e)
+        if e.estudio_id in resumen:
+            r = resumen[e.estudio_id]
+            fila.triaje = TriajeResumen(**r, nivel=nivel_prioridad(r['indice'], alta, media))
+        salida.append(fila)
+    return salida
+
+
+def _umbrales_triaje() -> tuple[float, float]:
+    from app.imagenes.infrastructure.vision.indice import cargar_indice
+    provisional = cargar_indice()['umbrales_provisionales']
+    alta = settings.radiology_triage_umbral_alta
+    media = settings.radiology_triage_umbral_media
+    return (provisional['alta'] if alta is None else alta, provisional['media'] if media is None else media)
 
 
 @router.get('/estudios/{estudio_id}', response_model=EstudioDetalleResponse)
@@ -106,16 +146,20 @@ async def guardar_informe(
     await _comprobar_estudio(estudio_id, modalidad, repositorio)
     caso = GuardarInforme(
         repositorio, AlmacenLocal(), settings.imagenes_tipos_lista,
-        settings.imagenes_max_mb * 1024 * 1024, settings.imagenes_max_archivos,
+        _limite_para, settings.imagenes_max_archivos,
     )
     entradas = []
     for archivo in archivos:
-        mime = (archivo.content_type or '').lower()
-        entradas.append({'nombre': archivo.filename, 'mime': mime,
-                         'contenido': await archivo.read(_limite_para(mime) + 1)})
+        mime = _mime_declarado(archivo.content_type, archivo.filename)
+        contenido = await archivo.read(_limite_para(mime) + 1)
+        entradas.append({'nombre': archivo.filename, 'mime': _mime_por_firma(mime, contenido),
+                         'contenido': contenido})
         await archivo.close()
     try:
         informe, _ = await caso.ejecutar(estudio_id, descripcion, entradas, usuario.id)
+        if modalidad == 'rayos_x' and settings.radiology_ai_enabled:
+            # Triaje visual en la cola local; no bloquea la subida ni modifica el informe.
+            await repositorio.encolar_triaje(estudio_id, informe.archivos)
     except EstudioNoEncontrado:
         raise HTTPException(status.HTTP_404_NOT_FOUND, 'El estudio no existe.') from None
     except FormatoNoAdmitido as error:
