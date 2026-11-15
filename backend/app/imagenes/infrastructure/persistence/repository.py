@@ -174,6 +174,11 @@ class RepositorioImagenSql:
             estado=estudio.estado,
             fecha_solicitud=solicitud.fecha_solicitud,
             informe=await self._ultimo_informe(estudio_id),
+            tipo_estudio_codigo=tipo.codigo,
+            codigo_paciente=paciente.codigo_paciente,
+            historia_clinica=paciente.historia_clinica,
+            fecha_nacimiento=paciente.fecha_nacimiento,
+            medico_solicitante=solicitud.medico_solicitante_nombre_snapshot,
         )
 
     async def _ultimo_informe(self, estudio_id: int) -> InformeImagen | None:
@@ -205,6 +210,7 @@ class RepositorioImagenSql:
             estudio_id=fila.estudio_id,
             numero_version=fila.numero_version,
             descripcion_texto=fila.descripcion_texto,
+            datos_ecografia=fila.datos_ecografia,
             estado=fila.estado,
             motivo_rectificacion=fila.motivo_rectificacion,
             fecha_hora_publicacion=fila.fecha_hora_publicacion,
@@ -221,7 +227,8 @@ class RepositorioImagenSql:
     # ---------- subida y publicacion ----------
 
     async def guardar_informe(
-        self, estudio_id: int, descripcion: str | None, archivos: list[dict], usuario_id: int
+        self, estudio_id: int, descripcion: str | None, archivos: list[dict], usuario_id: int,
+        datos_ecografia: dict | None = None,
     ) -> tuple[InformeImagen, bool]:
         ultimo = (
             await self.db.execute(
@@ -241,6 +248,7 @@ class RepositorioImagenSql:
             estudio_id=estudio_id,
             numero_version=numero,
             descripcion_texto=descripcion,
+            datos_ecografia=datos_ecografia,
             estado='borrador',
             version_anterior_id=ultimo.id if ultimo is not None else None,
             created_by=usuario_id,
@@ -331,6 +339,7 @@ class RepositorioImagenSql:
                 fecha_publicacion=informe.fecha_hora_publicacion if informe else None,
                 descripcion_texto=informe.descripcion_texto if informe else None,
                 archivos=informe.archivos if informe else (),
+                datos_ecografia=informe.datos_ecografia if informe else None,
             ))
         return publicados
 

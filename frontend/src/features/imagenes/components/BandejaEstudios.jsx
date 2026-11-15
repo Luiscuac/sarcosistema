@@ -5,7 +5,7 @@ import '../../laboratorio/pages/laboratorio.css'
 import { estadoEstudioImagen } from '../../consultas/utils/examenes.js'
 import '../pages/imagenes.css'
 
-export default function BandejaEstudios({ usuario, logout, modalidad = 'ecografia', bandeja }) {
+export default function BandejaEstudios({ usuario, logout, modalidad = 'ecografia', bandeja, accion }) {
   const rayosX = modalidad === 'rayos_x'
   const titulo = rayosX ? 'Rayos X' : 'Ecografía'
   const rutaBandeja = rayosX ? '/rayos-x/gestion' : '/ecografia'
@@ -29,7 +29,7 @@ export default function BandejaEstudios({ usuario, logout, modalidad = 'ecografi
     <div className="lab-main">
       <LaboratorioTopbar usuario={usuario} titulo={titulo} inicio={rutaBandeja} onLogout={logout} />
       <section className="lab-content">
-        <div className="lab-title-row"><div><p className="lab-eyebrow">{rayosX ? 'RAYOS X' : 'ECOGRAFÍAS'}</p><h1>Bandeja de estudios</h1><p className="lab-intro">Consulta cada estudio y prepara o revisa su informe.</p></div></div>
+        <div className="lab-title-row"><div><p className="lab-eyebrow">{rayosX ? 'RAYOS X' : 'ECOGRAFÍAS'}</p><h1>Bandeja de estudios</h1><p className="lab-intro">Consulta cada estudio y prepara o revisa su informe.</p></div><div className="lab-title-actions">{accion}</div></div>
         <section className="lab-list-panel" aria-label={`Estudios de ${titulo}`}>
           <div className="img-resumen" aria-label="Resumen de estudios">
             <button type="button" className={vista === 'pendientes' ? 'activo' : ''} onClick={() => setVista('pendientes')}><strong>{pendientes.length}</strong><span>Pendientes</span></button>

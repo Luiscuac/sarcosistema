@@ -4,6 +4,7 @@ from datetime import datetime
 
 from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Integer, Text
 from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.dialects.postgresql import JSONB
 
 from app.config.database import Base
 
@@ -17,6 +18,7 @@ class InformeImagen(Base):
     estudio_id: Mapped[int] = mapped_column(ForeignKey("estudio_solicitado.id"), nullable=False)
     numero_version: Mapped[int] = mapped_column(Integer, nullable=False)
     descripcion_texto: Mapped[str | None] = mapped_column(Text, nullable=True)
+    datos_ecografia: Mapped[dict | None] = mapped_column(JSONB(none_as_null=True), nullable=True)
     estado: Mapped[str] = mapped_column(Text, nullable=False)
     motivo_rectificacion: Mapped[str | None] = mapped_column(Text, nullable=True)
     usuario_publicacion_id: Mapped[int | None] = mapped_column(ForeignKey("usuario.id"), nullable=True)

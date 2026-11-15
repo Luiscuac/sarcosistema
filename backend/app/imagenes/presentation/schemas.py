@@ -1,5 +1,5 @@
 """Esquemas HTTP del modulo de imagen (ecografia clinica y asistencia RAG)."""
-from datetime import datetime
+from datetime import date, datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -52,6 +52,7 @@ class InformeImagenResponse(BaseModel):
     estado: str
     fecha_hora_publicacion: datetime | None
     archivos: list[ArchivoImagenResponse]
+    datos_ecografia: dict | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -79,6 +80,13 @@ class EstudioDetalleResponse(BaseModel):
     estado: str
     fecha_solicitud: datetime
     informe: InformeImagenResponse | None
+    tipo_estudio_codigo: str = ''
+    codigo_paciente: str = ''
+    historia_clinica: str | None = None
+    fecha_nacimiento: date | None = None
+    medico_solicitante: str | None = None
+    organos: list[str] = Field(default_factory=list)
+    max_archivos: int = 10
 
 
 class InformeRequest(BaseModel):
@@ -99,6 +107,7 @@ class EstudioPublicadoResponse(BaseModel):
     fecha_publicacion: datetime | None
     descripcion_texto: str | None
     archivos: list[ArchivoImagenResponse]
+    datos_ecografia: dict | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

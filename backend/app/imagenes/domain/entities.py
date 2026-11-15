@@ -1,6 +1,6 @@
 """Entidades del modulo de examenes complementarios de imagen."""
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,6 +56,7 @@ class InformeImagen:
     motivo_rectificacion: str | None
     fecha_hora_publicacion: datetime | None
     archivos: tuple[ArchivoImagen, ...] = ()
+    datos_ecografia: dict | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -70,6 +71,11 @@ class EstudioImagenDetalle:
     estado: str
     fecha_solicitud: datetime
     informe: InformeImagen | None
+    tipo_estudio_codigo: str = ''
+    codigo_paciente: str = ''
+    historia_clinica: str | None = None
+    fecha_nacimiento: date | None = None
+    medico_solicitante: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -83,3 +89,4 @@ class EstudioImagenPublicado:
     fecha_publicacion: datetime | None
     descripcion_texto: str | None
     archivos: tuple[ArchivoImagen, ...] = ()
+    datos_ecografia: dict | None = None

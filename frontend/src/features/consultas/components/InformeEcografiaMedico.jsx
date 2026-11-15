@@ -60,6 +60,7 @@ export default function InformeEcografiaMedico() {
         <div><dt>Estudio</dt><dd>{estudio.tipo_estudio_nombre}</dd></div>
         <div><dt>Fecha de solicitud</dt><dd>{fecha(estudio.fecha_solicitud)}</dd></div>
         <div><dt>Fecha de publicación</dt><dd>{fecha(estudio.fecha_publicacion)}</dd></div>
+        {estudio.datos_ecografia && <><div><dt>Fecha del estudio</dt><dd>{fecha(estudio.datos_ecografia.fecha_estudio)}</dd></div><div><dt>Establecimiento solicitante</dt><dd>{estudio.datos_ecografia.establecimiento || 'No registrado'}</dd></div></>}
         <div><dt>Referencia</dt><dd>{estudio.referencia_estudio}</dd></div>
       </dl>
       <section className="lab-report-study img-informe-cuerpo">
