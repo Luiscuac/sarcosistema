@@ -41,6 +41,7 @@ export default function InformeEcografiaMedico() {
   })
   const estudio = historial.data?.estudios_imagen?.find(e => e.estudio_id === Number(estudioId))
   const rayosX = ubicacion.pathname.includes('/rayos-x/') || /radiograf|rayos x/i.test(estudio?.tipo_estudio_nombre || '')
+  const esTorax = rayosX && /t[oó]rax/i.test(estudio?.tipo_estudio_nombre || '')
   const seccionVolver = rayosX ? 'rayos_x' : 'imagenes'
   const titulo = rayosX ? 'Informe de Rayos X' : 'Informe de ecografía'
 
@@ -51,7 +52,7 @@ export default function InformeEcografiaMedico() {
   const imagenes = archivos.filter(a => esImagenVisible(a.mime_type))
   const otros = archivos.filter(a => !esImagenVisible(a.mime_type))
   return <section className="lab-report-page">
-    <div className="lab-report-controls"><Link className="lab-back-link" to={`/consultas/pacientes/${pacienteId}?seccion=${seccionVolver}`}>← Volver a {rayosX ? 'Rayos X' : 'ecografías'}</Link>{rayosX && <Link className="lab-secondary-button" to={`/imagenes/rayos-x?estudio=${estudioId}`}>Abrir con asistente IA</Link>}<button className="primary-button" type="button" onClick={() => window.print()}>Imprimir o guardar PDF</button></div>
+    <div className="lab-report-controls"><Link className="lab-back-link" to={`/consultas/pacientes/${pacienteId}?seccion=${seccionVolver}`}>← Volver a {rayosX ? 'Rayos X' : 'ecografías'}</Link>{esTorax && <Link className="lab-secondary-button" to={`/imagenes/rayos-x?estudio=${estudioId}`}>Abrir con asistente IA</Link>}<button className="primary-button" type="button" onClick={() => window.print()}>Imprimir o guardar PDF</button></div>
     <article className="lab-report-document img-informe">
       <header className="lab-report-header"><div><p className="lab-report-institution">SarcoSistema · Diagnóstico por imágenes</p><h1>{titulo}</h1></div><strong>{estudio.referencia_estudio}</strong></header>
       <dl className="lab-report-meta">

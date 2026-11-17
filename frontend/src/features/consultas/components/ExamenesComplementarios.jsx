@@ -29,7 +29,7 @@ export default function ExamenesComplementarios({ historial, pacienteId, modalid
           {estudio.descripcion_texto
             ? <p className="med-eco-informe">{estudio.descripcion_texto.length > 220 ? `${estudio.descripcion_texto.slice(0, 220).trimEnd()}…` : estudio.descripcion_texto}</p>
             : <p className="med-message">El informe no tiene texto registrado.</p>}
-          <div className="med-eco-acciones"><span>{estudio.archivos?.length || 0} archivos adjuntos</span><Link className="med-lab-report-button" to={`/consultas/pacientes/${pacienteId}/${rayosX ? 'rayos-x' : 'ecografias'}/${estudio.estudio_id}/informe`}>Ver informe</Link></div>
+          <div className="med-eco-acciones"><span>{(estudio.archivos?.length || 0) === 1 ? "1 archivo adjunto" : `${estudio.archivos?.length || 0} archivos adjuntos`}</span><Link className="med-lab-report-button" to={`/consultas/pacientes/${pacienteId}/${rayosX ? 'rayos-x' : 'ecografias'}/${estudio.estudio_id}/informe`}>Ver informe</Link></div>
         </article>
       ))}
       {ejemplo}
