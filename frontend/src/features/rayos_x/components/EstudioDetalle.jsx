@@ -14,7 +14,10 @@ const cargarImagen = async (id, archivoId, signal) => {
   }
 }
 
-const PESTANAS = [['hallazgos', 'Hallazgos'], ['informe', 'Informe y comparación'], ['evidencia', 'Evidencia y límites'], ['revision', 'Tu revisión']]
+// Distancia coseno del buscador documental -> relación en lenguaje simple.
+const relacionEvidencia = d => typeof d !== 'number' ? { clave: 'media', texto: 'Relación media' } : d < 0.35 ? { clave: 'alta', texto: 'Relación alta' } : d < 0.5 ? { clave: 'media', texto: 'Relación media' } : { clave: 'baja', texto: 'Relación baja' }
+
+const PESTANAS = [['hallazgos', 'Hallazgos'], ['informe', 'Informe y comparación'], ['evidencia', 'Lecturas y límites'], ['revision', 'Tu revisión']]
 const OPCIONES_DECISION = [['aceptada_como_propuesta', 'Acepto'], ['corregida', 'Corrijo'], ['rechazada', 'Rechazo']]
 
 function SolicitarAnalisis({ confirmado, setConfirmado, proyeccion, setProyeccion, deshabilitado, onAnalizar, habilitada, compacto }) {
@@ -43,7 +46,8 @@ export default function EstudioDetalle({ id, usuario, habilitada, onVolver }) {
   const [mapa, setMapa] = useState(null)
   const [pestana, setPestana] = useState('hallazgos')
   const setProyeccion = valor => { setProyeccionBase(valor); setClave(crypto.randomUUID()) }
-  const detalle = useQuery({ queryKey: ['imagenes', usuario.id, 'estudio', id], queryFn: ({ signal }) => obtenerEstudio(id, signal) })
+  // Sin reintentos ante 404/403: no es un fallo pasajero y dejaría la pantalla "cargando" varios segundos.
+  const detalle = useQuery({ queryKey: ['imagenes', usuario.id, 'estudio', id], queryFn: ({ signal }) => obtenerEstudio(id, signal), retry: (intentos, error) => ![403, 404].includes(error?.response?.status) && intentos < 2 })
   const archivoId = detalle.data?.archivo?.id
   const imagen = useQuery({ queryKey: ['imagenes', usuario.id, 'archivo', id, archivoId], queryFn: ({ signal }) => cargarImagen(id, archivoId, signal), enabled: Boolean(archivoId), gcTime: 0, staleTime: 0 })
   useEffect(() => {
@@ -67,7 +71,9 @@ export default function EstudioDetalle({ id, usuario, habilitada, onVolver }) {
   const puedeAnalizar = habilitada && confirmado && archivoId && !solicitar.isPending && !procesando
 
   if (detalle.isPending) return <p role="status">Cargando estudio…</p>
-  if (detalle.error) return <p role="alert">{mensajeError(detalle.error)}</p>
+  if (detalle.error) return <section className="rx-ia"><header className="rx-ia-cabecera">{onVolver && <button type="button" className="lab-secondary-button" onClick={onVolver}>← Volver a la lista</button>}</header>
+    <div className="rx-ia-tarjeta" role="alert"><h3>No se puede abrir este estudio en el asistente</h3>
+      <p>{detalle.error?.response?.status === 404 ? 'El asistente de IA solo analiza radiografías de tórax con informe publicado. Este estudio no cumple esa condición; su informe sigue disponible en la ficha del paciente.' : mensajeError(detalle.error)}</p></div></section>
   const d = detalle.data
   const advertencias = resultado ? [...new Set([...(resultado.fusion.advertencias || []), ...(resultado.rag.advertencias || []), ...(resultado.vision.warnings || [])])] : []
 
@@ -117,11 +123,33 @@ export default function EstudioDetalle({ id, usuario, habilitada, onVolver }) {
             </>}
 
             {pestana === 'evidencia' && <>
-              <section><h4>Evidencia documental</h4><p>{resultado.rag.mensaje}</p>
-                {(resultado.rag.evidencia || []).map(e => <details key={e.id} className="rx-ia-plegable"><summary>{e.titulo} · {e.seccion}</summary><blockquote>{e.cita}</blockquote><p className="rx-nota">Fuente: {e.fuente}</p></details>)}
+              <section><h4>Lecturas de apoyo</h4>
+                <p className="rx-nota">Fragmentos de artículos médicos abiertos que el sistema encontró parecidos a lo que sugiere la IA. Están en inglés y sirven para consultar; no confirman nada del paciente.</p>
+                {(resultado.rag.evidencia || []).length
+                  ? <ul className="rx-ia-lecturas">{resultado.rag.evidencia.map(e => {
+                      const relacion = relacionEvidencia(e.distancia_coseno)
+                      return <li key={e.id}>
+                        <div className="rx-ia-lectura-cabecera"><strong>{e.seccion?.split(' / ').pop() || 'Fragmento'}</strong><span className={`rx-ia-relacion es-${relacion.clave}`}>{relacion.texto}</span></div>
+                        <small>{e.titulo}</small>
+                        <div className="rx-ia-lectura-acciones">
+                          <details><summary>Ver fragmento</summary><blockquote>{e.cita}</blockquote></details>
+                          {/^https:\/\//.test(e.fuente || '') && <a href={e.fuente} target="_blank" rel="noopener noreferrer">Abrir artículo ↗</a>}
+                        </div>
+                      </li>
+                    })}</ul>
+                  : <p className="rx-ia-vacio">No hay lecturas de apoyo para este análisis.</p>}
               </section>
-              <section><h4>Límites del asistente</h4><ul className="rx-ia-limites">{advertencias.map((a, i) => <li key={i}>{a}</li>)}</ul>
-                <p className="rx-nota">{resultado.fusion.criterio_tecnico.descripcion} Punto de corte técnico: {resultado.fusion.criterio_tecnico.umbral}.</p></section>
+              <section><h4>Qué tener en cuenta</h4>
+                <ul className="rx-ia-limites">
+                  <li>Solo analiza radiografías de tórax frontales.</li>
+                  <li>Sugiere parecidos, no diagnostica: un resultado bajo no descarta enfermedad.</li>
+                  <li>La comparación con el informe busca palabras clave; puede no entender redacciones poco habituales.</li>
+                </ul>
+                <details className="rx-ia-plegable"><summary>Detalle técnico ({advertencias.length})</summary>
+                  <ul className="rx-ia-limites">{advertencias.map((a, i) => <li key={i}>{a}</li>)}</ul>
+                  <p className="rx-nota">{resultado.fusion.criterio_tecnico.descripcion} Punto de corte técnico: {resultado.fusion.criterio_tecnico.umbral}.</p>
+                </details>
+              </section>
             </>}
 
             {pestana === 'revision' && <>

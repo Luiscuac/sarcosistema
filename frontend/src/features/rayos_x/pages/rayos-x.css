@@ -240,3 +240,18 @@
 .rx-ia-visor.es-analizando .rx-visor-lienzo { animation: rx-ia-pulso 1.6s ease-in-out infinite; }
 @keyframes rx-ia-pulso { 50% { opacity: .85; } }
 @media (prefers-reduced-motion: reduce) { .rx-ia-visor.es-analizando .rx-visor-lienzo { animation: none; } }
+.rx-ia-nivel.es-limite { color: var(--ia-tenue); font-weight: 600; }
+.rx-ia-nivel.es-limite .rx-ia-puntos i:first-child { background: var(--ia-media); }
+.rx-ia-lecturas { display: grid; gap: 8px; margin: 8px 0 0; padding: 0; list-style: none; }
+.rx-ia-lecturas li { display: grid; gap: 4px; padding: 10px 12px; border: 1px solid var(--ia-linea); border-radius: 6px; }
+.rx-ia-lecturas small { color: var(--ia-tenue); }
+.rx-ia-lectura-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.rx-ia-relacion { padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.rx-ia-relacion.es-alta { background: var(--ia-baja-suave); color: var(--ia-baja); }
+.rx-ia-relacion.es-media { background: #eef1f2; color: var(--ia-tenue); }
+.rx-ia-relacion.es-baja { background: #f7f9f9; color: #7a868c; }
+.rx-ia-lectura-acciones { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.rx-ia-lectura-acciones summary { color: var(--ia-marca); font-size: 13px; font-weight: 600; cursor: pointer; }
+.rx-ia-lectura-acciones a { color: var(--ia-marca); font-size: 13px; font-weight: 600; text-decoration: none; }
+.rx-ia-lectura-acciones a:hover { text-decoration: underline; }
+.rx-ia-lectura-acciones blockquote { margin: 6px 0 0; padding: 6px 10px; border-left: 3px solid #88afb1; color: var(--ia-tinta); font-size: 13px; }

@@ -4,9 +4,14 @@ import { Link, useLocation, useParams } from 'react-router-dom'
 import { obtenerHistorial, obtenerPaciente } from '../api/consultasApi.js'
 import { esImagenVisible, obtenerImagenVisible } from '../../imagenes/api/imagenesApi.js'
 import { fecha } from '../utils/paciente.js'
+import { describirEdad } from '../../../shared/utils/edad.js'
+import { partirTextoInforme } from '../../rayos_x/estudio/utils/informe.js'
 import '../../laboratorio/pages/laboratorio.css'
 import '../../laboratorio/pages/informe-solicitud.css'
 import '../../imagenes/pages/imagenes.css'
+import '../../ecografia/pages/ecografia.css'
+
+const SALTO = String.fromCharCode(10)
 
 function ImagenAdjunta({ archivo }) {
   const [url, setUrl] = useState('')
@@ -43,7 +48,6 @@ export default function InformeEcografiaMedico() {
   const rayosX = ubicacion.pathname.includes('/rayos-x/') || /radiograf|rayos x/i.test(estudio?.tipo_estudio_nombre || '')
   const esTorax = rayosX && /t[oó]rax/i.test(estudio?.tipo_estudio_nombre || '')
   const seccionVolver = rayosX ? 'rayos_x' : 'imagenes'
-  const titulo = rayosX ? 'Informe de Rayos X' : 'Informe de ecografía'
 
   if (historial.isPending || paciente.isPending) return <section className="lab-report-page"><p role="status">Cargando informe de imágenes…</p></section>
   if (historial.isError || paciente.isError || !estudio) return <section className="lab-report-page"><p role="alert" className="lab-report-error">No se pudo cargar el informe publicado para este paciente.</p><Link className="lab-back-link" to={`/consultas/pacientes/${pacienteId}?seccion=${seccionVolver}`}>Volver a {rayosX ? 'Rayos X' : 'ecografías'}</Link></section>
@@ -51,29 +55,42 @@ export default function InformeEcografiaMedico() {
   const archivos = estudio.archivos || []
   const imagenes = archivos.filter(a => esImagenVisible(a.mime_type))
   const otros = archivos.filter(a => !esImagenVisible(a.mime_type))
+  // Ecografía con plantilla: se usan los datos estructurados, como en su propio documento.
+  const eco = !rayosX && estudio.datos_ecografia ? estudio.datos_ecografia : null
+  const secciones = partirTextoInforme(estudio.descripcion_texto || '')
+  const conclusion = secciones.find(sec => /CONCLUSI/i.test(sec.titulo || ''))
+  const cuerpo = secciones.filter(sec => sec !== conclusion)
   return <section className="lab-report-page">
     <div className="lab-report-controls"><Link className="lab-back-link" to={`/consultas/pacientes/${pacienteId}?seccion=${seccionVolver}`}>← Volver a {rayosX ? 'Rayos X' : 'ecografías'}</Link>{esTorax && <Link className="lab-secondary-button" to={`/imagenes/rayos-x?estudio=${estudioId}`}>Abrir con asistente IA</Link>}<button className="primary-button" type="button" onClick={() => window.print()}>Imprimir o guardar PDF</button></div>
-    <article className="lab-report-document img-informe">
-      <header className="lab-report-header"><div><p className="lab-report-institution">SarcoSistema · Diagnóstico por imágenes</p><h1>{titulo}</h1></div><strong>{estudio.referencia_estudio}</strong></header>
-      <dl className="lab-report-meta">
-        <div><dt>Paciente</dt><dd>{paciente.data.nombre_completo}</dd></div>
-        <div><dt>Documento</dt><dd>{paciente.data.numero_documento || 'No registrado'}</dd></div>
-        <div><dt>Estudio</dt><dd>{estudio.tipo_estudio_nombre}</dd></div>
-        <div><dt>Fecha de solicitud</dt><dd>{fecha(estudio.fecha_solicitud)}</dd></div>
-        <div><dt>Fecha de publicación</dt><dd>{fecha(estudio.fecha_publicacion)}</dd></div>
-        {estudio.datos_ecografia && <><div><dt>Fecha del estudio</dt><dd>{fecha(estudio.datos_ecografia.fecha_estudio)}</dd></div><div><dt>Establecimiento solicitante</dt><dd>{estudio.datos_ecografia.establecimiento || 'No registrado'}</dd></div></>}
-        <div><dt>Referencia</dt><dd>{estudio.referencia_estudio}</dd></div>
+    <article className="lab-report-document eco-documento">
+      <header className="eco-cabecera"><div><strong>CENTRO DE SALUD INTEGRAL SARCOBAMBA</strong><p>COCHABAMBA · CERCADO</p></div><strong>{rayosX ? 'SERVICIO DE RAYOS X' : 'SERVICIO DE ECOGRAFÍA'}</strong></header>
+      <dl className="eco-identidad">
+        <div><dt>Nombre:</dt><dd>{paciente.data.nombre_completo}</dd></div>
+        <div><dt>Registro:</dt><dd>{paciente.data.codigo_paciente || 'No registrado'}</dd></div>
+        <div><dt>Fecha del estudio:</dt><dd>{fecha(estudio.datos_ecografia?.fecha_estudio || estudio.fecha_solicitud)}</dd></div>
+        <div><dt>Documento:</dt><dd>{paciente.data.numero_documento || 'No registrado'}</dd></div>
+        <div><dt>Establecimiento solicitante:</dt><dd>{estudio.datos_ecografia?.establecimiento || 'C.S. Sarcobamba'}</dd></div>
+        <div><dt>Publicado:</dt><dd>{fecha(estudio.fecha_publicacion)}</dd></div>
       </dl>
-      <section className="lab-report-study img-informe-cuerpo">
-        <div className="lab-report-study-title"><div><span>Resultado</span><h2>{estudio.tipo_estudio_nombre}</h2></div></div>
-        {estudio.descripcion_texto ? <p className="img-medico-descripcion">{estudio.descripcion_texto}</p> : <p className="lab-report-empty">El informe no tiene texto registrado.</p>}
-      </section>
-      <section className="img-informe-adjuntos">
-        <h2>Imágenes y archivos del estudio</h2>
-        {imagenes.length ? <div className="img-informe-imagenes">{imagenes.map(archivo => <ImagenAdjunta key={archivo.id} archivo={archivo} />)}</div> : <p className="lab-report-empty">No hay imágenes adjuntas al informe.</p>}
+      {paciente.data.fecha_nacimiento && <p>Edad: {describirEdad(paciente.data.fecha_nacimiento)}</p>}
+      <h2 className="eco-titulo">{estudio.tipo_estudio_nombre}</h2>
+      {eco ? <>
+          {eco.zona && <p className="eco-hallazgo"><strong>ZONA ESTUDIADA: </strong>{eco.zona}</p>}
+          {Object.entries(eco.evaluaciones || {}).map(([organo, texto]) => <p className="eco-hallazgo" key={organo}><strong>{organo.toLocaleUpperCase('es')}: </strong>{texto || 'No registrado.'}</p>)}
+          {eco.observaciones && <p className="eco-hallazgo"><strong>OBSERVACIONES: </strong>{eco.observaciones}</p>}
+          <section className="eco-conclusion"><h3>CONCLUSIÓN</h3><p>{eco.conclusion || 'No registrada.'}</p></section>
+        </>
+        : <>
+          {cuerpo.length || conclusion
+            ? cuerpo.map((sec, i) => <p className="eco-hallazgo" key={`${sec.titulo}-${i}`}>{sec.titulo && <strong>{sec.titulo.replace(/:$/, '')}: </strong>}{sec.lineas.join(SALTO)}</p>)
+            : <p className="lab-report-empty">El informe no tiene texto registrado.</p>}
+          {conclusion && <section className="eco-conclusion"><h3>CONCLUSIÓN</h3><p>{conclusion.lineas.join(SALTO)}</p></section>}
+        </>}
+      <footer className="lab-report-signature"><div><span /><p>Firma y sello del profesional responsable</p></div><p>{estudio.referencia_estudio} · Publicado el {fecha(estudio.fecha_publicacion)}</p></footer>
+      {(imagenes.length > 0 || otros.length > 0) && <section className="eco-laminas"><h3>IMÁGENES DEL ESTUDIO</h3><p>{paciente.data.nombre_completo} · {estudio.referencia_estudio}</p>
+        {imagenes.length > 0 && <div className="eco-galeria">{imagenes.map(archivo => <ImagenAdjunta key={archivo.id} archivo={archivo} />)}</div>}
         {otros.map(archivo => <p className="img-meta" key={archivo.id}>{archivo.nombre_original} · vista previa no disponible</p>)}
-      </section>
-      <footer className="lab-report-signature img-informe-firma"><div><span /><p>Firma y sello del profesional responsable</p></div><p>Documento publicado el {fecha(estudio.fecha_publicacion)} · SarcoSistema</p></footer>
+      </section>}
     </article>
   </section>
 }

@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { listarEstudios, mensajeErrorApi } from '../../api/radiologiaApi.js'
 import RayosXLayout from '../../components/RayosXLayout.jsx'
 import { agruparPorSolicitud, contarIndicadores, filtrarYOrdenarEstudios, INDICADORES_RX } from '../utils/bandejaRx.js'
+import '../../../laboratorio/components/solicitudes/solicitudes-panel.css'
 import '../gestion.css'
 
 const ACTUALIZACION_MS = 45_000
@@ -31,25 +32,37 @@ function fechaVisible(fecha) {
   return Number.isNaN(valor.getTime()) ? 'Fecha no registrada' : valor.toLocaleString('es-BO', { dateStyle: 'medium', timeStyle: 'short' })
 }
 
-function GrupoSolicitud({ solicitud }) {
-  return <article className={solicitud.prioridad === 'urgente' ? 'rxg-solicitud is-urgent' : 'rxg-solicitud'}>
-    <header className="rxg-solicitud-cabecera">
-      <div>
-        <Link to={`/rayos-x/gestion/solicitudes/${solicitud.id}`}>{solicitud.referencia}</Link>
-        <h3>{solicitud.paciente_nombre}</h3>
-        <p>{solicitud.paciente_documento ? `Documento ${solicitud.paciente_documento}` : 'Sin documento'} · {fechaVisible(solicitud.fecha_solicitud)}</p>
-      </div>
-      <dl>
-        <div><dt>Prioridad</dt><dd>{solicitud.prioridad === 'urgente' ? 'Urgente' : 'Sin prioridad'}</dd></div>
-        <div><dt>Médico</dt><dd>{solicitud.medico_solicitante || 'No registrado'}</dd></div>
-      </dl>
-    </header>
-    <div className="rxg-estudios-lista">{solicitud.estudios.map((estudio) => <div className="rxg-estudio-fila" key={estudio.estudio_id}>
-      <div className="rxg-estudio-identidad"><strong>{estudio.tipo_estudio_nombre}</strong><span>{LATERALIDAD[estudio.lateralidad] ?? 'Sin lateralidad'} · {estudio.imagenes ?? 0} {(estudio.imagenes ?? 0) === 1 ? 'imagen' : 'imágenes'}</span></div>
-      <div className="rxg-insignias"><span className={`rxg-etapa rxg-etapa--${estudio.etapa}`}>{estudio.etapa_texto}</span>{estudio.triaje && <span className={`rxg-triaje rxg-triaje--${estudio.triaje.nivel ?? 'neutro'}`}>Prioridad IA: {estudio.triaje.nivel ?? 'sin nivel'}</span>}</div>
-      <Link className="lab-secondary-button rxg-abrir" to={`/rayos-x/gestion/estudios/${estudio.estudio_id}`}>Abrir estudio</Link>
-    </div>)}</div>
-  </article>
+// Siguiente paso del estudio según su etapa (mismo patrón que la bandeja de Laboratorio).
+const SIGUIENTE_PASO = {
+  pendiente_realizacion: 'Realizar estudio', en_adquisicion: 'Continuar', pendiente_informe: 'Informar',
+  borrador: 'Continuar informe', validado: 'Ver informe', entregado: 'Ver informe',
+}
+
+function FilaEstudio({ solicitud, estudio }) {
+  const urgente = solicitud.prioridad === 'urgente'
+  const imagenes = estudio.imagenes ?? 0
+  return <tr className={`lab-table-row${urgente ? ' lab-table-row--urgent' : ''}`}>
+    <td className="rxg-celda-paciente">
+      <strong>{solicitud.paciente_nombre}</strong>
+      <span>{solicitud.paciente_documento ? `Doc. ${solicitud.paciente_documento}` : 'Sin documento'}</span>
+      <Link to={`/rayos-x/gestion/solicitudes/${solicitud.id}`}>{solicitud.referencia}</Link>
+    </td>
+    <td className="rxg-celda-estudio">
+      <strong>{estudio.tipo_estudio_nombre}</strong>
+      <span>{[LATERALIDAD[estudio.lateralidad], `${imagenes} ${imagenes === 1 ? 'imagen' : 'imágenes'}`].filter(Boolean).join(' · ')}</span>
+      {urgente && <em className="rxg-urgente">Urgente</em>}
+    </td>
+    <td className="rxg-celda-medico"><span>{solicitud.medico_solicitante || 'No registrado'}</span><small>{fechaVisible(solicitud.fecha_solicitud)}</small></td>
+    <td><div className="rxg-insignias"><span className={`rxg-etapa rxg-etapa--${estudio.etapa}`}>{estudio.etapa_texto}</span>{estudio.triaje && <span className={`rxg-triaje rxg-triaje--${estudio.triaje.nivel ?? 'neutro'}`}>IA: {estudio.triaje.nivel ?? 'sin nivel'}</span>}</div></td>
+    <td className="lab-row-action"><Link className="lab-next-action" to={`/rayos-x/gestion/estudios/${estudio.estudio_id}`}>{SIGUIENTE_PASO[estudio.etapa] ?? 'Abrir estudio'}</Link></td>
+  </tr>
+}
+
+function TablaEstudios({ solicitudes }) {
+  return <div className="lab-table-wrap rxg-tabla"><table className="lab-table">
+    <thead><tr><th scope="col">Paciente / solicitud</th><th scope="col">Estudio</th><th scope="col">Médico / fecha</th><th scope="col">Etapa</th><th scope="col">Acción</th></tr></thead>
+    <tbody>{solicitudes.flatMap((solicitud) => solicitud.estudios.map((estudio) => <FilaEstudio key={estudio.estudio_id} solicitud={solicitud} estudio={estudio} />))}</tbody>
+  </table></div>
 }
 
 export default function PanelRayosXPage({ usuario, logout }) {
@@ -102,7 +115,7 @@ export default function PanelRayosXPage({ usuario, logout }) {
       {consulta.isLoading && <div className="rxg-estado"><strong>Cargando estudios...</strong><span>La bandeja estará disponible en un momento.</span></div>}
       {consulta.isError && <div className="rxg-estado" role="alert"><strong>No se pudo cargar la bandeja.</strong><span>{mensajeErrorApi(consulta.error, 'Comprueba la conexión e intenta nuevamente.')}</span></div>}
       {consulta.isSuccess && solicitudes.length === 0 && <div className="rxg-estado"><strong>{!listaBaseVacia && hayFiltros ? 'No hay estudios con esos filtros.' : vista === 'activos' ? 'No hay estudios en curso.' : 'Todavía no hay estudios finalizados.'}</strong><span>{!listaBaseVacia && hayFiltros ? 'Prueba otra búsqueda o quita los filtros activos.' : vista === 'activos' ? usuario?.rol === 'rayos_x' ? 'Registra una nueva solicitud para iniciar el recorrido.' : 'Los estudios aparecerán cuando el personal técnico complete la adquisición.' : 'Los estudios aparecerán aquí cuando concluyan su recorrido.'}</span></div>}
-      {consulta.isSuccess && solicitudes.length > 0 && <div className="rxg-solicitudes">{solicitudes.map((solicitud) => <GrupoSolicitud key={solicitud.id} solicitud={solicitud} />)}</div>}
+      {consulta.isSuccess && solicitudes.length > 0 && <TablaEstudios solicitudes={solicitudes} />}
     </section>
   </RayosXLayout>
 }

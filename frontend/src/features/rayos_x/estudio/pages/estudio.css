@@ -153,3 +153,7 @@
 .rxe-visor-dialogo { padding: var(--rx-espacio-3); border-radius: var(--rx-radio-m); background: var(--rx-negatoscopio, #121b1f); color: var(--rx-negatoscopio-texto, #d9e3e6); }
 .rxe-visor-dialogo .rx-visor-ayuda, .rxe-work-visor .rx-visor-ayuda { color: var(--rx-negatoscopio-tenue, #93a5ab); }
 .rxe-work-visor { color: var(--rx-negatoscopio-texto, #d9e3e6); }
+/* Láminas de imágenes del informe (formato de ecografía) */
+.rxe-lamina { margin: 0; text-align: center; }
+.rxe-lamina img { display: block; width: 100%; max-height: 420px; object-fit: contain; background: #000; }
+.rxe-lamina figcaption { margin-top: 6px; font-size: 13px; }

@@ -180,3 +180,15 @@
 a.primary-button { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0 18px; border-radius: var(--rx-radio-s); text-decoration: none; white-space: nowrap; }
 a.primary-button:hover, a.primary-button:focus-visible { color: #fff; text-decoration: none; }
 a.primary-button:focus-visible { outline: none; box-shadow: var(--rx-foco); }
+
+/* Bandeja en tabla (mismo patrón que Laboratorio) */
+.rxg-tabla { margin-top: 4px; }
+.rxg-tabla td { vertical-align: middle; }
+.rxg-celda-paciente, .rxg-celda-estudio, .rxg-celda-medico { display: table-cell; }
+.rxg-celda-paciente strong, .rxg-celda-estudio strong { display: block; font-size: 14px; font-weight: 600; }
+.rxg-celda-paciente span, .rxg-celda-estudio span, .rxg-celda-medico small { display: block; margin-top: 3px; color: var(--muted); font-size: 12px; }
+.rxg-celda-paciente a { display: inline-block; margin-top: 3px; color: var(--brand); font-size: 12px; font-weight: 600; text-decoration: none; }
+.rxg-celda-paciente a:hover { text-decoration: underline; }
+.rxg-celda-medico span { font-size: 13px; }
+.rxg-urgente { display: inline-block; margin-top: 5px; padding: 1px 8px; border-radius: 999px; background: #fbe9e4; color: #a6351c; font-size: 11px; font-style: normal; font-weight: 700; }
+.rxg-tabla .lab-row-action .lab-next-action { min-width: 140px; justify-content: center; }

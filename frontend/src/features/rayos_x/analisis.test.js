@@ -91,6 +91,7 @@ import { nivelSenal } from './analisis.js'
 test('nivel de señal en lenguaje simple', () => {
   assert.equal(nivelSenal(0.9).clave, 'alta')
   assert.equal(nivelSenal(0.6).clave, 'moderada')
+  assert.equal(nivelSenal(0.52).clave, 'limite')
   assert.equal(nivelSenal(0.2).clave, 'baja')
   assert.equal(nivelSenal(undefined).clave, 'sin_dato')
 })
