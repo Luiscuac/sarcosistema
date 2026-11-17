@@ -2,7 +2,7 @@
 
 Prefijo: `/imagenes/radiologia`. Todas las rutas exigen JWT Bearer. Cliente frontend: `frontend/src/features/rayos_x/api/radiologiaApi.js`.
 
-Roles: **T** = `rayos_x` (recepción y técnico), **R** = `radiologo` (médico informante), **M** = `medico` (solicitante).
+Roles: **T** = `rayos_x` (a cargo de todo el flujo: recepción, adquisición, informe y validación), **M** = `medico` (solicitante). El rol `radiologo` fue eliminado (migración `20261117_0020`).
 Solo **R** redacta y valida informes. **T** nunca valida.
 
 Errores: `{"detail": "mensaje"}` con 400 (regla incumplida), 403, 404, 409 (conflicto de estado o de versión), 413, 415, 422.

@@ -45,7 +45,7 @@ async def rx(monkeypatch, tmp_path, client):
                 hash_ficticio = Argon2PasswordHasher().hashear(clave)
                 await demo.preparar_medico_demo(db, hash_ficticio)
                 nombres = {'medico': demo.USUARIO_DEMO}
-                for rol in ('rayos_x', 'radiologo', 'laboratorio'):
+                for rol in ('rayos_x', 'laboratorio'):
                     trabajador = await db.scalar(text("INSERT INTO trabajador(identificador,nombre_completo,estado,fecha_inicio) VALUES (:i,'Profesional FICTICIO','activo',CURRENT_DATE) RETURNING id"), {'i': rol + sufijo})
                     nombres[rol] = rol + sufijo
                     await db.execute(text("INSERT INTO usuario(identificador_acceso,contrasena_hash,rol_id,trabajador_id,estado) SELECT :i,:h,id,:t,'activo' FROM rol WHERE codigo=:r"), {'i': nombres[rol], 'h': hash_ficticio, 't': trabajador, 'r': rol})
@@ -93,7 +93,7 @@ async def adquirir(rx, estudio_id, proyecciones, lateralidad=None, imagenes=(10,
 
 
 async def informar(rx, estudio_id, contenido, validar=True):
-    c, h = rx['c'], rx['h']['radiologo']
+    c, h = rx['c'], rx['h']['rayos_x']
     borrador = await c.put(f'{R}/estudios/{estudio_id}/informe/borrador', headers=h,
                            json={'contenido': contenido, 'texto_final': None, 'version_edicion': None})
     assert borrador.status_code == 200, borrador.text
@@ -133,7 +133,7 @@ async def test_caso_1_torax_completo_hasta_informe_validado(rx):
     contenido = {'generales': {'tecnica': 'Proyecciones PA y lateral.', 'indicacion': 'Tos de 3 semanas.',
                                'conclusion': 'Sin evidencia de consolidación.'},
                  'apartados': {'campos_pulmonares': 'Sin opacidades focales.', 'indice_cardiotoracico': 0.45}}
-    previa = await c.post(f'{R}/estudios/{estudio_id}/informe/vista-previa', json={'contenido': contenido}, headers=h['radiologo'])
+    previa = await c.post(f'{R}/estudios/{estudio_id}/informe/vista-previa', json={'contenido': contenido}, headers=h['rayos_x'])
     assert 'HALLAZGOS:' in previa.json()['texto'] and 'Índice cardiotorácico: 0,45' in previa.json()['texto']
 
     final = await informar(rx, estudio_id, contenido)
@@ -158,7 +158,7 @@ async def test_caso_2_rodilla_derecha_lateralidad_y_plantilla_distinta(rx):
 
     creada = await solicitar(rx, [{'tipo_estudio_id': rodilla['id'], 'lateralidad': 'derecha', 'protocolo': 'AP_LAT'}])
     estudio_id = creada.json()['estudios'][0]['estudio_id']
-    detalle = (await c.get(f'{R}/estudios/{estudio_id}', headers=h['radiologo'])).json()
+    detalle = (await c.get(f'{R}/estudios/{estudio_id}', headers=h['rayos_x'])).json()
     assert detalle['estudio']['lateralidad'] == 'derecha'
     claves = {a['clave'] for a in detalle['config']['plantilla']['apartados']}
     assert 'derrame' in claves and 'campos_pulmonares' not in claves
@@ -166,7 +166,7 @@ async def test_caso_2_rodilla_derecha_lateralidad_y_plantilla_distinta(rx):
     incompleta = await c.post(f'{R}/estudios/{estudio_id}/adquisicion/completar', headers=h['rayos_x'])
     assert incompleta.status_code == 409 and incompleta.json()['detail']['pendientes']
     await adquirir(rx, estudio_id, ['AP', 'LAT'], lateralidad='derecha')
-    ajeno = await c.put(f'{R}/estudios/{estudio_id}/informe/borrador', headers=h['radiologo'],
+    ajeno = await c.put(f'{R}/estudios/{estudio_id}/informe/borrador', headers=h['rayos_x'],
                         json={'contenido': {'generales': {}, 'apartados': {'campos_pulmonares': 'x'}}, 'texto_final': None, 'version_edicion': None})
     assert ajeno.status_code == 400  # apartado de torax en un estudio de rodilla
 
@@ -201,7 +201,7 @@ async def test_caso_4_solicitud_multiple_mantiene_estudios_independientes(rx):
     detalle_rodilla = (await c.get(f'{R}/estudios/{rodilla}', headers=h['rayos_x'])).json()
     assert detalle_rodilla['imagenes'] == [] and detalle_rodilla['informe'] is None
 
-    activos = (await c.get(f'{R}/estudios', headers=h['radiologo'])).json()
+    activos = (await c.get(f'{R}/estudios', headers=h['rayos_x'])).json()
     assert rodilla in {e['estudio_id'] for e in activos} and torax not in {e['estudio_id'] for e in activos}
     finalizados = (await c.get(f'{R}/estudios?vista=finalizados', headers=h['rayos_x'])).json()
     assert torax in {e['estudio_id'] for e in finalizados}
@@ -215,11 +215,11 @@ async def test_caso_5_borrador_retomado_validacion_y_permisos(rx):
     estudio_id = creada.json()['estudios'][0]['estudio_id']
     url = f'{R}/estudios/{estudio_id}'
 
-    antes = await c.put(f'{url}/informe/borrador', headers=h['radiologo'], json={'contenido': {'generales': {}, 'apartados': {}}, 'texto_final': None, 'version_edicion': None})
+    antes = await c.put(f'{url}/informe/borrador', headers=h['rayos_x'], json={'contenido': {'generales': {}, 'apartados': {}}, 'texto_final': None, 'version_edicion': None})
     assert antes.status_code == 409  # sin adquisicion completada no hay informe
     await adquirir(rx, estudio_id, ['PA'], imagenes=(40,))
 
-    # El medico solicitante y otros roles no redactan ni validan (el personal de Rayos X si, igual que el radiologo).
+    # El medico solicitante y otros roles no redactan ni validan (el personal de Rayos X sí).
     for rol in ('medico', 'laboratorio'):
         r = await c.put(f'{url}/informe/borrador', headers=h[rol], json={'contenido': {}, 'texto_final': None, 'version_edicion': None})
         assert r.status_code == 403
@@ -231,23 +231,23 @@ async def test_caso_5_borrador_retomado_validacion_y_permisos(rx):
     incompleto = await informar(rx, estudio_id, {'generales': {}, 'apartados': {'campos_pulmonares': 'Opacidad basal derecha.'}}, validar=False)
     assert incompleto['estudio']['etapa'] == 'borrador' and incompleto['informe']['version_edicion'] == 1
     assert incompleto['pendientes']['validacion']
-    sin_conclusion = await c.post(f'{url}/informe/validar', headers=h['radiologo'], json={'version_edicion': 1, 'responsable_nombre': 'Dra. FICTICIA', 'confirmo': True})
+    sin_conclusion = await c.post(f'{url}/informe/validar', headers=h['rayos_x'], json={'version_edicion': 1, 'responsable_nombre': 'Dra. FICTICIA', 'confirmo': True})
     assert sin_conclusion.status_code == 409 and 'conclusión' in ' '.join(sin_conclusion.json()['detail']['pendientes']).lower()
 
-    retomado = (await c.get(url, headers=h['radiologo'])).json()
+    retomado = (await c.get(url, headers=h['rayos_x'])).json()
     assert retomado['informe']['contenido']['apartados']['campos_pulmonares'] == 'Opacidad basal derecha.'
     contenido = retomado['informe']['contenido'] | {'generales': {'conclusion': 'Opacidad basal derecha a correlacionar.'}}
-    obsoleto = await c.put(f'{url}/informe/borrador', headers=h['radiologo'], json={'contenido': contenido, 'texto_final': None, 'version_edicion': 99})
+    obsoleto = await c.put(f'{url}/informe/borrador', headers=h['rayos_x'], json={'contenido': contenido, 'texto_final': None, 'version_edicion': 99})
     assert obsoleto.status_code == 409
-    guardado = await c.put(f'{url}/informe/borrador', headers=h['radiologo'], json={'contenido': contenido, 'texto_final': None, 'version_edicion': 1})
+    guardado = await c.put(f'{url}/informe/borrador', headers=h['rayos_x'], json={'contenido': contenido, 'texto_final': None, 'version_edicion': 1})
     assert guardado.json()['informe']['version_edicion'] == 2
-    validado = await c.post(f'{url}/informe/validar', headers=h['radiologo'], json={'version_edicion': 2, 'responsable_nombre': 'Dra. FICTICIA', 'confirmo': True})
+    validado = await c.post(f'{url}/informe/validar', headers=h['rayos_x'], json={'version_edicion': 2, 'responsable_nombre': 'Dra. FICTICIA', 'confirmo': True})
     assert validado.status_code == 200 and validado.json()['permisos']['agregar_adenda']
 
     # Validado = inmutable: ni borrador, ni imagenes, ni adquisicion; solo adendas.
-    assert (await c.put(f'{url}/informe/borrador', headers=h['radiologo'], json={'contenido': contenido, 'texto_final': None, 'version_edicion': 2})).status_code == 409
+    assert (await c.put(f'{url}/informe/borrador', headers=h['rayos_x'], json={'contenido': contenido, 'texto_final': None, 'version_edicion': 2})).status_code == 409
     assert (await c.post(f'{url}/imagenes', files=[('archivos', ('n.png', png(99), 'image/png'))], headers=h['rayos_x'])).status_code == 409
-    adenda = await c.post(f'{url}/adendas', headers=h['radiologo'], json={'motivo': 'Aclaración', 'texto': 'Se sugiere control en 4 semanas.', 'autor_nombre': 'Dra. FICTICIA'})
+    adenda = await c.post(f'{url}/adendas', headers=h['rayos_x'], json={'motivo': 'Aclaración', 'texto': 'Se sugiere control en 4 semanas.', 'autor_nombre': 'Dra. FICTICIA'})
     assert adenda.status_code == 200 and adenda.json()['adendas'][0]['texto'].startswith('Se sugiere')
     assert adenda.json()['informe']['texto'] == validado.json()['informe']['texto']
     with pytest.raises(Exception, match='históricas'):
@@ -277,7 +277,7 @@ async def test_caso_6_imagenes_multiples_vinculo_retiro_y_acceso(rx):
     assert pdf.status_code == 415
     repetida = await c.post(f'{url}/imagenes', files=[archivos[0]], headers=h['rayos_x'])
     assert repetida.status_code == 400
-    assert (await c.post(f'{url}/imagenes', files=[('archivos', ('r.png', png(90), 'image/png'))], headers=h['radiologo'])).status_code == 403
+    assert (await c.post(f'{url}/imagenes', files=[('archivos', ('r.png', png(90), 'image/png'))], headers=h['medico'])).status_code == 403
 
     tercera = imagenes[2]['id']
     asignada = await c.patch(f'{url}/imagenes/{tercera}', json={'proyeccion_codigo': 'LAT'}, headers=h['rayos_x'])
@@ -290,7 +290,7 @@ async def test_caso_6_imagenes_multiples_vinculo_retiro_y_acceso(rx):
     # Acceso a binarios: personal de Rayos X si; medico solo tras validar; otros roles y anonimos no.
     archivo = imagenes[0]['archivo_id']
     assert (await c.get(f'/imagenes/archivos/{archivo}', headers=h['rayos_x'])).content == png(60)
-    vista = await c.get(f'/imagenes/archivos/{archivo}/vista', headers=h['radiologo'])
+    vista = await c.get(f'/imagenes/archivos/{archivo}/vista', headers=h['rayos_x'])
     assert vista.headers['content-type'] == 'image/png', vista.text
     assert (await c.get(f'/imagenes/archivos/{archivo}', headers=h['medico'])).status_code == 403
     assert (await c.get(f'/imagenes/archivos/{archivo}', headers=h['laboratorio'])).status_code == 403
@@ -306,7 +306,7 @@ async def test_caso_6_imagenes_multiples_vinculo_retiro_y_acceso(rx):
     assert externo.status_code == 200, externo.text
     registro = externo.json()['informes_externos'][0]
     assert registro['establecimiento'] == 'Centro externo FICTICIO' and externo.json()['informe'] is None
-    assert (await c.get(f"{R}/informes-externos/{registro['id']}/archivo", headers=h['radiologo'])).content == b'%PDF-1.4 ficticio'
+    assert (await c.get(f"{R}/informes-externos/{registro['id']}/archivo", headers=h['rayos_x'])).content == b'%PDF-1.4 ficticio'
     assert (await c.get(f"{R}/informes-externos/{registro['id']}/archivo", headers=h['medico'])).status_code == 403
 
 
@@ -345,14 +345,14 @@ async def test_recepcion_busca_y_registra_pacientes_y_medicos(rx):
     assert (await c.get(f'{R}/pacientes?termino=Paciente', headers=h['medico'])).status_code == 403
 
 
-async def test_radiologo_habilita_y_deshabilita_estudios_del_catalogo(rx):
+async def test_personal_rx_habilita_y_deshabilita_estudios_del_catalogo(rx):
     c, h = rx['c'], rx['h']
     craneo = rx['tipos']['RX_CRANEO']['id']
     assert (await c.patch(f'{R}/catalogo/estudios/{craneo}', json={'activo': False}, headers=h['medico'])).status_code == 403
-    assert (await c.patch(f'{R}/catalogo/estudios/{craneo}', json={'activo': False}, headers=h['radiologo'])).json()['activo'] is False
+    assert (await c.patch(f'{R}/catalogo/estudios/{craneo}', json={'activo': False}, headers=h['rayos_x'])).json()['activo'] is False
     visibles = {e['codigo'] for e in (await c.get(f'{R}/catalogo', headers=h['medico'])).json()['estudios']}
     assert 'RX_CRANEO' not in visibles
-    todos = {e['codigo'] for e in (await c.get(f'{R}/catalogo?todos=true', headers=h['radiologo'])).json()['estudios']}
+    todos = {e['codigo'] for e in (await c.get(f'{R}/catalogo?todos=true', headers=h['rayos_x'])).json()['estudios']}
     assert 'RX_CRANEO' in todos
     deshabilitado = await solicitar(rx, [{'tipo_estudio_id': craneo, 'protocolo': 'RUTINA'}])
     assert deshabilitado.status_code == 400

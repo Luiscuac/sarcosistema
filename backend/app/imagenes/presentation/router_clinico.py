@@ -1,4 +1,4 @@
-"""Endpoints del radiologo: bandeja, subida de imagenes/informe y publicacion."""
+"""Endpoints del personal de imágenes: bandeja, subida de imagenes/informe y publicacion."""
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -37,15 +37,15 @@ from app.imagenes.presentation.schemas import (
 router = APIRouter(tags=['imagenes'])
 
 ROL_POR_MODALIDAD = {'ecografia': 'imagenes', 'rayos_x': 'rayos_x'}
-# En Rayos X el personal del área y el médico radiólogo publican (validan) informes.
-ROLES_POR_MODALIDAD = {'ecografia': ('imagenes',), 'rayos_x': ('rayos_x', 'radiologo')}
-ROLES_PUBLICAN = {'ecografia': ('imagenes',), 'rayos_x': ('rayos_x', 'radiologo')}
+# En Rayos X el personal del área publica (valida) los informes.
+ROLES_POR_MODALIDAD = {'ecografia': ('imagenes',), 'rayos_x': ('rayos_x',)}
+ROLES_PUBLICAN = {'ecografia': ('imagenes',), 'rayos_x': ('rayos_x',)}
 
 
 def _validar_rol(usuario: Usuario, modalidad: str, publicar: bool = False) -> None:
     permitidos = (ROLES_PUBLICAN if publicar else ROLES_POR_MODALIDAD)[modalidad]
     if usuario.rol not in permitidos:
-        mensaje = ('Solo el médico radiólogo valida informes de Rayos X.' if publicar and usuario.rol == 'rayos_x'
+        mensaje = ('Solo el personal de Rayos X valida informes de Rayos X.' if publicar and usuario.rol == 'rayos_x'
                    else 'Sin acceso a esta área de imágenes.')
         raise HTTPException(status.HTTP_403_FORBIDDEN, mensaje)
 
@@ -149,9 +149,6 @@ async def guardar_informe(
     archivos: list[UploadFile] = File(default=[]),
 ):
     _validar_rol(usuario, modalidad)
-    if modalidad == 'rayos_x' and archivos and usuario.rol != 'rayos_x':
-        # La carga de imágenes es del técnico; el radiólogo solo informa (API de radiología convencional).
-        raise HTTPException(status.HTTP_403_FORBIDDEN, 'Solo el personal de Rayos X sube imágenes del estudio.')
     await _comprobar_estudio(estudio_id, modalidad, repositorio)
     caso = GuardarInforme(
         repositorio, AlmacenLocal(), settings.imagenes_tipos_lista,

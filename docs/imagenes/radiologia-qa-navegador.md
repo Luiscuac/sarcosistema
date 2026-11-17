@@ -14,6 +14,8 @@ Entorno local: PostgreSQL en Docker migrado a `20261116_0019`, uvicorn y Vite. C
 | Informe impreso | radiólogo | Correcto |
 | Informe validado en la ficha del paciente | médico | Correcto |
 
+> Nota 17/11/2026: después de esta prueba se eliminó el rol `radiologo`; el informe lo redacta y valida `rayos_x`.
+
 ## Correcciones hechas
 
 - Tildes: "Indicación clínica", "Tórax" (filtro), posiciones del paciente, "versión", textos de confirmación.

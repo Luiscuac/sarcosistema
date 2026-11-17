@@ -54,7 +54,7 @@ function GrupoSolicitud({ solicitud }) {
 }
 
 export default function PanelRayosXPage({ usuario, logout }) {
-  const indicadorInicial = usuario?.rol === 'radiologo' ? 'pendiente_informe' : 'pendiente_realizacion'
+  const indicadorInicial = 'pendiente_realizacion'
   const [vista, setVista] = useState('activos')
   const [indicador, setIndicador] = useState(indicadorInicial)
   const [busqueda, setBusqueda] = useState('')

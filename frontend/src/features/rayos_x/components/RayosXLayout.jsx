@@ -5,7 +5,6 @@ import '../pages/rx-tokens.css'
 
 export const RUTA_RAYOS_X = '/rayos-x/gestion'
 export const ROL_TECNICO = 'rayos_x'
-export const ROL_RADIOLOGO = 'radiologo'
 
 /**
  * Marco común de las pantallas de gestión de Rayos X: misma barra y navegación que Laboratorio.

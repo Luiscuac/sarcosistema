@@ -103,7 +103,7 @@ class RepositorioImagenSql:
         await self.db.flush()
         return modelo.id
 
-    # ---------- bandeja del radiologo ----------
+    # ---------- bandeja del personal de imágenes ----------
 
     async def listar_catalogo_imagen(self, modalidad: str | None = 'ecografia') -> list[dict]:
         """Tipos de imagen activos, opcionalmente filtrados por modalidad clínica."""

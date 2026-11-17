@@ -4,7 +4,6 @@ Cambio aditivo. No modifica ni elimina datos existentes:
 - `tipo_estudio.configuracion_radiologia` (JSONB): region, lateralidad, proyecciones, protocolos y plantilla.
 - Tablas `radiologia_*`: detalle de la solicitud por estudio, adquisicion tecnica, vinculo imagen-proyeccion,
   contenido estructurado del informe, adendas e informes externos.
-- Rol `radiologo` (medico informante): unico que redacta y valida informes de Rayos X.
 - Siembra el catalogo inicial desde `app.imagenes.domain.catalogo_radiologia` sin tocar los nombres existentes.
 
 `informe_imagen` y `archivo_imagen` no cambian: la asistencia IA sigue leyendo `descripcion_texto`,
@@ -134,19 +133,7 @@ def upgrade() -> None:
     """)
     op.execute('CREATE INDEX ix_radiologia_informe_externo_estudio ON public.radiologia_informe_externo (estudio_id)')
 
-    # Rol del medico informante. El rol rayos_x (tecnico / recepcion) no valida informes.
-    op.execute("""
-        INSERT INTO public.rol (codigo, nombre, descripcion, activo)
-        VALUES ('radiologo', 'Médico radiólogo', 'Interpreta, redacta y valida informes de Rayos X', TRUE)
-        ON CONFLICT (codigo) DO NOTHING
-    """)
-    op.execute("""
-        INSERT INTO public.rol_permiso (rol_id, permiso_id)
-        SELECT rol.id, permiso.id FROM public.rol AS rol CROSS JOIN public.permiso AS permiso
-         WHERE rol.codigo = 'radiologo'
-           AND permiso.codigo IN ('crear','modificar','publicar','rectificar','consultar','acceder')
-        ON CONFLICT DO NOTHING
-    """)
+    # Un solo rol (rayos_x) se encarga del flujo completo: no se crea un rol de médico informante.
 
     conexion = op.get_bind()
     for estudio in ESTUDIOS:

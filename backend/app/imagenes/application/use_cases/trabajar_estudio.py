@@ -1,4 +1,4 @@
-"""Casos de uso del radiologo: bandeja, subida de imagenes/informe y publicacion."""
+"""Casos de uso del personal de imágenes: bandeja, subida de imagenes/informe y publicacion."""
 from app.imagenes.domain.entities import ArchivoImagen, InformeImagen
 from app.imagenes.domain.errors import (
     ArchivoDemasiadoGrande,

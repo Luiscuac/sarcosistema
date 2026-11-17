@@ -27,10 +27,10 @@ No existe Caja ni Facturación en el proyecto: no se integra.
 | Sin registro técnico | Adquisición: proyecciones realizadas, posición, calidad, repeticiones y parámetros opcionales |
 | Archivos ligados a cada versión del informe; cada guardado creaba una versión | Imágenes ligadas al estudio y a su proyección; el borrador se edita en su sitio |
 | Informe de texto libre | Informe estructurado por plantilla, con texto final revisable |
-| El rol `rayos_x` redactaba y publicaba | `rayos_x` hace todo el flujo (recibe, adquiere, redacta y valida); `radiologo` se conserva como opcional |
+| El rol `rayos_x` redactaba y publicaba | `rayos_x` hace todo el flujo (recibe, adquiere, redacta y valida); el rol `radiologo` se eliminó |
 | Sin correcciones posteriores | Adendas con autor, motivo y fecha |
 | PDF adjunto sin semántica | Informe externo como entidad aparte, siempre rotulado como externo |
-| El rol `rayos_x` podía publicar por la ruta anterior | La ruta anterior también exige `radiologo` para publicar Rayos X |
+| El rol `rayos_x` podía publicar por la ruta anterior | La ruta anterior solo permite publicar Rayos X a `rayos_x` (rol único del flujo) |
 
 Se conserva sin cambios: ecografía, la asistencia IA del médico (`/imagenes/analisis`), el triaje (ahora solo para tórax) y la consulta del médico desde la ficha del paciente.
 
@@ -43,7 +43,7 @@ Se conserva sin cambios: ecografía, la asistencia IA del médico (`/imagenes/an
 - `radiologia_informe` (1:1 con `informe_imagen`): contenido estructurado, plantilla usada y control de edición concurrente.
 - `radiologia_adenda`: histórica, protegida por trigger.
 - `radiologia_informe_externo`: PDF externo con procedencia.
-- Rol `radiologo`.
+- Sin rol `radiologo`: la migración `20261117_0020` reasigna esos usuarios a `rayos_x` y elimina el rol.
 
 No se crean tablas por tipo de radiografía ni se cambian los estados de `estudio_solicitado` (compartidos con Laboratorio). La **etapa** radiológica se deriva:
 
@@ -66,7 +66,6 @@ No se crean tablas por tipo de radiografía ni se cambian los estados de `estudi
 | Rol | Puede |
 |---|---|
 | `rayos_x` (recepción, técnico e informante) | Todo el flujo: crear solicitudes, registrar adquisición, subir y retirar imágenes, adjuntar informe externo, marcar no realizado, redactar, guardar borrador, validar, agregar adendas, entregar y habilitar o deshabilitar estudios del catálogo |
-| `radiologo` (opcional, conservado) | Ver imágenes, redactar, validar, agregar adendas y gestionar el catálogo. No crea solicitudes ni adquiere |
 | `medico` (solicitante) | Solicitar desde la ficha del paciente y ver los informes validados |
 
 ## 5. Reparto del trabajo

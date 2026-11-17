@@ -338,15 +338,3 @@ async def test_dicom_se_acepta_y_guarda_extension(client, radiologo_sesion, repo
     assert archivo['mime_type'] == 'application/dicom'
     assert archivo['nombre_original'] == 'estudio.dcm'
 
-
-@pytest.mark.asyncio
-async def test_radiologo_no_sube_imagenes_por_la_ruta_heredada(client, repositorio_imagen):
-    app.dependency_overrides[usuario_actual] = lambda: Usuario(22, 'radiologo_prueba', 'radiologo', True)
-    try:
-        respuesta = await client.post(
-            '/imagenes/estudios/3/informes?modalidad=rayos_x',
-            files=[('archivos', ('rx.png', PNG_MINIMO, 'image/png'))],
-        )
-    finally:
-        app.dependency_overrides.pop(usuario_actual, None)
-    assert respuesta.status_code == 403

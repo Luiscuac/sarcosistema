@@ -18,8 +18,8 @@ import InformeImpresoRxPage from '../features/rayos_x/estudio/pages/InformeImpre
 import EnfermeriaPage from '../features/enfermeria/pages/EnfermeriaPage.jsx'
 import FarmaciaPage from '../features/enfermeria/pages/FarmaciaPage.jsx'
 import RayosXPage from '../features/rayos_x/pages/RayosXPage.jsx'
-// Recepción y técnico (rayos_x) y médico informante (radiologo) comparten el área de gestión.
-const ROLES_RAYOS_X = ['rayos_x', 'radiologo']
+// El personal de Rayos X (rayos_x) se encarga de todo el flujo: solicitud, imágenes e informe.
+const ROLES_RAYOS_X = ['rayos_x']
 
 function RedireccionEstudioRx() {
   const { estudioId } = useParams()

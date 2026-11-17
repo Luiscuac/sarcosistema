@@ -102,9 +102,6 @@ def test_validar_exige_conclusion_hallazgo_e_imagenes():
     ('rayos_x', 'pendiente_muestra', 'pendiente_realizacion', {'registrar_adquisicion', 'gestionar_imagenes', 'adjuntar_externo', 'marcar_no_realizado'}),
     ('rayos_x', 'resultado_en_preparacion', 'borrador', {'registrar_adquisicion', 'gestionar_imagenes', 'adjuntar_externo', 'redactar_informe', 'validar'}),
     ('rayos_x', 'publicado', 'validado', {'adjuntar_externo', 'entregar', 'agregar_adenda'}),
-    ('radiologo', 'pendiente_muestra', 'en_adquisicion', {'adjuntar_externo'}),
-    ('radiologo', 'resultado_en_preparacion', 'pendiente_informe', {'redactar_informe', 'validar', 'adjuntar_externo'}),
-    ('radiologo', 'publicado', 'validado', {'agregar_adenda', 'adjuntar_externo'}),
     ('medico', 'publicado', 'validado', set()),
     ('rayos_x', 'no_realizado', 'no_realizado', set()),
 ])

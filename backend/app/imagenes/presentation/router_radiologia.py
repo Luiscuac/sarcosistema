@@ -1,7 +1,7 @@
 """Radiologia convencional: recepcion, adquisicion, imagenes e informe estructurado.
 
-Contrato: docs/imagenes/radiologia-api.md. Roles: `rayos_x` (recepcion y tecnico),
-`radiologo` (medico informante; tambien redacta y valida, igual que `rayos_x`) y `medico` (solicitante).
+Contrato: docs/imagenes/radiologia-api.md. Roles: `rayos_x` (a cargo de todo el flujo: recepcion, adquisicion, informe y validacion)
+y `medico` (solicitante).
 """
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ from app.imagenes.infrastructure.storage.almacen_local import AlmacenLocal
 
 router = APIRouter(prefix='/radiologia', tags=['radiologia'])
 
-TECNICO, RADIOLOGO, MEDICO = 'rayos_x', 'radiologo', 'medico'
+TECNICO, MEDICO = 'rayos_x', 'medico'  # TECNICO: personal de Rayos X, a cargo de todo el flujo
 MIMES_IMAGEN = ('image/jpeg', 'image/png', 'application/dicom')
 EXTENSIONES = {'image/jpeg': 'jpg', 'image/png': 'png', 'application/dicom': 'dcm', 'application/pdf': 'pdf'}
 
@@ -60,15 +60,14 @@ def permisos(rol: str, detalle: dict) -> dict:
     estado = detalle['estudio']['estado']
     etapa = detalle['estudio']['etapa']
     abierto = estado in ('pendiente_muestra', 'resultado_en_preparacion')
-    tecnico = rol == TECNICO
-    radiologo = rol in (RADIOLOGO, TECNICO)  # el personal de Rayos X también informa y valida
+    tecnico = rol == TECNICO  # el personal de Rayos X hace todo el flujo, incluido informar y validar
     return {
         'registrar_adquisicion': tecnico and abierto,
         'gestionar_imagenes': tecnico and abierto,
-        'redactar_informe': radiologo and estado == 'resultado_en_preparacion',
-        'validar': radiologo and estado == 'resultado_en_preparacion',
-        'agregar_adenda': radiologo and estado == 'publicado',
-        'adjuntar_externo': (tecnico or radiologo) and (abierto or estado == 'publicado'),
+        'redactar_informe': tecnico and estado == 'resultado_en_preparacion',
+        'validar': tecnico and estado == 'resultado_en_preparacion',
+        'agregar_adenda': tecnico and estado == 'publicado',
+        'adjuntar_externo': tecnico and (abierto or estado == 'publicado'),
         'marcar_no_realizado': tecnico and abierto and etapa != 'borrador',
         'entregar': tecnico and etapa == 'validado',
     }
@@ -188,13 +187,13 @@ class CambioCatalogo(BaseModel):
 # ---------- catalogo, pacientes y medicos ----------
 
 @router.get('/catalogo')
-async def catalogo(todos: bool = False, usuario: Usuario = Depends(con_rol(TECNICO, RADIOLOGO, MEDICO)),
+async def catalogo(todos: bool = False, usuario: Usuario = Depends(con_rol(TECNICO, MEDICO)),
                    repositorio: RepositorioRadiologiaSql = Depends(get_repositorio)):
-    return await repositorio.catalogo(incluir_inactivos=todos and usuario.rol in (RADIOLOGO, TECNICO))
+    return await repositorio.catalogo(incluir_inactivos=todos and usuario.rol == TECNICO)
 
 
 @router.patch('/catalogo/estudios/{tipo_estudio_id}')
-async def cambiar_catalogo(tipo_estudio_id: int, datos: CambioCatalogo, usuario: Usuario = Depends(con_rol(RADIOLOGO, TECNICO)),
+async def cambiar_catalogo(tipo_estudio_id: int, datos: CambioCatalogo, usuario: Usuario = Depends(con_rol(TECNICO)),
                            repositorio: RepositorioRadiologiaSql = Depends(get_repositorio)):
     estudio = await repositorio.cambiar_activo(tipo_estudio_id, datos.activo, usuario.id)
     if estudio is None:
@@ -210,7 +209,7 @@ def _laboratorio(db: AsyncSession):
 
 @router.get('/pacientes')
 async def buscar_pacientes(termino: str = Query(min_length=2, max_length=100), db: AsyncSession = Depends(get_db),
-                           _: Usuario = Depends(con_rol(TECNICO, RADIOLOGO))):
+                           _: Usuario = Depends(con_rol(TECNICO))):
     from app.laboratorio.presentation.schemas import PacienteResponse
     return [PacienteResponse.model_validate(p) for p in await _laboratorio(db).buscar_pacientes(termino)]
 
@@ -234,7 +233,7 @@ async def crear_paciente(datos: dict, db: AsyncSession = Depends(get_db), usuari
 
 @router.get('/medicos')
 async def buscar_medicos(termino: str = Query(min_length=2, max_length=100), db: AsyncSession = Depends(get_db),
-                         _: Usuario = Depends(con_rol(TECNICO, RADIOLOGO))):
+                         _: Usuario = Depends(con_rol(TECNICO))):
     return await _laboratorio(db).listar_medicos(termino)
 
 
@@ -253,13 +252,13 @@ async def crear_solicitud(datos: SolicitudNueva, usuario: Usuario = Depends(con_
 
 
 @router.get('/estudios')
-async def listar_estudios(vista: Literal['activos', 'finalizados'] = 'activos', _: Usuario = Depends(con_rol(TECNICO, RADIOLOGO)),
+async def listar_estudios(vista: Literal['activos', 'finalizados'] = 'activos', _: Usuario = Depends(con_rol(TECNICO)),
                           repositorio: RepositorioRadiologiaSql = Depends(get_repositorio)):
     return await _con_triaje(repositorio, await repositorio.listar_estudios(vista))
 
 
 @router.get('/solicitudes/{solicitud_id}')
-async def obtener_solicitud(solicitud_id: int, _: Usuario = Depends(con_rol(TECNICO, RADIOLOGO)),
+async def obtener_solicitud(solicitud_id: int, _: Usuario = Depends(con_rol(TECNICO)),
                             repositorio: RepositorioRadiologiaSql = Depends(get_repositorio)):
     solicitud = await repositorio.solicitud(solicitud_id)
     if solicitud is None:
@@ -270,7 +269,7 @@ async def obtener_solicitud(solicitud_id: int, _: Usuario = Depends(con_rol(TECN
 
 
 @router.get('/pacientes/{paciente_id}/estudios')
-async def estudios_del_paciente(paciente_id: int, _: Usuario = Depends(con_rol(TECNICO, RADIOLOGO)),
+async def estudios_del_paciente(paciente_id: int, _: Usuario = Depends(con_rol(TECNICO)),
                                 repositorio: RepositorioRadiologiaSql = Depends(get_repositorio)):
     paciente = await repositorio.paciente(paciente_id)
     if paciente is None:
@@ -279,7 +278,7 @@ async def estudios_del_paciente(paciente_id: int, _: Usuario = Depends(con_rol(T
 
 
 @router.get('/estudios/{estudio_id}')
-async def obtener_estudio(estudio_id: int, usuario: Usuario = Depends(con_rol(TECNICO, RADIOLOGO, MEDICO)),
+async def obtener_estudio(estudio_id: int, usuario: Usuario = Depends(con_rol(TECNICO, MEDICO)),
                           repositorio: RepositorioRadiologiaSql = Depends(get_repositorio)):
     try:
         detalle = await _detalle(repositorio, estudio_id, usuario)
@@ -387,7 +386,7 @@ async def no_realizado(estudio_id: int, datos: Motivo, usuario: Usuario = Depend
 # ---------- informe ----------
 
 @router.post('/estudios/{estudio_id}/informe/vista-previa')
-async def vista_previa(estudio_id: int, datos: ContenidoInforme, _: Usuario = Depends(con_rol(RADIOLOGO, TECNICO)),
+async def vista_previa(estudio_id: int, datos: ContenidoInforme, _: Usuario = Depends(con_rol(TECNICO)),
                        repositorio: RepositorioRadiologiaSql = Depends(get_repositorio)):
     try:
         config = (await repositorio.base(estudio_id))['config']
@@ -397,21 +396,21 @@ async def vista_previa(estudio_id: int, datos: ContenidoInforme, _: Usuario = De
 
 
 @router.put('/estudios/{estudio_id}/informe/borrador')
-async def guardar_borrador(estudio_id: int, datos: BorradorInforme, usuario: Usuario = Depends(con_rol(RADIOLOGO, TECNICO)),
+async def guardar_borrador(estudio_id: int, datos: BorradorInforme, usuario: Usuario = Depends(con_rol(TECNICO)),
                            repositorio: RepositorioRadiologiaSql = Depends(get_repositorio)):
     return await _operar(repositorio.guardar_borrador(estudio_id, datos.contenido, datos.texto_final, datos.version_edicion, usuario.id),
                          repositorio, estudio_id, usuario)
 
 
 @router.post('/estudios/{estudio_id}/informe/validar')
-async def validar_informe(estudio_id: int, datos: Validacion, usuario: Usuario = Depends(con_rol(RADIOLOGO, TECNICO)),
+async def validar_informe(estudio_id: int, datos: Validacion, usuario: Usuario = Depends(con_rol(TECNICO)),
                           repositorio: RepositorioRadiologiaSql = Depends(get_repositorio)):
     return await _operar(repositorio.validar(estudio_id, datos.version_edicion, datos.responsable_nombre,
                                              datos.registro_profesional or None, usuario.id), repositorio, estudio_id, usuario)
 
 
 @router.post('/estudios/{estudio_id}/adendas')
-async def agregar_adenda(estudio_id: int, datos: AdendaNueva, usuario: Usuario = Depends(con_rol(RADIOLOGO, TECNICO)),
+async def agregar_adenda(estudio_id: int, datos: AdendaNueva, usuario: Usuario = Depends(con_rol(TECNICO)),
                          repositorio: RepositorioRadiologiaSql = Depends(get_repositorio)):
     return await _operar(repositorio.agregar_adenda(estudio_id, datos.motivo, datos.texto, datos.autor_nombre,
                                                     datos.registro_profesional or None, usuario.id), repositorio, estudio_id, usuario)
@@ -429,7 +428,7 @@ async def entregar(estudio_id: int, datos: Entrega, usuario: Usuario = Depends(c
 async def adjuntar_externo(estudio_id: int, archivo: UploadFile = File(...), establecimiento: str = Form(min_length=2, max_length=200),
                            profesional: str | None = Form(default=None, max_length=200), fecha_informe: date | None = Form(default=None),
                            observaciones: str | None = Form(default=None, max_length=1000),
-                           usuario: Usuario = Depends(con_rol(TECNICO, RADIOLOGO)),
+                           usuario: Usuario = Depends(con_rol(TECNICO)),
                            repositorio: RepositorioRadiologiaSql = Depends(get_repositorio)):
     try:
         await repositorio.base(estudio_id)
@@ -454,13 +453,13 @@ async def adjuntar_externo(estudio_id: int, archivo: UploadFile = File(...), est
 
 
 @router.post('/estudios/{estudio_id}/informes-externos/{externo_id}/retirar')
-async def retirar_externo(estudio_id: int, externo_id: int, datos: Motivo, usuario: Usuario = Depends(con_rol(TECNICO, RADIOLOGO)),
+async def retirar_externo(estudio_id: int, externo_id: int, datos: Motivo, usuario: Usuario = Depends(con_rol(TECNICO)),
                           repositorio: RepositorioRadiologiaSql = Depends(get_repositorio)):
     return await _operar(repositorio.retirar_externo(estudio_id, externo_id, datos.motivo, usuario.id), repositorio, estudio_id, usuario)
 
 
 @router.get('/informes-externos/{externo_id}/archivo')
-async def descargar_externo(externo_id: int, usuario: Usuario = Depends(con_rol(TECNICO, RADIOLOGO, MEDICO)),
+async def descargar_externo(externo_id: int, usuario: Usuario = Depends(con_rol(TECNICO, MEDICO)),
                             repositorio: RepositorioRadiologiaSql = Depends(get_repositorio)):
     externo = await repositorio.externo(externo_id)
     if externo is None:
