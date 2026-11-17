@@ -41,7 +41,7 @@ test('valida formatos y limites de archivos', () => {
 })
 
 test('parte titulos en mayusculas para impresión', () => {
-  assert.deepEqual(partirTextoInforme('TÉCNICA:\nDos proyecciones.\n\nCONCLUSION:\nSin lesion.'), [
+  assert.deepEqual(partirTextoInforme('TÉCNICA:\nDos proyecciones.\n\nCONCLUSIÓN:\nSin lesión.'), [
     { titulo: 'TÉCNICA', lineas: ['Dos proyecciones.', ''] },
     { titulo: 'CONCLUSIÓN', lineas: ['Sin lesión.'] },
   ])
