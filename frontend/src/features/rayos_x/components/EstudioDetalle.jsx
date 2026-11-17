@@ -14,7 +14,10 @@ const cargarImagen = async (id, archivoId, signal) => {
   }
 }
 
-const PESTANAS = [['hallazgos', 'Hallazgos'], ['informe', 'Informe y comparación'], ['evidencia', 'Evidencia y límites'], ['revision', 'Tu revisión']]
+// Distancia coseno del buscador documental -> relación en lenguaje simple.
+const relacionEvidencia = d => typeof d !== 'number' ? { clave: 'media', texto: 'Relación media' } : d < 0.35 ? { clave: 'alta', texto: 'Relación alta' } : d < 0.5 ? { clave: 'media', texto: 'Relación media' } : { clave: 'baja', texto: 'Relación baja' }
+
+const PESTANAS = [['hallazgos', 'Hallazgos'], ['informe', 'Informe y comparación'], ['evidencia', 'Lecturas y límites'], ['revision', 'Tu revisión']]
 const OPCIONES_DECISION = [['aceptada_como_propuesta', 'Acepto'], ['corregida', 'Corrijo'], ['rechazada', 'Rechazo']]
 
 function SolicitarAnalisis({ confirmado, setConfirmado, proyeccion, setProyeccion, deshabilitado, onAnalizar, habilitada, compacto }) {
@@ -120,11 +123,33 @@ export default function EstudioDetalle({ id, usuario, habilitada, onVolver }) {
             </>}
 
             {pestana === 'evidencia' && <>
-              <section><h4>Evidencia documental</h4><p>{resultado.rag.mensaje}</p>
-                {(resultado.rag.evidencia || []).map(e => <details key={e.id} className="rx-ia-plegable"><summary>{e.titulo} · {e.seccion}</summary><blockquote>{e.cita}</blockquote><p className="rx-nota">Fuente: {e.fuente}</p></details>)}
+              <section><h4>Lecturas de apoyo</h4>
+                <p className="rx-nota">Fragmentos de artículos médicos abiertos que el sistema encontró parecidos a lo que sugiere la IA. Están en inglés y sirven para consultar; no confirman nada del paciente.</p>
+                {(resultado.rag.evidencia || []).length
+                  ? <ul className="rx-ia-lecturas">{resultado.rag.evidencia.map(e => {
+                      const relacion = relacionEvidencia(e.distancia_coseno)
+                      return <li key={e.id}>
+                        <div className="rx-ia-lectura-cabecera"><strong>{e.seccion?.split(' / ').pop() || 'Fragmento'}</strong><span className={`rx-ia-relacion es-${relacion.clave}`}>{relacion.texto}</span></div>
+                        <small>{e.titulo}</small>
+                        <div className="rx-ia-lectura-acciones">
+                          <details><summary>Ver fragmento</summary><blockquote>{e.cita}</blockquote></details>
+                          {/^https:\/\//.test(e.fuente || '') && <a href={e.fuente} target="_blank" rel="noopener noreferrer">Abrir artículo ↗</a>}
+                        </div>
+                      </li>
+                    })}</ul>
+                  : <p className="rx-ia-vacio">No hay lecturas de apoyo para este análisis.</p>}
               </section>
-              <section><h4>Límites del asistente</h4><ul className="rx-ia-limites">{advertencias.map((a, i) => <li key={i}>{a}</li>)}</ul>
-                <p className="rx-nota">{resultado.fusion.criterio_tecnico.descripcion} Punto de corte técnico: {resultado.fusion.criterio_tecnico.umbral}.</p></section>
+              <section><h4>Qué tener en cuenta</h4>
+                <ul className="rx-ia-limites">
+                  <li>Solo analiza radiografías de tórax frontales.</li>
+                  <li>Sugiere parecidos, no diagnostica: un resultado bajo no descarta enfermedad.</li>
+                  <li>La comparación con el informe busca palabras clave; puede no entender redacciones poco habituales.</li>
+                </ul>
+                <details className="rx-ia-plegable"><summary>Detalle técnico ({advertencias.length})</summary>
+                  <ul className="rx-ia-limites">{advertencias.map((a, i) => <li key={i}>{a}</li>)}</ul>
+                  <p className="rx-nota">{resultado.fusion.criterio_tecnico.descripcion} Punto de corte técnico: {resultado.fusion.criterio_tecnico.umbral}.</p>
+                </details>
+              </section>
             </>}
 
             {pestana === 'revision' && <>
