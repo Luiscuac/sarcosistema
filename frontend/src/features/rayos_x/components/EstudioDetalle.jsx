@@ -15,11 +15,7 @@ const cargarImagen = async (id, archivoId, signal) => {
 }
 
 const PESTANAS = [['hallazgos', 'Hallazgos'], ['informe', 'Informe y comparación'], ['evidencia', 'Evidencia y límites'], ['revision', 'Tu revisión']]
-const OPCIONES_DECISION = [
-  ['aceptada_como_propuesta', 'Acepto la propuesta', 'Coincide con mi lectura de la imagen.'],
-  ['corregida', 'La corrijo', 'Algo no coincide; indico qué cambio.'],
-  ['rechazada', 'La rechazo', 'No coincide con mi lectura.'],
-]
+const OPCIONES_DECISION = [['aceptada_como_propuesta', 'Acepto'], ['corregida', 'Corrijo'], ['rechazada', 'Rechazo']]
 
 function SolicitarAnalisis({ confirmado, setConfirmado, proyeccion, setProyeccion, deshabilitado, onAnalizar, habilitada, compacto }) {
   return <div className={`rx-ia-solicitar${compacto ? ' es-compacto' : ''}`}>
@@ -93,13 +89,13 @@ export default function EstudioDetalle({ id, usuario, habilitada, onVolver }) {
       <div className="rx-ia-flujo">
         {!resultado && !procesando && <section className="rx-ia-tarjeta">
           <h3>Analizar con IA</h3>
-          <p>El asistente revisa la radiografía de tórax, marca las zonas que le llaman la atención y compara lo que ve con el informe. Es una guía para tu lectura: no modifica el informe.</p>
+          <p>Sugiere hallazgos, marca dónde se fijó y lo compara con el informe.</p>
           <SolicitarAnalisis {...{ confirmado, setConfirmado, proyeccion, setProyeccion, habilitada }} deshabilitado={!puedeAnalizar} onAnalizar={() => solicitar.mutate()} />
         </section>}
 
         {procesando && <section className="rx-ia-tarjeta rx-ia-proceso" role="status">
           <span className="rx-ia-girando" aria-hidden="true" />
-          <div><h3>{analisis.data.estado === 'en_cola' ? 'En cola' : 'Analizando la radiografía'}</h3><p>Suele tardar unos segundos. Puedes seguir mirando la imagen mientras tanto.</p></div>
+          <div><h3>{analisis.data.estado === 'en_cola' ? 'En cola' : 'Analizando…'}</h3><p>Unos segundos.</p></div>
         </section>}
 
         {solicitar.error && <p role="alert" className="rx-ia-error">{mensajeError(solicitar.error)}</p>}
@@ -129,16 +125,16 @@ export default function EstudioDetalle({ id, usuario, habilitada, onVolver }) {
             </>}
 
             {pestana === 'revision' && <>
-              <p className="rx-nota">Registra si la propuesta del asistente coincide con tu lectura. Sirve para medir el asistente en este hospital; no publica ni cambia el informe.</p>
+              <p className="rx-nota">¿Coincide con tu lectura? No cambia el informe.</p>
               <form className="rx-ia-revision" onSubmit={e => { e.preventDefault(); revision.mutate() }}>
                 <fieldset><legend>Tu decisión</legend>
-                  <div className="rx-ia-opciones">{OPCIONES_DECISION.map(([valor, titulo, ayuda]) => <label key={valor} className={decision === valor ? 'es-elegida' : undefined}>
+                  <div className="rx-ia-opciones">{OPCIONES_DECISION.map(([valor, titulo]) => <label key={valor} className={decision === valor ? 'es-elegida' : undefined}>
                     <input type="radio" name="rx-decision" value={valor} checked={decision === valor} onChange={() => { iniciarBorrador(); setDecision(valor) }} />
-                    <strong>{titulo}</strong><small>{ayuda}</small></label>)}</div>
+                    <strong>{titulo}</strong></label>)}</div>
                 </fieldset>
                 {decision === 'corregida' && <label className="rx-ia-campo">Corrección<textarea value={correccion} maxLength={4000} onChange={e => { iniciarBorrador(); setCorreccion(e.target.value) }} placeholder="¿Qué cambiarías de la propuesta?" /></label>}
                 {decision && decision !== 'aceptada_como_propuesta' && <label className="rx-ia-campo">Motivo<textarea value={motivo} maxLength={2000} onChange={e => { iniciarBorrador(); setMotivo(e.target.value) }} /></label>}
-                <fieldset className="rx-ia-lectura"><legend>Según tu lectura, la radiografía es… <small>(opcional)</small></legend>
+                <fieldset className="rx-ia-lectura"><legend>La radiografía es… <small>(opcional)</small></legend>
                   {[['si', 'Anormal'], ['no', 'Normal'], ['', 'Prefiero no indicarlo']].map(([valor, texto]) => <label key={texto}><input type="radio" name="rx-anormal" value={valor} checked={anormal === valor} onChange={() => { iniciarBorrador(); setAnormal(valor) }} />{texto}</label>)}
                 </fieldset>
                 {conflicto && <p role="alert" className="rx-ia-error">Otra persona guardó una revisión más reciente. Tu borrador no se guardará encima.</p>}
