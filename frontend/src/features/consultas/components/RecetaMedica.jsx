@@ -67,6 +67,8 @@ export default function RecetaMedica({ paciente, mode = 'lista', recetaId }) {
   const navigate = useNavigate()
   const [diagnostico, setDiagnostico] = useState('')
   const [medicamentos, setMedicamentos] = useState([medicamentoVacio()])
+  const [medicamentoActivo, setMedicamentoActivo] = useState(0)
+  const [errorMedicamentos, setErrorMedicamentos] = useState('')
   const [confirmando, setConfirmando] = useState(false)
   const recetas = useQuery({ queryKey: ['enfermeria', 'recetas-publicadas', paciente.id],
     queryFn: () => obtenerRecetasPublicadas(paciente.id) })
@@ -78,9 +80,29 @@ export default function RecetaMedica({ paciente, mode = 'lista', recetaId }) {
       navigate(`/consultas/pacientes/${paciente.id}?seccion=receta`, { replace: true })
     },
     onError: () => setConfirmando(false) })
-  const actualizar = (i, campo, valor) => setMedicamentos(actual => actual.map((m, n) => n === i ? { ...m, [campo]: valor } : m))
+  const actualizar = (i, campo, valor) => {
+    setMedicamentos(actual => actual.map((m, n) => n === i ? { ...m, [campo]: valor } : m))
+    setErrorMedicamentos('')
+  }
+  function agregarMedicamento() {
+    setMedicamentos(actual => [...actual, medicamentoVacio()])
+    setMedicamentoActivo(medicamentos.length)
+    setErrorMedicamentos('')
+  }
+  function quitarMedicamento(indice) {
+    const restantes = medicamentos.filter((_, n) => n !== indice)
+    setMedicamentos(restantes)
+    setMedicamentoActivo(actual => actual > indice ? actual - 1 : Math.min(actual, restantes.length - 1))
+    setErrorMedicamentos('')
+  }
   function revisar(evento) {
-    evento.preventDefault() // los campos `required` ya validaron; antes de enviar a farmacia se confirma
+    evento.preventDefault()
+    const incompleto = medicamentos.findIndex(m => !m.nombre_generico.trim() || !m.forma_concentracion.trim() || !m.indicaciones.trim())
+    if (incompleto !== -1) {
+      setMedicamentoActivo(incompleto)
+      setErrorMedicamentos(`Completa los campos obligatorios del medicamento ${incompleto + 1} antes de revisar la receta.`)
+      return
+    }
     setConfirmando(true)
   }
   function emitir() {
@@ -107,11 +129,12 @@ export default function RecetaMedica({ paciente, mode = 'lista', recetaId }) {
           </div>
           <div className="med-prescription-meds">
             <h3>Medicamentos <span>{medicamentos.length}</span></h3>
-            {medicamentos.map((m, i) => <fieldset key={i} className="med-prescription-med" aria-label={`Medicamento ${i + 1}`}>
+            {errorMedicamentos && <p role="alert" className="med-error">{errorMedicamentos}</p>}
+            {medicamentos.map((m, i) => i === medicamentoActivo && <fieldset key={i} className="med-prescription-med" aria-label={`Medicamento ${i + 1}`}>
               <div className="med-prescription-med-heading">
                 <strong className="med-prescription-med-title">Medicamento {i + 1}</strong>
                 {medicamentos.length > 1 && <button type="button" className="med-secondary-button med-danger-button"
-                  onClick={() => setMedicamentos(actual => actual.filter((_, n) => n !== i))} aria-label={`Quitar medicamento ${i + 1}`}>Quitar</button>}
+                  onClick={() => quitarMedicamento(i)} aria-label={`Quitar medicamento ${i + 1}`}>Quitar</button>}
               </div>
               <div className="med-fields">
                 <label><span>Nombre genérico <abbr title="Obligatorio">*</abbr></span><input required value={m.nombre_generico} onChange={e => actualizar(i, 'nombre_generico', e.target.value)} placeholder="Ej.: Amoxicilina" /></label>
@@ -120,7 +143,16 @@ export default function RecetaMedica({ paciente, mode = 'lista', recetaId }) {
                 <label>Cantidad recetada<input value={m.cantidad_recetada} onChange={e => actualizar(i, 'cantidad_recetada', e.target.value)} placeholder="Ej.: 30 cápsulas" /></label>
               </div>
             </fieldset>)}
-            <button type="button" className="med-add-button" onClick={() => setMedicamentos(actual => [...actual, medicamentoVacio()])}>+ Añadir otro medicamento</button>
+            <nav className="med-prescription-steps" aria-label="Medicamentos de la receta">
+              <ol>{medicamentos.map((m, i) => {
+                const completo = Boolean(m.nombre_generico.trim() && m.forma_concentracion.trim() && m.indicaciones.trim())
+                return <li key={i}>
+                  <button type="button" className={medicamentoActivo === i ? 'active' : completo ? 'complete' : ''} aria-current={medicamentoActivo === i ? 'step' : undefined}
+                    aria-label={`Medicamento ${i + 1}${completo ? ', completo' : ', incompleto'}`} onClick={() => setMedicamentoActivo(i)}>{i + 1}</button>
+                </li>
+              })}</ol>
+            </nav>
+            <button type="button" className="med-add-button" onClick={agregarMedicamento}>+ Añadir otro medicamento</button>
           </div>
           {mutation.isError && <p role="alert" className="med-error">No se pudo emitir la receta. Revisa los datos e inténtalo de nuevo.</p>}
           <div className="med-form-actions">

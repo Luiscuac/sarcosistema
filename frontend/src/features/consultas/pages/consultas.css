@@ -279,6 +279,12 @@
 .med-prescription-meds { display: grid; gap: 12px; }
 .med-prescription-meds h3 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 14px; }
 .med-prescription-meds h3 span { display: grid; place-items: center; min-width: 21px; height: 21px; padding: 0 5px; border-radius: 999px; background: #edf2f2; color: #46535e; font-size: 10px; }
+.med-prescription-steps { display: flex; justify-content: center; }
+.med-prescription-steps ol { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 0; padding: 2px 0; list-style: none; }
+.med-prescription-steps button { display: grid; width: 34px; height: 34px; place-items: center; border: 1px solid var(--line); border-radius: 50%; background: #fff; color: #53606b; font: inherit; font-size: 12px; font-weight: 650; cursor: pointer; }
+.med-prescription-steps button.active { border-color: var(--brand); background: var(--brand); color: #fff; }
+.med-prescription-steps button.complete:not(.active) { border-color: #b6d5d0; background: #edf6f4; color: var(--brand); }
+.med-prescription-steps button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 .med-form .med-prescription-med { padding: 14px 16px 16px; border: 1px solid var(--line); border-radius: 8px; background: #fbfcfc; }
 .med-prescription-med-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
 .med-prescription-med-title { font-size: 13px; font-weight: 600; color: var(--brand); }
