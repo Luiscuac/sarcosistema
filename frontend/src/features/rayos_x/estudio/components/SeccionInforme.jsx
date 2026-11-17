@@ -50,7 +50,7 @@ function InformePublicado({ estudioId, detalle, actualizar }) {
   </div>
 }
 
-export default function SeccionInforme({ estudioId, detalle }) {
+export default function SeccionInforme({ estudioId, detalle, irA }) {
   const queryClient = useQueryClient(); const { notificar } = useNotificacion(); const clave = ['radiologia', 'estudio', estudioId]
   const inicial = useMemo(() => estadoInicialInforme(detalle.informe, detalle.config?.plantilla), [detalle.informe, detalle.config?.plantilla])
   const [edicion, setEdicion] = useState(inicial); const [vista, setVista] = useState(null); const [confirmando, setConfirmando] = useState(false)
@@ -65,6 +65,8 @@ export default function SeccionInforme({ estudioId, detalle }) {
   const validar = useMutation({ mutationFn: () => validarInforme(estudioId, { version_edicion: detalleConfirmacion?.informe?.version_edicion, responsable_nombre: validacion.responsable_nombre.trim(), registro_profesional: validacion.registro_profesional.trim() || null, confirmo: true }), onSuccess: d => { actualizar(d); setConfirmando(false); setDetalleConfirmacion(null); notificar('Informe validado.', 'exito') }, onError: e => notificar(mensajeErrorApi(e), 'error') })
   const publicado = detalle.informe?.estado === 'publicado'
   if (publicado) return <InformePublicado estudioId={estudioId} detalle={detalle} actualizar={actualizar} />
+  const faltaAdquisicion = ['pendiente_realizacion', 'en_adquisicion'].includes(detalle.estudio.etapa)
+  if (faltaAdquisicion) return <div className="rxe-bloque rxe-informe-bloqueado"><strong>Todavía no se puede redactar el informe</strong><p>Primero completa la adquisición: sube las imágenes del estudio y pulsa «Completar adquisición».</p>{irA && detalle.permisos.registrar_adquisicion && <button type="button" className="primary-button" onClick={() => irA('adquisicion')}>Ir a Adquisición e imágenes</button>}</div>
   if (!detalle.permisos.redactar_informe) return <div className="rxe-bloque"><p className="rxe-estado">Informe en modo de solo lectura.</p><TextoInforme texto={detalle.informe?.texto} /><Adendas adendas={detalle.adendas || []} /></div>
   const iniciarValidacion = async () => { try { const d = await guardar.mutateAsync(); setDetalleConfirmacion(d); setValidacion(v => ({ ...v, responsable_nombre: d.informe?.responsable_nombre || v.responsable_nombre })); setConfirmando(true) } catch { /* el aviso conserva la edicion */ } }
   const textoConfirmacion = edicion.textoFinal ?? vista ?? detalleConfirmacion?.informe?.texto ?? detalle.informe?.texto ?? ''
