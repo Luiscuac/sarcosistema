@@ -11,6 +11,7 @@ import ConsultasPage from '../features/consultas/pages/ConsultasPage.jsx'
 import EcografiaPage from '../features/ecografia/pages/EcografiaPage.jsx'
 import InformeEcografiaPage from '../features/ecografia/pages/InformeEcografiaPage.jsx'
 import PanelRayosXPage from '../features/rayos_x/gestion/pages/PanelRayosXPage.jsx'
+import NuevaSolicitudRxPage from '../features/rayos_x/gestion/pages/NuevaSolicitudRxPage.jsx'
 import SolicitudRayosXPage from '../features/rayos_x/gestion/pages/SolicitudRayosXPage.jsx'
 import HistorialPacienteRxPage from '../features/rayos_x/gestion/pages/HistorialPacienteRxPage.jsx'
 import EstudioRayosXPage from '../features/rayos_x/estudio/pages/EstudioRayosXPage.jsx'
@@ -91,6 +92,7 @@ const router = createBrowserRouter(createRoutesFromElements(
         } />
         {[
           ['/rayos-x/gestion', PanelRayosXPage],
+          ['/rayos-x/gestion/solicitudes/nueva', NuevaSolicitudRxPage],
           ['/rayos-x/gestion/solicitudes/:solicitudId', SolicitudRayosXPage],
           ['/rayos-x/gestion/pacientes/:pacienteId', HistorialPacienteRxPage],
           ['/rayos-x/gestion/estudios/:estudioId', EstudioRayosXPage],

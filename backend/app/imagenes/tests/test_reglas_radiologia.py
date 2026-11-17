@@ -17,13 +17,16 @@ def test_solicitud_toma_proyecciones_del_protocolo_y_ordena_segun_catalogo():
     assert explicito['proyecciones_solicitadas'] == ['AP', 'LAT']
 
 
+def test_solicitud_sin_proyecciones_ni_protocolo_es_valida():
+    assert r.normalizar_detalle_solicitud(config('RX_TORAX'), {})['proyecciones_solicitadas'] == []
+
+
 @pytest.mark.parametrize('codigo,item', [
     ('RX_RODILLA', {'protocolo': 'AP_LAT'}),                                   # falta lateralidad
     ('RX_TORAX', {'protocolo': 'PA', 'lateralidad': 'derecha'}),               # lateralidad donde no aplica
     ('RX_HOMBRO', {'protocolo': 'RUTINA', 'lateralidad': 'bilateral'}),        # bilateral no permitido
     ('RX_TORAX', {'proyecciones': ['MORTAJA']}),                               # proyeccion de otro estudio
     ('RX_TORAX', {'protocolo': 'AP_LAT_L5S1'}),                                # protocolo de otro estudio
-    ('RX_TORAX', {}),                                                          # sin proyecciones ni protocolo
 ])
 def test_solicitud_rechaza_combinaciones_invalidas(codigo, item):
     with pytest.raises(r.ReglaRadiologia):

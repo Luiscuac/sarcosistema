@@ -34,3 +34,9 @@ Entorno local: PostgreSQL en Docker migrado a `20261116_0019`, uvicorn y Vite. C
 - Pestañas de imágenes del informe sin `tabIndex`/`aria-controls`.
 - Códigos internos como respaldo en algunos textos (decisión de revisión IA, `actor {id}`).
 - No se probó la solicitud completa desde la ficha del médico ni la subida de DICOM en navegador.
+
+## Nueva solicitud en pantalla completa (17/11/2026)
+
+- Ya no es una ventana: `/rayos-x/gestion/solicitudes/nueva`, con paciente y catálogo a la izquierda, y estudios elegidos, datos del pedido y botones (fijos) a la derecha.
+- Se quitó el **protocolo** del formulario (duplicaba las proyecciones). Las proyecciones solicitadas son opcionales y están en "Más opciones"; el backend ya no las exige.
+- Al registrar, redirige a la solicitud creada.

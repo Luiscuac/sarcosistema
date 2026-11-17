@@ -115,3 +115,27 @@
 @media (prefers-reduced-motion: reduce) {
   .rxg-catalogo-estudio, .rxg-solicitud, .rxg-estudio-fila { scroll-behavior: auto; transition: none; }
 }
+
+/* Nueva solicitud en pantalla completa */
+.rxg-nueva-columnas { display: grid; grid-template-columns: minmax(0, 1fr) minmax(380px, 460px); gap: var(--rx-espacio-5); align-items: start; }
+.rxg-nueva-izquierda, .rxg-nueva-derecha { display: grid; gap: var(--rx-espacio-4); min-width: 0; }
+.rxg-nueva-derecha { position: sticky; top: var(--rx-espacio-4); max-height: calc(100vh - 2 * var(--rx-espacio-4)); overflow: auto; padding: var(--rx-espacio-4); border: 1px solid var(--rx-linea); border-radius: var(--rx-radio-m); background: var(--rx-superficie, #fff); }
+.rxg-nueva .rxg-catalogo { max-height: none; overflow: visible; }
+.rxg-nueva .rxg-catalogo-opciones { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); }
+.rxg-nueva-derecha .rxg-estudios-seleccionados { margin-top: 0; }
+.rxg-estudio-campos { display: grid; grid-template-columns: minmax(130px, 170px) minmax(0, 1fr); gap: var(--rx-espacio-3); }
+.rxg-estudio-campos label, .rxg-mas-opciones label { display: grid; gap: var(--rx-espacio-1); font-size: var(--rx-texto-xs); }
+.rxg-estudio-campos .rxg-campo-completo, .rxg-mas-opciones .rxg-campo-completo { grid-column: 1 / -1; }
+.rxg-estudio-campos input, .rxg-estudio-campos select, .rxg-mas-opciones textarea { width: 100%; box-sizing: border-box; }
+.rxg-mas-opciones { margin-top: var(--rx-espacio-3); }
+.rxg-mas-opciones > summary { color: var(--rx-marca); font-size: var(--rx-texto-xs); font-weight: 600; cursor: pointer; }
+.rxg-mas-opciones[open] > summary { margin-bottom: var(--rx-espacio-3); }
+.rxg-nueva-acciones { position: sticky; bottom: calc(-1 * var(--rx-espacio-4)); display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--rx-espacio-3); margin: 0 calc(-1 * var(--rx-espacio-4)) calc(-1 * var(--rx-espacio-4)); padding: var(--rx-espacio-3) var(--rx-espacio-4); border-top: 1px solid var(--rx-linea); background: var(--rx-superficie, #fff); }
+.rxg-nueva-acciones .lab-dialog-summary { flex: 1 1 100%; margin: 0; }
+@media (max-width: 960px) {
+  .rxg-nueva-columnas { grid-template-columns: 1fr; }
+  .rxg-nueva-derecha { position: static; max-height: none; overflow: visible; }
+  .rxg-estudio-campos { grid-template-columns: 1fr; }
+}
+.rxg-nueva-derecha h3, .rxg-nueva-izquierda h3 { margin: 0 0 var(--rx-espacio-2); }
+.rxg-nueva-derecha .lab-form-section { margin: 0; }

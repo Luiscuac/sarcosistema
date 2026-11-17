@@ -1,13 +1,12 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { buscarMedicos, buscarPacientes, crearPaciente, crearSolicitud, mensajeErrorApi, obtenerCatalogo } from '../../api/radiologiaApi.js'
 import ConfirmarAccion from '../../../laboratorio/components/ConfirmarAccion.jsx'
-import Dialogo from '../../../laboratorio/components/Dialogo.jsx'
 import { nombreSexo, SEXOS, TIPOS_DOCUMENTO } from '../../../laboratorio/utils/catalogos.js'
 import { describirEdad } from '../../../../shared/utils/edad.js'
 import { formatearFecha } from '../../../../shared/utils/formatearFecha.js'
 import { useValorDiferido } from '../../../../shared/hooks/useValorDiferido.js'
-import SelectorEstudiosRx from './SelectorEstudiosRx.jsx'
+import { CatalogoEstudiosRx, EstudiosSeleccionadosRx } from './SelectorEstudiosRx.jsx'
 import { erroresDeSolicitud, prepararEstudiosParaApi } from '../utils/solicitud.js'
 
 const PACIENTE_VACIO = {
@@ -47,6 +46,8 @@ export default function NuevaSolicitudRx({ onClose, onCreated }) {
   const [estudios, setEstudios] = useState([])
   const [pedido, setPedido] = useState(PEDIDO_INICIAL)
   const [errores, setErrores] = useState([])
+  const avisoErrores = useRef(null)
+  useEffect(() => { if (errores.length) avisoErrores.current?.scrollIntoView({ block: 'center', behavior: 'smooth' }) }, [errores])
   const [confirmarRegistro, setConfirmarRegistro] = useState(false)
   const [confirmarCierre, setConfirmarCierre] = useState(false)
   const pacienteDiferido = useValorDiferido(terminoPaciente.trim())
@@ -78,8 +79,8 @@ export default function NuevaSolicitudRx({ onClose, onCreated }) {
     mutationFn: crearSolicitud,
     onSuccess: async (respuesta) => {
       await queryClient.invalidateQueries({ queryKey: ['radiologia', 'estudios'] })
-      onCreated?.(respuesta)
-      onClose()
+      if (onCreated) onCreated(respuesta)
+      else onClose()
     },
     onError: (error) => {
       setConfirmarRegistro(false)
@@ -146,10 +147,9 @@ export default function NuevaSolicitudRx({ onClose, onCreated }) {
   const solicitarCierre = () => hayDatos ? setConfirmarCierre(true) : onClose()
 
   return <>
-    <Dialogo eyebrow="SOLICITUD DE RAYOS X" titulo="Nueva solicitud" bloqueado={ocupado}
-      descripcion="Identifica al paciente y configura cada estudio del pedido." onCerrar={solicitarCierre}>
-      <form onSubmit={revisar}>
-        <div className="lab-dialog-body">
+    <form className="rxg-nueva" onSubmit={revisar}>
+      <div className="rxg-nueva-columnas">
+        <div className="rxg-nueva-izquierda">
           <section className="lab-form-section">
             <h3>1. Paciente</h3>
             {paciente ? <div className="rxg-paciente-seleccionado">
@@ -179,11 +179,13 @@ export default function NuevaSolicitudRx({ onClose, onCreated }) {
             </>}
           </section>
 
-          <SelectorEstudiosRx catalogo={catalogoQuery.data} valor={estudios} onChange={setEstudios} deshabilitado={ocupado} />
+          <CatalogoEstudiosRx catalogo={catalogoQuery.data} valor={estudios} onChange={setEstudios} deshabilitado={ocupado} />
           {catalogoQuery.isError && <p className="lab-form-error" role="alert">{mensajeErrorApi(catalogoQuery.error, 'No se pudo cargar el catálogo de Rayos X.')}</p>}
-
+        </div>
+        <aside className="rxg-nueva-derecha">
+          <EstudiosSeleccionadosRx catalogo={catalogoQuery.data} valor={estudios} onChange={setEstudios} deshabilitado={ocupado} titulo={estudios.length ? `Estudios seleccionados (${estudios.length})` : 'Estudios seleccionados'} />
           <section className="lab-form-section">
-            <h3>3. Datos del pedido</h3>
+            <h3>Datos del pedido</h3>
             <div className="lab-form-grid">
               <label>Procedencia<select value={pedido.procedencia} onChange={(e) => cambiarPedido('procedencia', e.target.value)}><option value="este_centro">Este centro</option><option value="otro_centro">Otro centro</option></select></label>
               <label>Prioridad<select value={pedido.prioridad} onChange={(e) => cambiarPedido('prioridad', e.target.value)}><option value="sin_prioridad">Sin prioridad</option><option value="urgente">Urgente</option></select></label>
@@ -197,15 +199,15 @@ export default function NuevaSolicitudRx({ onClose, onCreated }) {
               <label className="lab-full-field">Diagnóstico o motivo general (opcional)<textarea rows="3" value={pedido.diagnostico_principal} onChange={(e) => cambiarPedido('diagnostico_principal', e.target.value)} /></label>
             </div>
           </section>
-          {errores.length > 0 && <div className="rxg-errores" role="alert"><strong>Revisa la solicitud:</strong><ul>{errores.map((error) => <li key={error}>{error}</li>)}</ul></div>}
-        </div>
-        <footer className="lab-dialog-footer">
-          <p className="lab-dialog-summary">{paciente ? <strong>{paciente.nombre_completo}</strong> : 'Sin paciente'} · {estudios.length} {estudios.length === 1 ? 'estudio' : 'estudios'}{pedido.prioridad === 'urgente' && ' · Urgente'}</p>
-          <button type="button" onClick={solicitarCierre} disabled={ocupado}>Cancelar</button>
-          <button className="primary-button" type="submit" disabled={ocupado || catalogoQuery.isLoading}>Revisar solicitud</button>
-        </footer>
-      </form>
-    </Dialogo>
+          {errores.length > 0 && <div className="rxg-errores" role="alert" ref={avisoErrores}><strong>Revisa la solicitud:</strong><ul>{errores.map((error) => <li key={error}>{error}</li>)}</ul></div>}
+          <div className="rxg-nueva-acciones">
+            <p className="lab-dialog-summary">{paciente ? <strong>{paciente.nombre_completo}</strong> : 'Sin paciente'} · {estudios.length} {estudios.length === 1 ? 'estudio' : 'estudios'}{pedido.prioridad === 'urgente' && ' · Urgente'}</p>
+            <button type="button" className="lab-secondary-button" onClick={solicitarCierre} disabled={ocupado}>Cancelar</button>
+            <button className="primary-button" type="submit" disabled={ocupado || catalogoQuery.isLoading}>Revisar solicitud</button>
+          </div>
+        </aside>
+      </div>
+    </form>
     {confirmarRegistro && <ConfirmarAccion titulo="Confirmar nueva solicitud" textoConfirmar="Registrar solicitud" pendiente={solicitudMutation.isPending} onConfirmar={confirmar} onCancelar={() => setConfirmarRegistro(false)}>
       <p>Se registrará la solicitud para <strong>{paciente?.nombre_completo}</strong> con {estudios.length} {estudios.length === 1 ? 'estudio' : 'estudios'}.</p>
       <p>Prioridad: <strong>{pedido.prioridad === 'urgente' ? 'Urgente' : 'Sin prioridad'}</strong>.</p>

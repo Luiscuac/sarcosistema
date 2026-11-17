@@ -49,9 +49,6 @@ export function erroresDeEstudios(catalogo, valor) {
     if (new Set(proyecciones).size !== proyecciones.length || proyecciones.some((codigo) => !permitidas.has(codigo))) {
       errores.push(`${estudio.nombre}: revisa las proyecciones seleccionadas.`)
     }
-    if (!protocolo && proyecciones.length === 0) {
-      errores.push(`${estudio.nombre}: elige un protocolo o al menos una proyección.`)
-    }
     if (texto(config.detalle_requerido) && !texto(seleccion.detalle_region)) {
       errores.push(`${estudio.nombre}: completa ${config.detalle_requerido.toLocaleLowerCase()}.`)
     }

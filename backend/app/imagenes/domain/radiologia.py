@@ -106,8 +106,7 @@ def normalizar_detalle_solicitud(config: dict, item: dict) -> dict:
     if not proyecciones and protocolo:
         proyecciones = protocolos[protocolo]['proyecciones']
     proyecciones = validar_proyecciones(config, proyecciones, 'proyecciones solicitadas')
-    if not proyecciones:
-        raise ReglaRadiologia('proyecciones solicitadas: elige un protocolo o al menos una proyección')
+    # Las proyecciones solicitadas son opcionales: el técnico define las que realiza en la adquisición.
     return {
         'lateralidad': lateralidad,
         'protocolo_codigo': protocolo,

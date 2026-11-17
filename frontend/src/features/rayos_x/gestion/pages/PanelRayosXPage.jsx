@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { listarEstudios, mensajeErrorApi } from '../../api/radiologiaApi.js'
 import RayosXLayout from '../../components/RayosXLayout.jsx'
-import NuevaSolicitudRx from '../components/NuevaSolicitudRx.jsx'
 import { agruparPorSolicitud, contarIndicadores, filtrarYOrdenarEstudios, INDICADORES_RX } from '../utils/bandejaRx.js'
 import '../gestion.css'
 
@@ -60,8 +59,6 @@ export default function PanelRayosXPage({ usuario, logout }) {
   const [busqueda, setBusqueda] = useState('')
   const [categoria, setCategoria] = useState('')
   const [etapa, setEtapa] = useState('')
-  const [mostrarNueva, setMostrarNueva] = useState(false)
-  const [creada, setCreada] = useState(null)
   const activosQuery = useQuery({ queryKey: ['radiologia', 'estudios', 'activos'], queryFn: ({ signal }) => listarEstudios('activos', signal), refetchInterval: ACTUALIZACION_MS })
   const finalizadosQuery = useQuery({ queryKey: ['radiologia', 'estudios', 'finalizados'], queryFn: ({ signal }) => listarEstudios('finalizados', signal), enabled: vista === 'finalizados', refetchInterval: ACTUALIZACION_MS })
   const consulta = vista === 'activos' ? activosQuery : finalizadosQuery
@@ -84,9 +81,8 @@ export default function PanelRayosXPage({ usuario, logout }) {
   return <RayosXLayout usuario={usuario} logout={logout}>
     <div className="lab-title-row">
       <div><p className="lab-eyebrow">RAYOS X</p><h1>Estudios de Rayos X</h1></div>
-      {usuario?.rol === 'rayos_x' && <div className="lab-title-actions"><button className="primary-button" type="button" onClick={() => { setCreada(null); setMostrarNueva(true) }}>Nueva solicitud</button></div>}
+      {usuario?.rol === 'rayos_x' && <div className="lab-title-actions"><Link className="primary-button" to="/rayos-x/gestion/solicitudes/nueva">Nueva solicitud</Link></div>}
     </div>
-    {creada && <div className="lab-created-notice" role="status"><span>Solicitud <strong>{creada.referencia}</strong> registrada.</span><Link className="primary-button" to={`/rayos-x/gestion/solicitudes/${creada.solicitud_id}`}>Ver solicitud</Link><button type="button" aria-label="Cerrar aviso" onClick={() => setCreada(null)}>×</button></div>}
 
     <div className="lab-summary rxg-resumen" aria-label="Indicadores de Rayos X">{INDICADORES_RX.map((item) => {
       const activo = vista === 'activos' && indicador === item.codigo
@@ -108,6 +104,5 @@ export default function PanelRayosXPage({ usuario, logout }) {
       {consulta.isSuccess && solicitudes.length === 0 && <div className="rxg-estado"><strong>{!listaBaseVacia && hayFiltros ? 'No hay estudios con esos filtros.' : vista === 'activos' ? 'No hay estudios en curso.' : 'Todavía no hay estudios finalizados.'}</strong><span>{!listaBaseVacia && hayFiltros ? 'Prueba otra búsqueda o quita los filtros activos.' : vista === 'activos' ? usuario?.rol === 'rayos_x' ? 'Registra una nueva solicitud para iniciar el recorrido.' : 'Los estudios aparecerán cuando el personal técnico complete la adquisición.' : 'Los estudios aparecerán aquí cuando concluyan su recorrido.'}</span></div>}
       {consulta.isSuccess && solicitudes.length > 0 && <div className="rxg-solicitudes">{solicitudes.map((solicitud) => <GrupoSolicitud key={solicitud.id} solicitud={solicitud} />)}</div>}
     </section>
-    {mostrarNueva && <NuevaSolicitudRx onClose={() => setMostrarNueva(false)} onCreated={setCreada} />}
   </RayosXLayout>
 }
