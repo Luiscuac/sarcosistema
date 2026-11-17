@@ -1,0 +1,87 @@
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import Dialogo from '../../../laboratorio/components/Dialogo.jsx'
+import VisorRadiografia from '../../components/VisorRadiografia.jsx'
+import { useAvisoCambiosSinGuardar } from '../../../../shared/hooks/useAvisoCambiosSinGuardar.js'
+import { useNotificacion } from '../../../../shared/notifications/NotificationContext.jsx'
+import { agregarAdenda, guardarBorradorInforme, mensajeErrorApi, previsualizarInforme, validarInforme } from '../../api/radiologiaApi.js'
+import FormularioInforme from './FormularioInforme.jsx'
+import { useVistaImagen } from './GaleriaImagenes.jsx'
+import { detectarCambios, estadoInicialInforme, limpiarContenido } from '../utils/informe.js'
+
+function BotonMiniatura({ imagen, activa, onClick }) {
+  const url = useVistaImagen(imagen.archivo_id)
+  return <button type="button" role="tab" aria-selected={activa} className={`rxe-tira-item${activa ? ' is-active' : ''}`} onClick={onClick}>
+    {url ? <img src={url} alt="" /> : <span>...</span>}<small>{imagen.proyeccion_codigo || 'Sin asignar'}</small>
+  </button>
+}
+
+function PanelImagenes({ imagenes }) {
+  const [indice, setIndice] = useState(0); const tira = useRef(null)
+  useEffect(() => { if (indice >= imagenes.length) setIndice(Math.max(0, imagenes.length - 1)) }, [imagenes.length, indice])
+  const seleccionada = imagenes[indice]; const url = useVistaImagen(seleccionada?.archivo_id)
+  const teclado = e => { if (!['ArrowLeft', 'ArrowRight'].includes(e.key) || !imagenes.length) return; e.preventDefault(); setIndice(i => e.key === 'ArrowRight' ? (i + 1) % imagenes.length : (i - 1 + imagenes.length) % imagenes.length) }
+  return <aside className="rxe-work-visor"><div ref={tira} className="rxe-tira" role="tablist" aria-label="Imagenes del estudio" onKeyDown={teclado}>
+    {imagenes.map((imagen, i) => <BotonMiniatura key={imagen.id} imagen={imagen} activa={i === indice} onClick={() => setIndice(i)} />)}
+  </div><div className="rxe-visor-principal">{seleccionada && url ? <VisorRadiografia url={url} alt={seleccionada.nombre_original} vision={undefined} mapa={null} onMapa={() => {}} /> : <p>{imagenes.length ? 'Cargando imagen...' : 'No hay imagenes disponibles.'}</p>}</div></aside>
+}
+
+function TextoInforme({ texto }) {
+  return <div className="rxe-texto-informe">{texto || 'El informe aun no tiene texto.'}</div>
+}
+
+function Adendas({ adendas }) {
+  return adendas.length > 0 && <section className="rxe-adendas"><h3>Adendas</h3>{adendas.map(adenda => <article key={adenda.id}><header>{new Date(adenda.fecha_hora).toLocaleString('es-BO')} · {adenda.autor_nombre}</header><strong>{adenda.motivo}</strong><p>{adenda.texto}</p></article>)}</section>
+}
+
+function InformePublicado({ estudioId, detalle, actualizar }) {
+  const { notificar } = useNotificacion(); const [form, setForm] = useState({ motivo: '', texto: '', autor_nombre: '', registro_profesional: '' })
+  const mutacion = useMutation({ mutationFn: () => agregarAdenda(estudioId, form), onSuccess: d => { actualizar(d); setForm({ motivo: '', texto: '', autor_nombre: '', registro_profesional: '' }); notificar('Adenda agregada.', 'exito') }, onError: e => notificar(mensajeErrorApi(e), 'error') })
+  const informe = detalle.informe
+  return <div className="rxe-publicado"><p className="rxe-estado">Informe validado. Se muestra en modo de solo lectura.</p><TextoInforme texto={informe.texto} />
+    <dl className="rxe-datos"><div><dt>Profesional responsable</dt><dd>{informe.responsable_nombre || 'No informado'}</dd></div><div><dt>Registro profesional</dt><dd>{informe.registro_profesional || 'No informado'}</dd></div><div><dt>Fecha de validacion</dt><dd>{informe.fecha_hora_publicacion ? new Date(informe.fecha_hora_publicacion).toLocaleString('es-BO') : 'No informada'}</dd></div></dl>
+    <Adendas adendas={detalle.adendas || []} />
+    {detalle.permisos.agregar_adenda && <form className="rxe-form-grid rxe-adenda-form" onSubmit={e => { e.preventDefault(); mutacion.mutate() }}><h3 className="rxe-span">Agregar adenda</h3>
+      <label>Motivo *<input required value={form.motivo} onChange={e => setForm({ ...form, motivo: e.target.value })} /></label><label>Autor *<input required value={form.autor_nombre} onChange={e => setForm({ ...form, autor_nombre: e.target.value })} /></label>
+      <label className="rxe-span">Texto *<textarea required value={form.texto} onChange={e => setForm({ ...form, texto: e.target.value })} /></label><label>Registro profesional<input value={form.registro_profesional} onChange={e => setForm({ ...form, registro_profesional: e.target.value })} /></label>
+      <button type="submit" className="primary-button" disabled={mutacion.isPending}>Agregar adenda</button></form>}
+    <Link className="primary-button rxe-link-boton" to={`/rayos-x/gestion/estudios/${estudioId}/impresion`}>Ver informe para imprimir</Link>
+  </div>
+}
+
+export default function SeccionInforme({ estudioId, detalle }) {
+  const queryClient = useQueryClient(); const { notificar } = useNotificacion(); const clave = ['radiologia', 'estudio', estudioId]
+  const inicial = useMemo(() => estadoInicialInforme(detalle.informe, detalle.config?.plantilla), [detalle.informe, detalle.config?.plantilla])
+  const [edicion, setEdicion] = useState(inicial); const [vista, setVista] = useState(null); const [confirmando, setConfirmando] = useState(false)
+  const [detalleConfirmacion, setDetalleConfirmacion] = useState(null)
+  const [validacion, setValidacion] = useState({ responsable_nombre: '', registro_profesional: '', confirmo: false }); const [conflicto, setConflicto] = useState(false)
+  useEffect(() => { setEdicion(inicial); setVista(null); setConflicto(false) }, [inicial])
+  const hayCambios = detectarCambios(edicion, inicial); useAvisoCambiosSinGuardar(hayCambios && Boolean(detalle.permisos.redactar_informe))
+  const actualizar = d => queryClient.setQueryData(clave, d)
+  const payload = () => ({ contenido: limpiarContenido(edicion.contenido), texto_final: edicion.textoFinal?.trim() || null, version_edicion: detalle.informe?.version_edicion ?? null })
+  const guardar = useMutation({ mutationFn: () => guardarBorradorInforme(estudioId, payload()), onSuccess: d => { actualizar(d); setConflicto(false); notificar('Borrador guardado.', 'exito'); return d }, onError: e => { if (e.response?.status === 409) setConflicto(true); notificar(e.response?.status === 409 ? 'Otra persona guardo antes. Tu texto local se conserva.' : mensajeErrorApi(e), 'error') } })
+  const previa = useMutation({ mutationFn: () => previsualizarInforme(estudioId, limpiarContenido(edicion.contenido)), onSuccess: d => setVista(d.texto), onError: e => notificar(mensajeErrorApi(e), 'error') })
+  const validar = useMutation({ mutationFn: () => validarInforme(estudioId, { version_edicion: detalleConfirmacion?.informe?.version_edicion, responsable_nombre: validacion.responsable_nombre.trim(), registro_profesional: validacion.registro_profesional.trim() || null, confirmo: true }), onSuccess: d => { actualizar(d); setConfirmando(false); setDetalleConfirmacion(null); notificar('Informe validado.', 'exito') }, onError: e => notificar(mensajeErrorApi(e), 'error') })
+  const publicado = detalle.informe?.estado === 'publicado'
+  if (publicado) return <InformePublicado estudioId={estudioId} detalle={detalle} actualizar={actualizar} />
+  if (!detalle.permisos.redactar_informe) return <div className="rxe-bloque"><p className="rxe-estado">Informe en modo de solo lectura.</p><TextoInforme texto={detalle.informe?.texto} /><Adendas adendas={detalle.adendas || []} /></div>
+  const iniciarValidacion = async () => { try { const d = await guardar.mutateAsync(); setDetalleConfirmacion(d); setValidacion(v => ({ ...v, responsable_nombre: d.informe?.responsable_nombre || v.responsable_nombre })); setConfirmando(true) } catch { /* el aviso conserva la edicion */ } }
+  const textoConfirmacion = edicion.textoFinal ?? vista ?? detalleConfirmacion?.informe?.texto ?? detalle.informe?.texto ?? ''
+  const pendientes = (detalleConfirmacion || detalle).pendientes?.validacion || []
+  return <div className="rxe-workspace"><PanelImagenes imagenes={detalle.imagenes || []} /><div className="rxe-work-form">
+    {detalle.informe?.estructurado === false && <p className="rxe-estado">Se cargo el informe antiguo como punto de partida del texto final.</p>}
+    <FormularioInforme detalle={detalle} contenido={edicion.contenido} onChange={contenido => setEdicion({ ...edicion, contenido })} />
+    {vista != null && <section className="rxe-previa"><h2>Vista previa</h2><TextoInforme texto={edicion.textoFinal ?? vista} />
+      {edicion.textoFinal == null ? <button type="button" className="lab-secondary-button" onClick={() => setEdicion({ ...edicion, textoFinal: vista })}>Editar texto final</button> : <><label>Texto final<textarea rows="16" value={edicion.textoFinal} onChange={e => setEdicion({ ...edicion, textoFinal: e.target.value })} /></label><button type="button" className="lab-secondary-button" onClick={() => setEdicion({ ...edicion, textoFinal: null })}>Restablecer texto compuesto</button></>}
+    </section>}
+    {conflicto && <div className="rxe-conflicto" role="alert"><p>Otra persona guardo una version mas reciente. El contenido local sigue en pantalla.</p><button type="button" className="lab-secondary-button" onClick={() => queryClient.invalidateQueries({ queryKey: clave })}>Recargar desde el servidor</button></div>}
+  </div><footer className="rxe-barra-acciones"><strong>{hayCambios ? 'Cambios sin guardar' : 'Guardado'}</strong><button type="button" disabled={guardar.isPending} onClick={() => guardar.mutate()}>Guardar borrador</button><button type="button" className="lab-secondary-button" disabled={previa.isPending} onClick={() => previa.mutate()}>Vista previa</button>{detalle.permisos.validar && <button type="button" className="primary-button" disabled={guardar.isPending || validar.isPending} onClick={iniciarValidacion}>Validar informe</button>}</footer>
+    {confirmando && <Dialogo titulo="Validar informe" descripcion="Despues de validar no podra modificarse; las correcciones se registran como adendas." onCerrar={() => setConfirmando(false)} bloqueado={validar.isPending}>
+      <div className="lab-dialog-body"><TextoInforme texto={textoConfirmacion} />{pendientes.length > 0 && <div className="rxe-pendientes" role="alert"><strong>Pendientes:</strong><ul>{pendientes.map(p => <li key={p}>{p}</li>)}</ul></div>}
+        <label className="lab-search-label">Profesional responsable *<input required value={validacion.responsable_nombre} onChange={e => setValidacion({ ...validacion, responsable_nombre: e.target.value })} /></label><label className="lab-search-label">Registro profesional<input value={validacion.registro_profesional} onChange={e => setValidacion({ ...validacion, registro_profesional: e.target.value })} /></label>
+        <label className="rxe-check"><input type="checkbox" checked={validacion.confirmo} onChange={e => setValidacion({ ...validacion, confirmo: e.target.checked })} />Confirmo que revise las imagenes y el texto del informe.</label>
+      </div><footer className="lab-dialog-footer"><button type="button" onClick={() => setConfirmando(false)}>Seguir editando</button><button type="button" className="primary-button" disabled={validar.isPending || pendientes.length > 0 || !validacion.confirmo || !validacion.responsable_nombre.trim()} onClick={() => validar.mutate()}>Confirmar validacion</button></footer>
+    </Dialogo>}
+  </div>
+}
