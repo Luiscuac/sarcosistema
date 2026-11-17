@@ -16,12 +16,12 @@ test('limpia vacios y detecta cambios semanticos', () => {
   assert.equal(detectarCambios({ ...inicial, contenido: { generales: { conclusion: ' normal ' }, apartados: {} } }, inicial), true)
 })
 
-test('inserta frases sin ejecutarlas automaticamente', () => {
+test('inserta frases sin ejecutarlas automáticamente', () => {
   assert.equal(insertarFrase('', 'Sin fractura.'), 'Sin fractura.')
   assert.equal(insertarFrase('Alineacion conservada', 'Sin fractura.'), 'Alineacion conservada. Sin fractura.')
 })
 
-test('compone tecnica con nombres del catalogo', () => {
+test('compone técnica con nombres del catálogo', () => {
   const frase = fraseTecnicaDesdeAdquisicion({
     estudio: { tipo_estudio_nombre: 'Radiografia de rodilla', detalle: { lateralidad: 'derecha' } },
     config: { proyecciones: [{ codigo: 'AP', nombre: 'AP' }, { codigo: 'LAT', nombre: 'lateral' }] },
@@ -30,7 +30,7 @@ test('compone tecnica con nombres del catalogo', () => {
   assert.equal(frase, 'Radiografia de rodilla. Proyecciones AP y lateral, lateralidad derecha.')
 })
 
-test('convierte parametros y omite vacios', () => {
+test('convierte parámetros y omite vacios', () => {
   assert.deepEqual(parametrosANumeros({ kvp: '60', mas: '', equipo: ' Sala 1 ' }), { kvp: 60, equipo: 'Sala 1' })
 })
 
@@ -40,9 +40,9 @@ test('valida formatos y limites de archivos', () => {
   assert.match(validarArchivoImagen({ name: 'placa.dcm', type: '', size: 101 * 1024 * 1024 }), /100 MB/)
 })
 
-test('parte titulos en mayusculas para impresion', () => {
-  assert.deepEqual(partirTextoInforme('TECNICA:\nDos proyecciones.\n\nCONCLUSION:\nSin lesion.'), [
-    { titulo: 'TECNICA', lineas: ['Dos proyecciones.', ''] },
-    { titulo: 'CONCLUSION', lineas: ['Sin lesion.'] },
+test('parte titulos en mayusculas para impresión', () => {
+  assert.deepEqual(partirTextoInforme('TÉCNICA:\nDos proyecciones.\n\nCONCLUSION:\nSin lesion.'), [
+    { titulo: 'TÉCNICA', lineas: ['Dos proyecciones.', ''] },
+    { titulo: 'CONCLUSIÓN', lineas: ['Sin lesión.'] },
   ])
 })

@@ -11,6 +11,7 @@ import '../../pages/rayos-x.css'
 import './estudio.css'
 
 const SECCIONES = ['resumen', 'adquisicion', 'informe', 'historial']
+const NOMBRES_SECCION = { resumen: 'Resumen', adquisicion: 'Adquisición e imágenes', informe: 'Informe', historial: 'Historial' }
 const lateralidad = valor => ({ derecha: 'Derecha', izquierda: 'Izquierda', bilateral: 'Bilateral' }[valor] || 'No aplica')
 const proyecciones = (codigos, config) => (codigos || []).map(c => config?.proyecciones?.find(p => p.codigo === c)?.nombre || c).join(', ') || 'Ninguna registrada'
 
@@ -23,8 +24,8 @@ function Resumen({ estudioId, detalle }) {
   return <div className="rxe-seccion"><section className="rxe-bloque"><h2>Resumen del estudio</h2><dl className="rxe-datos">
     <div><dt>Solicitud de origen</dt><dd><Link to={`/rayos-x/gestion/solicitudes/${detalle.solicitud.id}`}>{detalle.solicitud.referencia}</Link></dd></div>
     <div><dt>Proyecciones solicitadas</dt><dd>{proyecciones(detalle.estudio.detalle?.proyecciones_solicitadas, detalle.config)}</dd></div><div><dt>Proyecciones realizadas</dt><dd>{proyecciones(a?.proyecciones_realizadas, detalle.config)}</dd></div>
-    <div><dt>Estado de adquisicion</dt><dd>{a?.estado?.replaceAll('_', ' ') || 'No iniciada'}</dd></div><div className="rxe-span"><dt>Observaciones</dt><dd>{detalle.estudio.detalle?.observaciones || a?.observaciones || 'Sin observaciones'}</dd></div>
-  </dl><Link to={`/rayos-x/gestion/pacientes/${detalle.paciente.id}`}>Ver historial radiologico del paciente</Link>
+    <div><dt>Estado de adquisición</dt><dd>{a?.estado?.replaceAll('_', ' ') || 'No iniciada'}</dd></div><div className="rxe-span"><dt>Observaciones</dt><dd>{detalle.estudio.detalle?.observaciones || a?.observaciones || 'Sin observaciones'}</dd></div>
+  </dl><Link to={`/rayos-x/gestion/pacientes/${detalle.paciente.id}`}>Ver historial radiológico del paciente</Link>
     <div className="rxe-acciones">{detalle.permisos.marcar_no_realizado && <button type="button" className="lab-secondary-button" onClick={() => setAccion('no-realizado')}>Marcar como no realizado</button>}{detalle.permisos.entregar && <button type="button" className="primary-button" onClick={() => setAccion('entregar')}>Registrar entrega</button>}</div>
   </section>
   <section className="rxe-bloque"><h2>Informes externos</h2>{detalle.informes_externos?.length ? <ul className="rxe-lista">{detalle.informes_externos.map(x => <li key={x.id}><div><strong>Informe externo — {x.establecimiento}</strong><span>{x.profesional || 'Profesional no informado'} · {x.fecha_informe || x.fecha_carga}</span></div></li>)}</ul> : <p>No hay informes externos.</p>}</section>
@@ -48,8 +49,8 @@ export default function EstudioRayosXPage({ usuario, logout }) {
   return <RayosXLayout usuario={usuario} logout={logout} navegacion={navegacion} ancho>
     {isLoading && <p>Cargando estudio...</p>}{isError && <p role="alert" className="lab-form-error">{mensajeErrorApi(error, 'No se pudo cargar el estudio.')}</p>}
     {detalle && <><header className="rxe-cabecera"><div><span className="rxe-etapa">{detalle.estudio.etapa_texto}</span><h1>{detalle.estudio.tipo_estudio_nombre} · {lateralidad(detalle.estudio.detalle?.lateralidad)}</h1><p>{detalle.estudio.referencia_estudio}</p></div><dl>
-      <div><dt>Paciente</dt><dd>{detalle.paciente.nombre_completo}</dd></div><div><dt>Documento</dt><dd>{detalle.paciente.numero_documento || 'No registrado'}</dd></div><div><dt>Edad / sexo</dt><dd>{detalle.paciente.edad ?? '—'} / {detalle.paciente.sexo || '—'}</dd></div><div><dt>Solicitante</dt><dd>{detalle.solicitud.medico_solicitante || 'No registrado'}</dd></div><div><dt>Indicacion clinica</dt><dd>{detalle.estudio.detalle?.indicacion_clinica || 'No registrada'}</dd></div><div><dt>Prioridad</dt><dd>{detalle.estudio.prioridad === 'urgente' ? 'Urgente' : 'Sin prioridad'}</dd></div>
-    </dl></header><nav className="rxe-tabs" role="tablist" aria-label="Secciones del estudio">{SECCIONES.map(tab => <button key={tab} type="button" role="tab" aria-selected={seccion === tab} onClick={() => setParams({ seccion: tab })}>{tab[0].toUpperCase() + tab.slice(1)}</button>)}</nav>
+      <div><dt>Paciente</dt><dd>{detalle.paciente.nombre_completo}</dd></div><div><dt>Documento</dt><dd>{detalle.paciente.numero_documento || 'No registrado'}</dd></div><div><dt>Edad / sexo</dt><dd>{detalle.paciente.edad ?? '—'} / {detalle.paciente.sexo || '—'}</dd></div><div><dt>Solicitante</dt><dd>{detalle.solicitud.medico_solicitante || 'No registrado'}</dd></div><div><dt>Indicación clínica</dt><dd>{detalle.estudio.detalle?.indicacion_clinica || 'No registrada'}</dd></div><div><dt>Prioridad</dt><dd>{detalle.estudio.prioridad === 'urgente' ? 'Urgente' : 'Sin prioridad'}</dd></div>
+    </dl></header><nav className="rxe-tabs" role="tablist" aria-label="Secciones del estudio">{SECCIONES.map(tab => <button key={tab} type="button" role="tab" aria-selected={seccion === tab} onClick={() => setParams({ seccion: tab })}>{NOMBRES_SECCION[tab]}</button>)}</nav>
       {seccion === 'resumen' && <Resumen estudioId={estudioId} detalle={detalle} />}{seccion === 'adquisicion' && <SeccionAdquisicion estudioId={estudioId} detalle={detalle} />}{seccion === 'informe' && <SeccionInforme estudioId={estudioId} detalle={detalle} />}{seccion === 'historial' && <Historial historial={detalle.historial} />}
     </>}
   </RayosXLayout>

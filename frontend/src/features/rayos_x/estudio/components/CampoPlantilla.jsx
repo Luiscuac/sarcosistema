@@ -17,7 +17,7 @@ export default function CampoPlantilla({ campo, valor, onChange, disabled = fals
     </select> : campo.tipo === 'medicion' ? <div className="rxe-medicion">
       <input id={`rxe-${campo.clave}`} type="number" min={campo.minimo} max={campo.maximo} step="any" {...comunes} />
       {campo.unidad && <span>{campo.unidad}</span>}
-    </div> : <textarea ref={area} id={`rxe-${campo.clave}`} rows={3} maxLength={12000} {...comunes} />}
+    </div> : <textarea ref={area} id={`rxe-${campo.clave}`} rows={3} maxLength={4000} {...comunes} />}
     {campo.ayuda && <small id={ayudaId}>{campo.ayuda}</small>}
     {!disabled && campo.frases?.length > 0 && <div className="rxe-frases" aria-label={`Frases para ${campo.titulo}`}>
       {campo.frases.map(frase => <button key={frase} type="button" className="lab-secondary-button"

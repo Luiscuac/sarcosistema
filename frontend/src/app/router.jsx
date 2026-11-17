@@ -1,4 +1,4 @@
-import { createBrowserRouter, createRoutesFromElements, Navigate, Route, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, createRoutesFromElements, Navigate, Route, RouterProvider, useParams } from 'react-router-dom'
 import LoginPage from '../features/accesos/pages/LoginPage.jsx'
 import InicioPage from '../features/inicio/pages/InicioPage.jsx'
 import LaboratorioPage from '../features/laboratorio/pages/LaboratorioPage.jsx'
@@ -13,12 +13,18 @@ import InformeEcografiaPage from '../features/ecografia/pages/InformeEcografiaPa
 import PanelRayosXPage from '../features/rayos_x/gestion/pages/PanelRayosXPage.jsx'
 import SolicitudRayosXPage from '../features/rayos_x/gestion/pages/SolicitudRayosXPage.jsx'
 import HistorialPacienteRxPage from '../features/rayos_x/gestion/pages/HistorialPacienteRxPage.jsx'
-import InformeRayosXPage from '../features/rayos_x/pages/InformeRayosXPage.jsx'
+import EstudioRayosXPage from '../features/rayos_x/estudio/pages/EstudioRayosXPage.jsx'
+import InformeImpresoRxPage from '../features/rayos_x/estudio/pages/InformeImpresoRxPage.jsx'
 import EnfermeriaPage from '../features/enfermeria/pages/EnfermeriaPage.jsx'
 import FarmaciaPage from '../features/enfermeria/pages/FarmaciaPage.jsx'
 import RayosXPage from '../features/rayos_x/pages/RayosXPage.jsx'
 // Recepción y técnico (rayos_x) y médico informante (radiologo) comparten el área de gestión.
 const ROLES_RAYOS_X = ['rayos_x', 'radiologo']
+
+function RedireccionEstudioRx() {
+  const { estudioId } = useParams()
+  return <Navigate to={`/rayos-x/gestion/estudios/${estudioId}?seccion=informe`} replace />
+}
 
 const router = createBrowserRouter(createRoutesFromElements(
   <>
@@ -87,16 +93,15 @@ const router = createBrowserRouter(createRoutesFromElements(
           ['/rayos-x/gestion', PanelRayosXPage],
           ['/rayos-x/gestion/solicitudes/:solicitudId', SolicitudRayosXPage],
           ['/rayos-x/gestion/pacientes/:pacienteId', HistorialPacienteRxPage],
+          ['/rayos-x/gestion/estudios/:estudioId', EstudioRayosXPage],
+          ['/rayos-x/gestion/estudios/:estudioId/impresion', InformeImpresoRxPage],
         ].map(([path, Pagina]) => <Route key={path} path={path} element={
           <ProtectedRoute rolesPermitidos={ROLES_RAYOS_X}>
             {({ usuario, logout }) => <Pagina usuario={usuario} logout={logout} />}
           </ProtectedRoute>
         } />)}
-        <Route path="/rayos-x/gestion/estudios/:estudioId/informe" element={
-          <ProtectedRoute rolesPermitidos={['rayos_x']}>
-            {({ usuario, logout }) => <InformeRayosXPage usuario={usuario} logout={logout} />}
-          </ProtectedRoute>
-        } />
+        {/* Ruta anterior del informe de texto libre: ahora vive en el espacio de trabajo del estudio. */}
+        <Route path="/rayos-x/gestion/estudios/:estudioId/informe" element={<RedireccionEstudioRx />} />
         <Route path="/imagenes" element={<Navigate to="/ecografia" replace />} />
         <Route path="/imagenes/rayos-x-informes" element={<Navigate to="/rayos-x/gestion" replace />} />
         <Route path="/imagenes/estudios/:estudioId/informe" element={

@@ -13,8 +13,8 @@ export default function FormularioInforme({ detalle, contenido, onChange, disabl
   return <div className="rxe-form-informe">
     <section><h2>Datos del informe</h2>
       {!disabled && <div className="rxe-ayudas-explicitas">
-        <button type="button" className="lab-secondary-button" onClick={() => cambiar('generales', 'tecnica', fraseTecnicaDesdeAdquisicion(detalle))}>Proponer tecnica desde la adquisicion</button>
-        <button type="button" className="lab-secondary-button" onClick={() => cambiar('generales', 'indicacion', detalle.estudio.detalle?.indicacion_clinica || '')}>Usar indicacion de la solicitud</button>
+        <button type="button" className="lab-secondary-button" onClick={() => cambiar('generales', 'tecnica', fraseTecnicaDesdeAdquisicion(detalle))}>Proponer técnica desde la adquisición</button>
+        <button type="button" className="lab-secondary-button" onClick={() => cambiar('generales', 'indicacion', detalle.estudio.detalle?.indicacion_clinica || '')}>Usar indicación de la solicitud</button>
       </div>}
       {generales.filter(item => CLAVES_DATOS.includes(item.clave)).map(campo)}
     </section>

@@ -11,8 +11,8 @@ import { parametrosANumeros, validarArchivoImagen } from '../utils/informe.js'
 
 const VACIO = { proyecciones_realizadas: [], lateralidad_realizada: '', posicion_paciente: '', fecha_hora_adquisicion: '', operador_nombre: '', calidad: '', limitaciones: '', repeticiones: 0, motivo_repeticion: '', observaciones: '', parametros: {} }
 const PARAMETROS = [
-  ['kvp', 'kVp'], ['mas', 'mAs'], ['tiempo_ms', 'Tiempo (ms)'], ['indice_exposicion', 'Indice de exposicion'],
-  ['indice_desviacion', 'Indice de desviacion'], ['dap', 'DAP'], ['distancia_cm', 'Distancia (cm)'], ['equipo', 'Equipo'],
+  ['kvp', 'kVp'], ['mas', 'mAs'], ['tiempo_ms', 'Tiempo (ms)'], ['indice_exposicion', 'Índice de exposición'],
+  ['indice_desviacion', 'Índice de desviación'], ['dap', 'DAP'], ['distancia_cm', 'Distancia (cm)'], ['equipo', 'Equipo'],
 ]
 const aLocal = iso => {
   if (!iso) return ''
@@ -26,17 +26,17 @@ function ZonaCarga({ proyecciones, disabled, onSubir }) {
   const validos = items.length > 0 && items.every(item => !item.error)
   return <div className="rxe-carga">
     <label className="rxe-drop" onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); if (!disabled) agregar(e.dataTransfer.files) }}>
-      <span>Arrastra imagenes aqui o selecciona archivos JPG, PNG o DICOM</span>
+      <span>Arrastra imágenes aquí o selecciona archivos JPG, PNG o DICOM</span>
       <input type="file" multiple accept=".jpg,.jpeg,.png,.dcm,image/jpeg,image/png,application/dicom" disabled={disabled} onChange={e => agregar(e.target.files)} />
     </label>
     {items.map((item, i) => <div className="rxe-archivo" key={`${item.archivo.name}-${item.archivo.lastModified}`}>
       <span>{item.archivo.name}</span><small>{(item.archivo.size / 1024 / 1024).toFixed(1)} MB</small>
-      <label>Proyeccion<select value={item.proyeccion} disabled={disabled || Boolean(item.error)} onChange={e => setItems(actual => actual.map((x, n) => n === i ? { ...x, proyeccion: e.target.value } : x))}>
+      <label>Proyección<select value={item.proyeccion} disabled={disabled || Boolean(item.error)} onChange={e => setItems(actual => actual.map((x, n) => n === i ? { ...x, proyeccion: e.target.value } : x))}>
         <option value="">Sin asignar</option>{proyecciones.map(p => <option key={p.codigo} value={p.codigo}>{p.nombre}</option>)}
       </select></label>{item.error && <p className="lab-form-error" role="alert">{item.error}</p>}
     </div>)}
     {items.length > 0 && <button type="button" className="primary-button" disabled={disabled || !validos}
-      onClick={() => onSubir(items.map(x => x.archivo), items.map(x => x.proyeccion), () => setItems([]))}>Subir imagenes</button>}
+      onClick={() => onSubir(items.map(x => x.archivo), items.map(x => x.proyeccion), () => setItems([]))}>Subir imágenes</button>}
   </div>
 }
 
@@ -88,9 +88,9 @@ export default function SeccionAdquisicion({ estudioId, detalle }) {
     motivo_repeticion: form.motivo_repeticion?.trim() || null,
     parametros: parametrosANumeros(form.parametros),
     observaciones: form.observaciones?.trim() || null,
-  }), onSuccess: d => { actualizar(d); notificar('Registro de adquisicion guardado.', 'exito') }, onError: fallo })
-  const completar = useMutation({ mutationFn: () => completarAdquisicion(estudioId), onSuccess: d => { actualizar(d); setPendientes([]); notificar('Adquisicion completada.', 'exito') }, onError: e => { setPendientes(pendientesDeError(e)); fallo(e) } })
-  const subir = useMutation({ mutationFn: ({ archivos, proyecciones }) => subirImagenes(estudioId, archivos, proyecciones), onSuccess: (d, variables) => { actualizar(d); variables.fin(); notificar('Imagenes subidas.', 'exito') }, onError: fallo })
+  }), onSuccess: d => { actualizar(d); notificar('Registro de adquisición guardado.', 'exito') }, onError: fallo })
+  const completar = useMutation({ mutationFn: () => completarAdquisicion(estudioId), onSuccess: d => { actualizar(d); setPendientes([]); notificar('Adquisición completada.', 'exito') }, onError: e => { setPendientes(pendientesDeError(e)); fallo(e) } })
+  const subir = useMutation({ mutationFn: ({ archivos, proyecciones }) => subirImagenes(estudioId, archivos, proyecciones), onSuccess: (d, variables) => { actualizar(d); variables.fin(); notificar('Imágenes subidas.', 'exito') }, onError: fallo })
   const asignar = useMutation({ mutationFn: ({ id, codigo }) => asignarProyeccion(estudioId, id, codigo), onSuccess: actualizar, onError: fallo })
   const retirar = useMutation({ mutationFn: ({ id, motivo }) => retirarImagen(estudioId, id, motivo), onSuccess: (d, variables) => { actualizar(d); variables.fin(); notificar('Imagen retirada.', 'exito') }, onError: fallo })
   const editableRegistro = Boolean(detalle.permisos.registrar_adquisicion); const editableImagenes = Boolean(detalle.permisos.gestionar_imagenes)
@@ -98,25 +98,25 @@ export default function SeccionAdquisicion({ estudioId, detalle }) {
   const proyecciones = detalle.config?.proyecciones || []
   const alternar = codigo => setForm(f => ({ ...f, proyecciones_realizadas: f.proyecciones_realizadas.includes(codigo) ? f.proyecciones_realizadas.filter(x => x !== codigo) : [...f.proyecciones_realizadas, codigo] }))
   return <div className="rxe-seccion">
-    <section className="rxe-bloque"><h2>Registro tecnico</h2>{!editableRegistro && <p className="rxe-estado">Registro en modo de solo lectura.</p>}
+    <section className="rxe-bloque"><h2>Registro técnico</h2>{!editableRegistro && <p className="rxe-estado">Registro en modo de solo lectura.</p>}
       <form className="rxe-form-grid" onSubmit={e => { e.preventDefault(); guardar.mutate() }}>
         <fieldset className="rxe-span"><legend>Proyecciones realizadas</legend>{proyecciones.map(p => <label className="rxe-check" key={p.codigo}><input type="checkbox" checked={form.proyecciones_realizadas.includes(p.codigo)} disabled={!editableRegistro || ocupado} onChange={() => alternar(p.codigo)} />{p.nombre}</label>)}
           {editableRegistro && <button type="button" className="lab-secondary-button" onClick={() => setForm({ ...form, proyecciones_realizadas: [...(detalle.estudio.detalle?.proyecciones_solicitadas || [])] })}>Usar las solicitadas</button>}</fieldset>
         {detalle.config?.requiere_lateralidad && <label>Lateralidad realizada<select value={form.lateralidad_realizada || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, lateralidad_realizada: e.target.value })}><option value="">Seleccionar</option><option value="derecha">Derecha</option><option value="izquierda">Izquierda</option>{detalle.config.permite_bilateral && <option value="bilateral">Bilateral</option>}</select></label>}
-        <label>Posicion del paciente<select value={form.posicion_paciente || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, posicion_paciente: e.target.value })}><option value="">Seleccionar</option>{['bipedestacion', 'sedestacion', 'decubito_supino', 'decubito_prono', 'decubito_lateral'].map(x => <option key={x} value={x}>{x.replaceAll('_', ' ')}</option>)}</select></label>
+        <label>Posición del paciente<select value={form.posicion_paciente || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, posicion_paciente: e.target.value })}><option value="">Seleccionar</option>{['bipedestacion', 'sedestacion', 'decubito_supino', 'decubito_prono', 'decubito_lateral'].map(x => <option key={x} value={x}>{x.replaceAll('_', ' ')}</option>)}</select></label>
         <label>Fecha y hora<input type="datetime-local" value={form.fecha_hora_adquisicion || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, fecha_hora_adquisicion: e.target.value })} /></label>
         <label>Operador<input value={form.operador_nombre || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, operador_nombre: e.target.value })} /></label>
-        <label>Calidad<select value={form.calidad || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, calidad: e.target.value })}><option value="">Seleccionar</option><option value="adecuada">Adecuada</option><option value="limitada">Limitada</option><option value="no_diagnostica">No diagnostica</option></select></label>
+        <label>Calidad<select value={form.calidad || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, calidad: e.target.value })}><option value="">Seleccionar</option><option value="adecuada">Adecuada</option><option value="limitada">Limitada</option><option value="no_diagnostica">No diagnóstica</option></select></label>
         <label>Repeticiones<input type="number" min="0" value={form.repeticiones} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, repeticiones: e.target.value })} /></label>
         <label className="rxe-span">Limitaciones<textarea value={form.limitaciones || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, limitaciones: e.target.value })} /></label>
-        <label className="rxe-span">Motivo de repeticion<textarea value={form.motivo_repeticion || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, motivo_repeticion: e.target.value })} /></label>
+        <label className="rxe-span">Motivo de repetición<textarea value={form.motivo_repeticion || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, motivo_repeticion: e.target.value })} /></label>
         <label className="rxe-span">Observaciones<textarea value={form.observaciones || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, observaciones: e.target.value })} /></label>
-        <details className="rxe-span"><summary>Parametros tecnicos (opcionales)</summary><div className="rxe-form-grid">{PARAMETROS.map(([claveParametro, etiqueta]) => <label key={claveParametro}>{etiqueta}<input type={claveParametro === 'equipo' ? 'text' : 'number'} step="any" value={form.parametros?.[claveParametro] ?? ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, parametros: { ...form.parametros, [claveParametro]: e.target.value } })} /></label>)}</div></details>
-        {editableRegistro && <div className="rxe-acciones rxe-span"><button type="submit" disabled={ocupado}>Guardar registro</button><button type="button" className="primary-button" disabled={ocupado} onClick={() => { setPendientes(detalle.pendientes?.adquisicion || []); if (!(detalle.pendientes?.adquisicion || []).length) completar.mutate() }}>Completar adquisicion</button></div>}
+        <details className="rxe-span"><summary>Parámetros técnicos (opcionales)</summary><div className="rxe-form-grid">{PARAMETROS.map(([claveParametro, etiqueta]) => <label key={claveParametro}>{etiqueta}<input type={claveParametro === 'equipo' ? 'text' : 'number'} step="any" value={form.parametros?.[claveParametro] ?? ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, parametros: { ...form.parametros, [claveParametro]: e.target.value } })} /></label>)}</div></details>
+        {editableRegistro && <div className="rxe-acciones rxe-span"><button type="submit" disabled={ocupado}>Guardar registro</button><button type="button" className="primary-button" disabled={ocupado} onClick={() => { setPendientes(detalle.pendientes?.adquisicion || []); if (!(detalle.pendientes?.adquisicion || []).length) completar.mutate() }}>Completar adquisición</button></div>}
       </form>
       {pendientes.length > 0 && <div className="rxe-pendientes" role="alert"><strong>Pendientes antes de completar:</strong><ul>{pendientes.map(p => <li key={p}>{p}</li>)}</ul><button type="button" className="primary-button" disabled={ocupado} onClick={() => completar.mutate()}>Comprobar y completar</button></div>}
     </section>
-    <section className="rxe-bloque"><h2>Imagenes</h2>{editableImagenes && <ZonaCarga proyecciones={proyecciones} disabled={ocupado} onSubir={(archivos, proys, fin) => subir.mutate({ archivos, proyecciones: proys, fin })} />}
+    <section className="rxe-bloque"><h2>Imágenes</h2>{editableImagenes && <ZonaCarga proyecciones={proyecciones} disabled={ocupado} onSubir={(archivos, proys, fin) => subir.mutate({ archivos, proyecciones: proys, fin })} />}
       <GaleriaImagenes imagenes={detalle.imagenes || []} proyecciones={proyecciones} editable={editableImagenes} ocupado={ocupado} onAsignar={(id, codigo) => asignar.mutate({ id, codigo })} onRetirar={(id, motivo, fin) => motivo.trim() && retirar.mutate({ id, motivo: motivo.trim(), fin })} />
     </section>
     <InformesExternos estudioId={estudioId} informes={detalle.informes_externos || []} editable={Boolean(detalle.permisos.adjuntar_externo)} actualizar={actualizar} />

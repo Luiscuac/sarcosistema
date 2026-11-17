@@ -37,7 +37,7 @@ export function fraseTecnicaDesdeAdquisicion(detalle) {
   const codigos = detalle?.adquisicion?.proyecciones_realizadas || []
   const nombres = codigos.map(codigo => detalle?.config?.proyecciones?.find(p => p.codigo === codigo)?.nombre || codigo)
   if (!nombres.length) return ''
-  const examen = detalle?.estudio?.tipo_estudio_nombre || 'Radiografia'
+  const examen = detalle?.estudio?.tipo_estudio_nombre || 'Radiografía'
   const lateralidad = detalle?.adquisicion?.lateralidad_realizada || detalle?.estudio?.detalle?.lateralidad
   return `${examen}. Proyecciones ${unirNatural(nombres)}${lateralidad ? `, lateralidad ${lateralidad}` : ''}.`
 }

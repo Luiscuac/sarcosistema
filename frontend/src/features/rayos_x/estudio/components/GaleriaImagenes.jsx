@@ -26,7 +26,7 @@ function Miniatura({ imagen, proyecciones, editable, ocupado, onAsignar, onRetir
       {url ? <img src={url} alt={`Vista de ${imagen.nombre_original}`} /> : <span>Cargando vista...</span>}
     </button>
     <div><strong>{imagen.nombre_original}</strong><small>{(imagen.tamano_bytes / 1024 / 1024).toFixed(1)} MB · {new Date(imagen.fecha_carga).toLocaleString('es-BO')}</small></div>
-    <label>Proyeccion<select value={imagen.proyeccion_codigo || ''} disabled={!editable || ocupado} onChange={e => onAsignar(imagen.id, e.target.value || null)}>
+    <label>Proyección<select value={imagen.proyeccion_codigo || ''} disabled={!editable || ocupado} onChange={e => onAsignar(imagen.id, e.target.value || null)}>
       <option value="">Sin asignar</option>{proyecciones.map(p => <option key={p.codigo} value={p.codigo}>{p.nombre}</option>)}
     </select></label>
     {editable && <button type="button" className="lab-secondary-button" onClick={() => onRetirar(imagen)}>Retirar</button>}
@@ -46,7 +46,7 @@ export default function GaleriaImagenes({ imagenes, proyecciones, editable, ocup
   const [motivo, setMotivo] = useState('')
   return <>
     <div className="rxe-galeria">{imagenes.length ? imagenes.map(imagen => <Miniatura key={imagen.id} imagen={imagen} proyecciones={proyecciones}
-      editable={editable} ocupado={ocupado} onAsignar={onAsignar} onRetirar={setRetirar} onAbrir={setVisor} />) : <p>No hay imagenes adjuntas.</p>}</div>
+      editable={editable} ocupado={ocupado} onAsignar={onAsignar} onRetirar={setRetirar} onAbrir={setVisor} />) : <p>No hay imágenes adjuntas.</p>}</div>
     {visor && <VisorDialogo imagen={visor} onCerrar={() => setVisor(null)} />}
     {retirar && <Dialogo compacto eyebrow="CONFIRMAR" titulo="Retirar imagen" bloqueado={ocupado} onCerrar={() => { setRetirar(null); setMotivo('') }}>
       <div className="lab-dialog-body lab-confirm-body"><p>La imagen quedara retirada con trazabilidad; el archivo no se borrara.</p>
