@@ -6,27 +6,49 @@ import { mensajeErrorApi, obtenerEstudio } from '../../api/radiologiaApi.js'
 import { useVistaImagen } from '../components/GaleriaImagenes.jsx'
 import { partirTextoInforme } from '../utils/informe.js'
 import '../../../laboratorio/pages/informe-solicitud.css'
+import '../../../ecografia/pages/ecografia.css'
 import './estudio.css'
 
 const LATERALIDADES = { derecha: 'Derecha', izquierda: 'Izquierda', bilateral: 'Bilateral' }
 const nombresProyecciones = detalle => (detalle.adquisicion?.proyecciones_realizadas || []).map(c => detalle.config?.proyecciones?.find(p => p.codigo === c)?.nombre || c).join(', ') || 'No registradas'
-function AnexoImagen({ imagen, detalle, indice }) {
-  const url = useVistaImagen(imagen.archivo_id); const proyeccion = detalle.config?.proyecciones?.find(p => p.codigo === imagen.proyeccion_codigo)?.nombre || imagen.proyeccion_codigo || 'Sin asignar'
-  return <section className="rxe-anexo-pagina"><h2>Anexo de imágenes · {indice + 1}</h2>{url ? <img src={url} alt={imagen.nombre_original} /> : <p>{url === false ? 'No se pudo cargar la imagen.' : 'Cargando imagen…'}</p>}<p>{proyeccion} · {imagen.nombre_original}</p></section>
+const SEXOS = { M: 'Masculino', F: 'Femenino', masculino: 'Masculino', femenino: 'Femenino' }
+const fechaCorta = valor => valor ? new Date(valor).toLocaleDateString('es-BO') : 'No registrada'
+
+function LaminaImagen({ imagen, detalle }) {
+  const url = useVistaImagen(imagen.archivo_id)
+  const proyeccion = detalle.config?.proyecciones?.find(p => p.codigo === imagen.proyeccion_codigo)?.nombre || imagen.proyeccion_codigo || 'Proyección sin asignar'
+  return <figure className="rxe-lamina">{url ? <img src={url} alt={imagen.nombre_original} /> : <p>{url === false ? 'No se pudo cargar la imagen.' : 'Cargando imagen…'}</p>}<figcaption>{proyeccion}</figcaption></figure>
 }
 
+/** Documento de lectura e impresión con el mismo formato institucional que el informe de ecografía. */
 export function DocumentoInformeRx({ detalle, incluirImagenes }) {
   const { estudio, paciente, solicitud, adquisicion, informe, adendas = [] } = detalle
   const borrador = informe?.estado !== 'publicado'
-  return <><article className="lab-report-document rxe-documento">
-    {borrador && <p className="rxe-marca-borrador">BORRADOR — sin validez diagnóstica</p>}
-    <header className="lab-report-header"><div><p className="lab-report-institution">SarcoSistema · Rayos X</p><h1>Informe radiológico</h1></div><strong>{estudio.referencia_estudio}<br />{solicitud.referencia}</strong></header>
-    <dl className="lab-report-meta"><div className="is-wide"><dt>Paciente</dt><dd>{paciente.nombre_completo}</dd></div><div><dt>Documento</dt><dd>{paciente.numero_documento || '—'}</dd></div><div><dt>Edad / sexo</dt><dd>{paciente.edad ?? '—'} / {paciente.sexo || '—'}</dd></div><div><dt>Fecha del examen</dt><dd>{adquisicion?.fecha_hora_adquisicion ? new Date(adquisicion.fecha_hora_adquisicion).toLocaleString('es-BO') : 'No registrada'}</dd></div><div className="is-wide"><dt>Médico solicitante</dt><dd>{solicitud.medico_solicitante || '—'}</dd></div></dl>
-    <section className="rxe-datos-impresos"><h2>Datos del estudio</h2><dl><div><dt>Examen</dt><dd>{estudio.tipo_estudio_nombre}</dd></div><div><dt>Región</dt><dd>{detalle.config?.region || '—'}</dd></div><div><dt>Lateralidad</dt><dd>{LATERALIDADES[estudio.detalle?.lateralidad] || 'No aplica'}</dd></div><div><dt>Proyecciones</dt><dd>{nombresProyecciones(detalle)}</dd></div><div><dt>Indicación clínica</dt><dd>{estudio.detalle?.indicacion_clinica || '—'}</dd></div></dl></section>
-    <section className="rxe-cuerpo-informe">{partirTextoInforme(informe?.texto || '').map((seccion, i) => <section key={`${seccion.titulo}-${i}`}>{seccion.titulo && <h2>{seccion.titulo}</h2>}<p>{seccion.lineas.join('\n')}</p></section>)}</section>
-    {adendas.length > 0 && <section className="rxe-adendas-impresas"><h2>Adendas</h2>{adendas.map(a => <article key={a.id}><h3>{new Date(a.fecha_hora).toLocaleString('es-BO')} · {a.autor_nombre}</h3><strong>{a.motivo}</strong><p>{a.texto}</p></article>)}</section>}
-    <footer className="lab-report-signature"><div><p>Profesional responsable: {informe?.responsable_nombre || 'No informado'}</p><p>Registro profesional: {informe?.registro_profesional || 'No informado'}</p><p>Validado: {informe?.fecha_hora_publicacion ? new Date(informe.fecha_hora_publicacion).toLocaleString('es-BO') : 'No validado'}</p><p>Identificador: {estudio.referencia_estudio} · versión {informe?.numero_version || 1}</p></div><div className="lab-report-sign-line"><span /><p>Firma y sello</p></div></footer>
-  </article>{incluirImagenes && (detalle.imagenes || []).map((imagen, i) => <AnexoImagen key={imagen.id} imagen={imagen} detalle={detalle} indice={i} />)}</>
+  const lateralidad = LATERALIDADES[estudio.detalle?.lateralidad]
+  const secciones = partirTextoInforme(informe?.texto || '')
+  const conclusion = secciones.find(sec => /CONCLUSI/i.test(sec.titulo || ''))
+  const cuerpo = secciones.filter(sec => sec !== conclusion)
+  return <article className="lab-report-document eco-documento rxe-documento">
+    <header className="eco-cabecera"><div><strong>CENTRO DE SALUD INTEGRAL SARCOBAMBA</strong><p>COCHABAMBA · CERCADO</p></div><strong>SERVICIO DE RAYOS X</strong></header>
+    {borrador && <p className="eco-borrador">BORRADOR · PENDIENTE DE VALIDACIÓN</p>}
+    <dl className="eco-identidad">
+      <div><dt>Nombre:</dt><dd>{paciente.nombre_completo}</dd></div>
+      <div><dt>Registro:</dt><dd>{paciente.codigo_paciente || 'No registrado'}</dd></div>
+      <div><dt>Fecha del estudio:</dt><dd>{fechaCorta(adquisicion?.fecha_hora_adquisicion || solicitud.fecha_solicitud)}</dd></div>
+      <div><dt>Documento:</dt><dd>{paciente.numero_documento || 'No registrado'}</dd></div>
+      <div><dt>Establecimiento solicitante:</dt><dd>{solicitud.establecimiento || 'C.S. Sarcobamba'}</dd></div>
+      <div><dt>Médico solicitante:</dt><dd>{solicitud.medico_solicitante || 'No registrado'}</dd></div>
+    </dl>
+    <p>Edad: {paciente.edad != null ? `${paciente.edad} años` : 'No registrada'} · Sexo: {SEXOS[paciente.sexo] || paciente.sexo || 'No registrado'}</p>
+    <h2 className="eco-titulo">{estudio.tipo_estudio_nombre}{lateralidad ? ` ${lateralidad.toLocaleLowerCase('es')}` : ''}</h2>
+    <p className="eco-hallazgo"><strong>PROYECCIONES: </strong>{nombresProyecciones(detalle)}</p>
+    {estudio.detalle?.indicacion_clinica && <p className="eco-hallazgo"><strong>INDICACIÓN CLÍNICA: </strong>{estudio.detalle.indicacion_clinica}</p>}
+    {cuerpo.map((sec, i) => <p className="eco-hallazgo" key={`${sec.titulo}-${i}`}>{sec.titulo && <strong>{sec.titulo.replace(/:$/, '')}: </strong>}{sec.lineas.join('\n')}</p>)}
+    <section className="eco-conclusion"><h3>CONCLUSIÓN</h3><p>{conclusion ? conclusion.lineas.join('\n') : 'Pendiente de registrar.'}</p></section>
+    {adendas.length > 0 && <section className="eco-conclusion"><h3>ADENDAS</h3>{adendas.map(a => <p key={a.id}><strong>{new Date(a.fecha_hora).toLocaleDateString('es-BO')} · {a.motivo}: </strong>{a.texto}</p>)}</section>}
+    <footer className="lab-report-signature"><div><span /><p>Firma y sello del profesional responsable</p><p>{informe?.responsable_nombre || ''}{informe?.registro_profesional ? ` · Reg. ${informe.registro_profesional}` : ''}</p></div><p>{estudio.referencia_estudio} · {borrador ? 'Borrador' : `Validado el ${fechaCorta(informe?.fecha_hora_publicacion)}`}</p></footer>
+    {incluirImagenes && (detalle.imagenes || []).length > 0 && <section className="eco-laminas"><h3>IMÁGENES DEL ESTUDIO</h3><p>{paciente.nombre_completo} · {estudio.referencia_estudio}</p><div className="eco-galeria">{detalle.imagenes.map(imagen => <LaminaImagen key={imagen.id} imagen={imagen} detalle={detalle} />)}</div></section>}
+  </article>
 }
 
 export default function InformeImpresoRxPage({ usuario, logout }) {
