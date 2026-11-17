@@ -21,15 +21,16 @@ export default function ExamenesComplementarios({ historial, pacienteId, modalid
       {historial.isError && <p role="alert" className="med-message">No se pudieron cargar los resultados de {nombre}.</p>}
       {historial.data && !estudios.length && <p className="med-message">Todavía no hay estudios de {nombre} informados para este paciente. Los que solicites aparecerán aquí cuando el servicio de imagen publique el informe.</p>}
       {estudios.map((estudio) => (
-        <article className="med-eco-estudio" key={estudio.estudio_id}>
-          <header>
-            <strong>{estudio.tipo_estudio_nombre}</strong>
-            <span>Publicado el {fecha(estudio.fecha_publicacion)} · {estudio.referencia_estudio}</span>
-          </header>
-          {estudio.descripcion_texto
-            ? <p className="med-eco-informe">{estudio.descripcion_texto.length > 220 ? `${estudio.descripcion_texto.slice(0, 220).trimEnd()}…` : estudio.descripcion_texto}</p>
-            : <p className="med-message">El informe no tiene texto registrado.</p>}
-          <div className="med-eco-acciones"><span>{estudio.archivos?.length || 0} archivos adjuntos</span><Link className="med-lab-report-button" to={`/consultas/pacientes/${pacienteId}/${rayosX ? 'rayos-x' : 'ecografias'}/${estudio.estudio_id}/informe`}>Ver informe</Link></div>
+          <article className="med-eco-estudio" key={estudio.estudio_id}>
+            <div className="med-eco-estudio-identidad">
+              <strong>{estudio.tipo_estudio_nombre}</strong>
+              <span>Referencia · {estudio.referencia_estudio}</span>
+            </div>
+            <div className="med-eco-estudio-meta">
+              <span>Publicado · {fecha(estudio.fecha_publicacion)}</span>
+              <span>{estudio.archivos?.length || 0} archivos</span>
+            </div>
+            <Link className="med-eco-estudio-accion" to={`/consultas/pacientes/${pacienteId}/${rayosX ? 'rayos-x' : 'ecografias'}/${estudio.estudio_id}/informe`}>Ver informe <span aria-hidden="true">→</span></Link>
         </article>
       ))}
       {ejemplo}

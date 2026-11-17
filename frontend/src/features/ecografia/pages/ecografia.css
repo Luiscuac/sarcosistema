@@ -44,3 +44,41 @@
   .eco-imagen img { height: 70mm; }
   .eco-borrador { color: #111; border: 1px solid #777; }
 }
+
+.eco-image-page .lab-list-panel { overflow: hidden; border-radius: 12px; }
+.eco-image-page .img-resumen { gap: 12px; }
+.eco-image-page .img-resumen button { display: grid; grid-template-columns: 48px minmax(0, 1fr); align-items: center; gap: 4px 12px; min-height: 78px; padding: 13px 16px; border-color: #e3e9eb; border-radius: 10px; text-align: left; transition: border-color .15s, box-shadow .15s, background .15s; }
+.eco-image-page .img-resumen button:hover { border-color: #bfd5d2; box-shadow: 0 4px 14px rgb(23 63 60 / 6%); }
+.eco-image-page .img-resumen button.activo { border-color: #b7d2ce; background: #f5faf9; box-shadow: inset 3px 0 0 var(--brand); }
+.eco-image-page .img-resumen strong { grid-row: span 2; color: var(--brand); font-size: 25px; font-variant-numeric: tabular-nums; }
+.eco-image-page .img-resumen span { color: #53606b; font-size: 12px; font-weight: 600; }
+.eco-study-list { margin-top: 8px; }
+.eco-study-row { display: grid; grid-template-columns: minmax(170px, 1.15fr) minmax(170px, 1fr) minmax(140px, .9fr) minmax(125px, auto) auto; align-items: center; gap: 16px; padding: 16px 22px; border-top: 1px solid #edf0f2; transition: background .15s; }
+.eco-study-row:hover { background: #f8fbfb; }
+.eco-study-name, .eco-study-patient, .eco-study-request { display: grid; min-width: 0; gap: 5px; }
+.eco-study-name > span, .eco-study-patient > span, .eco-study-request > span { color: var(--muted); font-size: 11px; }
+.eco-study-name > strong, .eco-study-patient > strong { color: var(--ink); font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+.eco-study-request > span:first-child { color: #34424c; font-size: 12px; overflow-wrap: anywhere; }
+.eco-study-request > span + span { font-size: 11px; }
+.eco-study-status { display: inline-flex; align-items: center; gap: 8px; color: #825b08; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.eco-study-status > span { width: 7px; height: 7px; flex: 0 0 auto; border-radius: 50%; background: currentColor; }
+.eco-study-status--resultado_en_preparacion { color: #285a9e; }
+.eco-study-status--publicado { color: #176057; }
+.eco-study-open { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 36px; padding: 7px 11px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--brand); font-size: 12px; font-weight: 600; text-decoration: none; white-space: nowrap; transition: background .15s, border-color .15s; }
+.eco-study-open:hover { border-color: var(--brand); background: #f4faf9; }
+.eco-study-open span { font-size: 16px; }
+@media (max-width: 900px) {
+  .eco-study-row { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto; gap: 12px; padding-right: 16px; padding-left: 16px; }
+  .eco-study-name { grid-column: 1; grid-row: 1; }
+  .eco-study-patient { grid-column: 2; grid-row: 1; }
+  .eco-study-request { grid-column: 1; grid-row: 2; }
+  .eco-study-status { grid-column: 2; grid-row: 2; }
+  .eco-study-open { grid-column: 3; grid-row: 1 / span 2; }
+}
+@media (max-width: 700px) {
+  .eco-image-page .img-resumen { gap: 8px; }
+  .eco-image-page .img-resumen button { min-height: 70px; padding: 10px; }
+  .eco-study-row { grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 14px 16px; }
+  .eco-study-name, .eco-study-patient, .eco-study-request, .eco-study-status, .eco-study-open { grid-column: 1; grid-row: auto; }
+  .eco-study-open { justify-content: space-between; }
+}

@@ -85,7 +85,11 @@ function HistorialConsultas({ historial, pagina, pacienteId }) {
 
 export default function PacienteFicha({ id, usuario }) {
   const [parametros] = useSearchParams()
-  const [seccion, setSeccion] = useState(['imagenes', 'rayos_x'].includes(parametros.get('seccion')) ? parametros.get('seccion') : 'consultas')
+  const [seccion, setSeccion] = useState(
+    ['enfermeria', 'receta', 'laboratorio', 'imagenes', 'rayos_x'].includes(parametros.get('seccion'))
+      ? parametros.get('seccion')
+      : 'consultas',
+  )
   const pagina = usePaginaHistorial(id)
   const paciente = usePaciente(id)
   const historial = useHistorial(id, pagina.pagina, seccion === 'consultas' || seccion === 'imagenes' || seccion === 'rayos_x')
