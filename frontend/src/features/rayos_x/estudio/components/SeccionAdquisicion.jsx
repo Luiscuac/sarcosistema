@@ -10,10 +10,6 @@ import GaleriaImagenes from './GaleriaImagenes.jsx'
 import { parametrosANumeros, tamanoLegible, validarArchivoImagen } from '../utils/informe.js'
 
 const VACIO = { proyecciones_realizadas: [], lateralidad_realizada: '', posicion_paciente: '', fecha_hora_adquisicion: '', operador_nombre: '', calidad: '', limitaciones: '', repeticiones: 0, motivo_repeticion: '', observaciones: '', parametros: {} }
-const PARAMETROS = [
-  ['kvp', 'kVp'], ['mas', 'mAs'], ['tiempo_ms', 'Tiempo (ms)'], ['indice_exposicion', 'Índice de exposición'],
-  ['indice_desviacion', 'Índice de desviación'], ['dap', 'DAP'], ['distancia_cm', 'Distancia (cm)'], ['equipo', 'Equipo'],
-]
 const aLocal = iso => {
   if (!iso) return ''
   const fecha = new Date(iso); const dos = numero => String(numero).padStart(2, '0')
@@ -114,7 +110,6 @@ export default function SeccionAdquisicion({ estudioId, detalle }) {
         <label className="rxe-span">Limitaciones<textarea value={form.limitaciones || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, limitaciones: e.target.value })} /></label>
         <label className="rxe-span">Motivo de repetición<textarea value={form.motivo_repeticion || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, motivo_repeticion: e.target.value })} /></label>
         <label className="rxe-span">Observaciones<textarea value={form.observaciones || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, observaciones: e.target.value })} /></label>
-        <details className="rxe-span"><summary>Parámetros técnicos (opcionales)</summary><div className="rxe-form-grid">{PARAMETROS.map(([claveParametro, etiqueta]) => <label key={claveParametro}>{etiqueta}<input type={claveParametro === 'equipo' ? 'text' : 'number'} step="any" value={form.parametros?.[claveParametro] ?? ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, parametros: { ...form.parametros, [claveParametro]: e.target.value } })} /></label>)}</div></details>
         {editableRegistro && <div className="rxe-acciones rxe-span"><button type="submit" className="lab-secondary-button" disabled={ocupado}>Guardar registro</button><button type="button" className="primary-button" disabled={ocupado} onClick={() => { setPendientes(detalle.pendientes?.adquisicion || []); if (!(detalle.pendientes?.adquisicion || []).length) completar.mutate() }}>Completar adquisición</button></div>}
       </form>
       {pendientes.length > 0 && <div className="rxe-pendientes" role="alert"><strong>Pendientes antes de completar:</strong><ul>{pendientes.map(p => <li key={p}>{p}</li>)}</ul><button type="button" className="primary-button" disabled={ocupado} onClick={() => completar.mutate()}>Comprobar y completar</button></div>}
