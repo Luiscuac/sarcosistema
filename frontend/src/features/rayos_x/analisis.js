@@ -99,3 +99,24 @@ export const porcentaje = valor => (typeof valor === 'number' && Number.isFinite
 
 /** Lectura del médico en la revisión: '' (no indicada), 'si' o 'no' -> true/false/null. */
 export const lecturaAnormal = valor => (valor === 'si' ? true : valor === 'no' ? false : null)
+
+/** Nivel de señal en lenguaje simple a partir del score normalizado (0,5 = punto de corte del modelo). */
+export function nivelSenal(score) {
+  if (typeof score !== 'number' || !Number.isFinite(score)) return { clave: 'sin_dato', texto: 'Sin dato' }
+  if (score >= 0.75) return { clave: 'alta', texto: 'Señal alta' }
+  if (score >= 0.5) return { clave: 'moderada', texto: 'Señal moderada' }
+  return { clave: 'baja', texto: 'Sin señal relevante' }
+}
+
+/** Veredicto orientativo para el médico según el nivel de prioridad del índice y los hallazgos destacados. */
+export const VEREDICTOS = {
+  alta: { titulo: 'Revisar con prioridad', texto: 'El modelo encuentra señales que conviene revisar pronto en la imagen.' },
+  media: { titulo: 'Revisar con atención', texto: 'El modelo encuentra algunas señales; revísalas junto con el informe.' },
+  baja: { titulo: 'Sin señales importantes', texto: 'El modelo no encuentra señales relevantes. Esto no descarta enfermedad.' },
+}
+
+export const DECISIONES = {
+  aceptada_como_propuesta: 'Aceptada como propuesta',
+  corregida: 'Corregida',
+  rechazada: 'Rechazada',
+}

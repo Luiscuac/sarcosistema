@@ -85,3 +85,12 @@ test('lectura del médico y porcentajes del panel', async () => {
   assert.equal(porcentaje(0.456), '46 %')
   assert.equal(porcentaje(null), '—')
 })
+
+import { nivelSenal } from './analisis.js'
+
+test('nivel de señal en lenguaje simple', () => {
+  assert.equal(nivelSenal(0.9).clave, 'alta')
+  assert.equal(nivelSenal(0.6).clave, 'moderada')
+  assert.equal(nivelSenal(0.2).clave, 'baja')
+  assert.equal(nivelSenal(undefined).clave, 'sin_dato')
+})

@@ -31,12 +31,27 @@ def raiz_archivos():
     return raices_archivos()
 
 
+def _prioridad(resultado) -> str | None:
+    """Nivel orientativo (alta/media/baja) del índice pulmonar, con los mismos umbrales que la bandeja."""
+    indice = (((resultado or {}).get('vision') or {}).get('indice_pulmonar') or {}).get('valor')
+    if indice is None:
+        return None
+    try:
+        from app.imagenes.application.triaje import nivel_prioridad
+        from app.imagenes.presentation.router_clinico import _umbrales_triaje
+        return nivel_prioridad(indice, *_umbrales_triaje())
+    except Exception:  # sin archivo de índice preparado no se clasifica
+        return None
+
+
 def analisis_publico(a):
-    return {k: a[k] for k in ('id', 'estudio_id', 'informe_id', 'archivo_id',
-                              'archivo_sha256', 'informe_sha256', 'informe_texto',
-                              'estado', 'proyeccion', 'resultado',
-                              'error_codigo', 'version_revision', 'creado_en',
-                              'actualizado_en', 'revisiones') if k in a}
+    salida = {k: a[k] for k in ('id', 'estudio_id', 'informe_id', 'archivo_id',
+                                'archivo_sha256', 'informe_sha256', 'informe_texto',
+                                'estado', 'proyeccion', 'resultado',
+                                'error_codigo', 'version_revision', 'creado_en',
+                                'actualizado_en', 'revisiones') if k in a}
+    salida['prioridad'] = _prioridad(a.get('resultado'))
+    return salida
 
 
 @router.get('/estudios')
