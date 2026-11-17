@@ -30,3 +30,9 @@ export const descargarArchivo = async (archivoId, nombreOriginal) => {
   enlace.remove()
   URL.revokeObjectURL(url)
 }
+
+// DICOM no se ve en el navegador: el servidor genera una vista PNG local con los mismos permisos.
+export const esImagenVisible = mime => mime.startsWith('image/') || mime === 'application/dicom'
+export const obtenerImagenVisible = async archivo => (archivo.mime_type === 'application/dicom'
+  ? (await api.get(`/imagenes/archivos/${archivo.id}/vista`, { responseType: 'blob' })).data
+  : (await api.get(`/imagenes/archivos/${archivo.id}`, { responseType: 'blob' })).data)

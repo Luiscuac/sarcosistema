@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { obtenerHistorial, obtenerPaciente } from '../api/consultasApi.js'
-import { obtenerArchivoImagen } from '../../imagenes/api/imagenesApi.js'
+import { esImagenVisible, obtenerImagenVisible } from '../../imagenes/api/imagenesApi.js'
 import { fecha } from '../utils/paciente.js'
 import '../../laboratorio/pages/laboratorio.css'
 import '../../laboratorio/pages/informe-solicitud.css'
@@ -12,8 +12,8 @@ function ImagenAdjunta({ archivo }) {
   const [url, setUrl] = useState('')
   const imagen = useQuery({
     queryKey: ['consultas', 'ecografia', 'archivo', archivo.id],
-    queryFn: () => obtenerArchivoImagen(archivo.id),
-    enabled: archivo.mime_type.startsWith('image/'),
+    queryFn: () => obtenerImagenVisible(archivo),
+    enabled: esImagenVisible(archivo.mime_type),
   })
   useEffect(() => {
     if (!imagen.data) return undefined
@@ -22,7 +22,7 @@ function ImagenAdjunta({ archivo }) {
     return () => URL.revokeObjectURL(objectUrl)
   }, [imagen.data])
 
-  if (!archivo.mime_type.startsWith('image/')) return null
+  if (!esImagenVisible(archivo.mime_type)) return null
   if (imagen.isError) return <p role="alert">No se pudo cargar {archivo.nombre_original}.</p>
   if (!url) return <p role="status">Cargando {archivo.nombre_original}…</p>
   return <figure className="img-informe-figura"><img src={url} alt={`Imagen del estudio: ${archivo.nombre_original}`} /><figcaption>{archivo.nombre_original}</figcaption></figure>
@@ -41,6 +41,7 @@ export default function InformeEcografiaMedico() {
   })
   const estudio = historial.data?.estudios_imagen?.find(e => e.estudio_id === Number(estudioId))
   const rayosX = ubicacion.pathname.includes('/rayos-x/') || /radiograf|rayos x/i.test(estudio?.tipo_estudio_nombre || '')
+  const esTorax = rayosX && /t[oó]rax/i.test(estudio?.tipo_estudio_nombre || '')
   const seccionVolver = rayosX ? 'rayos_x' : 'imagenes'
   const titulo = rayosX ? 'Informe de Rayos X' : 'Informe de ecografía'
 
@@ -48,10 +49,10 @@ export default function InformeEcografiaMedico() {
   if (historial.isError || paciente.isError || !estudio) return <section className="lab-report-page"><p role="alert" className="lab-report-error">No se pudo cargar el informe publicado para este paciente.</p><Link className="lab-back-link" to={`/consultas/pacientes/${pacienteId}?seccion=${seccionVolver}`}>Volver a {rayosX ? 'Rayos X' : 'ecografías'}</Link></section>
 
   const archivos = estudio.archivos || []
-  const imagenes = archivos.filter(a => a.mime_type.startsWith('image/'))
-  const otros = archivos.filter(a => !a.mime_type.startsWith('image/'))
+  const imagenes = archivos.filter(a => esImagenVisible(a.mime_type))
+  const otros = archivos.filter(a => !esImagenVisible(a.mime_type))
   return <section className="lab-report-page">
-    <div className="lab-report-controls"><Link className="lab-back-link" to={`/consultas/pacientes/${pacienteId}?seccion=${seccionVolver}`}>← Volver a {rayosX ? 'Rayos X' : 'ecografías'}</Link><button className="primary-button" type="button" onClick={() => window.print()}>Imprimir o guardar PDF</button></div>
+    <div className="lab-report-controls"><Link className="lab-back-link" to={`/consultas/pacientes/${pacienteId}?seccion=${seccionVolver}`}>← Volver a {rayosX ? 'Rayos X' : 'ecografías'}</Link>{esTorax && <Link className="lab-secondary-button" to={`/imagenes/rayos-x?estudio=${estudioId}`}>Abrir con asistente IA</Link>}<button className="primary-button" type="button" onClick={() => window.print()}>Imprimir o guardar PDF</button></div>
     <article className="lab-report-document img-informe">
       <header className="lab-report-header"><div><p className="lab-report-institution">SarcoSistema · Diagnóstico por imágenes</p><h1>{titulo}</h1></div><strong>{estudio.referencia_estudio}</strong></header>
       <dl className="lab-report-meta">

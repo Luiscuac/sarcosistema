@@ -337,3 +337,4 @@ async def test_dicom_se_acepta_y_guarda_extension(client, radiologo_sesion, repo
     archivo = respuesta.json()['archivos'][0]
     assert archivo['mime_type'] == 'application/dicom'
     assert archivo['nombre_original'] == 'estudio.dcm'
+

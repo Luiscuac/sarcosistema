@@ -1,4 +1,4 @@
-"""Descarga de archivos clinicos: medico (ve su paciente) y radiologo (su trabajo)."""
+"""Descarga de archivos clinicos: medico (ve su paciente) y personal de imágenes (su trabajo)."""
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,17 +18,10 @@ def get_repositorio(db: AsyncSession = Depends(get_db)) -> RepositorioImagenSql:
     return RepositorioImagenSql(db)
 
 
-@router.get('/archivos/{archivo_id}')
-async def descargar_archivo(
-    archivo_id: int,
-    usuario: Usuario = Depends(usuario_actual),
-    repositorio: RepositorioImagenSql = Depends(get_repositorio),
-    almacen: AlmacenLocal = Depends(lambda: AlmacenLocal()),
-):
-    """Solo el medico (su paciente) o el radiologo (su trabajo) descargan."""
+async def _archivo_autorizado(archivo_id: int, usuario: Usuario, repositorio: RepositorioImagenSql):
+    """Solo el medico (su paciente, publicado) o el personal de su modalidad acceden al archivo."""
     if usuario.rol not in ('medico', 'imagenes', 'rayos_x'):
         raise HTTPException(status.HTTP_403_FORBIDDEN, 'Sin acceso a este archivo.')
-
     try:
         archivo = await repositorio.obtener_archivo(archivo_id)
     except ArchivoNoEncontrado:
@@ -49,7 +42,18 @@ async def descargar_archivo(
         raise HTTPException(status.HTTP_403_FORBIDDEN, 'Sin acceso a este archivo.')
     if usuario.rol == 'medico' and estudio.estado != 'publicado':
         raise HTTPException(status.HTTP_403_FORBIDDEN, 'El estudio no está publicado.')
+    return archivo
 
+
+@router.get('/archivos/{archivo_id}')
+async def descargar_archivo(
+    archivo_id: int,
+    usuario: Usuario = Depends(usuario_actual),
+    repositorio: RepositorioImagenSql = Depends(get_repositorio),
+    almacen: AlmacenLocal = Depends(lambda: AlmacenLocal()),
+):
+    """Solo el medico (su paciente) o el personal de imágenes (su trabajo) descargan."""
+    archivo = await _archivo_autorizado(archivo_id, usuario, repositorio)
     try:
         ruta = almacen.ruta_absoluta(archivo.url_archivo)
     except (FileNotFoundError, ValueError):
@@ -59,6 +63,33 @@ async def descargar_archivo(
         ruta, media_type=archivo.mime_type, filename=archivo.nombre_original,
         content_disposition_type='attachment',
     )
+
+
+@router.get('/archivos/{archivo_id}/vista')
+async def vista_archivo(
+    archivo_id: int,
+    usuario: Usuario = Depends(usuario_actual),
+    repositorio: RepositorioImagenSql = Depends(get_repositorio),
+):
+    """PNG 8 bits para ver en el navegador radiografías DICOM, de 16 bits o en paleta."""
+    import asyncio
+    from fastapi import Response
+    from app.imagenes.domain.vision import ErrorVision, ImagenNoValida
+    from app.imagenes.infrastructure.archivos import leer_archivo_local, raices_archivos
+    from app.imagenes.infrastructure.vision.preprocesamiento import vista_previa_png
+    archivo = await _archivo_autorizado(archivo_id, usuario, repositorio)
+    metadatos = {'url_archivo': archivo.url_archivo, 'mime_type': archivo.mime_type, 'activo': True,
+                 'tamano_bytes': archivo.tamano_bytes, 'hash_sha256': archivo.hash_sha256}
+    try:
+        contenido, _ = leer_archivo_local(raices_archivos(), metadatos)
+        png = await asyncio.to_thread(vista_previa_png, contenido)
+    except ValueError:
+        raise HTTPException(status.HTTP_409_CONFLICT, 'El archivo no está disponible o no supera la comprobación de integridad.') from None
+    except ImagenNoValida:
+        raise HTTPException(422, 'El archivo no tiene un formato de radiografía admitido para la vista previa.') from None
+    except ErrorVision:
+        raise HTTPException(503, 'Faltan dependencias locales para generar la vista previa.') from None
+    return Response(png, media_type='image/png', headers={'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff'})
 
 
 __all__ = ['router', 'EstudioNoEncontrado']

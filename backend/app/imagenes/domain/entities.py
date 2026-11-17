@@ -5,7 +5,7 @@ from datetime import date, datetime
 
 @dataclass(frozen=True, slots=True)
 class SolicitudEcografia:
-    """Pedido del medico: genera solicitud y estudio pendiente para el radiologo."""
+    """Pedido del medico: genera solicitud y estudio pendiente para el personal de imágenes."""
 
     paciente_id: int
     tipo_estudio_ids: tuple[int, ...]
@@ -17,7 +17,7 @@ class SolicitudEcografia:
 
 @dataclass(frozen=True, slots=True)
 class EstudioImagenPendiente:
-    """Estudio de imagen en bandeja del radiologo."""
+    """Estudio de imagen en bandeja del personal de imágenes."""
 
     estudio_id: int
     referencia_estudio: str
@@ -61,7 +61,7 @@ class InformeImagen:
 
 @dataclass(frozen=True, slots=True)
 class EstudioImagenDetalle:
-    """Vista de trabajo del radiologo: estudio + ultima version del informe."""
+    """Vista de trabajo del personal de imágenes: estudio + ultima version del informe."""
 
     estudio_id: int
     referencia_estudio: str

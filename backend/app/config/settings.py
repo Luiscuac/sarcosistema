@@ -25,7 +25,13 @@ class Settings(BaseSettings):
     radiology_ai_enabled: bool = False
     radiology_storage_dir: str = '.storage/radiologia'
     radiology_vision_min_free_mib: int = Field(default=4096,ge=2048)
+    # Mapas de calor solo en pulmones si la segmentación local está preparada (scripts.preparar_segmentacion_pulmonar).
+    radiology_lung_mask_enabled: bool = True
     radiology_score_threshold: float = Field(default=0.5,ge=0,le=1)
+    # Umbrales del nivel de triaje (alta/media). Vacíos = provisionales del artefacto del índice;
+    # deben calibrarse con casos validados del propio hospital.
+    radiology_triage_umbral_alta: float | None = Field(default=None,ge=0,le=1)
+    radiology_triage_umbral_media: float | None = Field(default=None,ge=0,le=1)
 
     # Examenes complementarios de imagen: solo imagen hoy, abierto a video/audio.
     imagenes_tipos_permitidos: str = (

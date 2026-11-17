@@ -55,3 +55,11 @@ async def test_fallo_bd_rag_conserva_vision_valida():
     r = await AnalizarEstudio(Vision(),Rag(),lambda _:b'fixture').ejecutar(t,s)
     assert r['vision']['findings'][0]['score'] == 0.8
     assert r['rag']['estado'] == 'no_disponible'
+
+
+def test_pregunta_documental_usa_categorias_que_mas_pesan_y_completa_con_fijas():
+    from app.imagenes.application.analizar_estudio import pregunta_documental
+    sin_indice = pregunta_documental({'findings': []})
+    assert sin_indice == 'Radiografía de tórax: consolidación pulmonar, derrame pleural y cardiomegalia. Hallazgos radiográficos.'
+    con = pregunta_documental({'indice_pulmonar': {'contribuciones': [{'name': 'Fibrosis', 'aporte': 1}, {'name': 'Nodule', 'aporte': .5}]}})
+    assert con.startswith('Radiografía de tórax: fibrosis, nódulo y consolidación pulmonar')

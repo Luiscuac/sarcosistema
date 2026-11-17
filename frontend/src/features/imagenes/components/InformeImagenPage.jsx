@@ -7,13 +7,14 @@ import { estadoEstudioImagen, formatearTamano } from '../../consultas/utils/exam
 import { useRef } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import '../pages/imagenes.css'
+import { esImagenVisible, obtenerImagenVisible } from '../api/imagenesApi.js'
 
 function ImagenAdjunta({ archivo, obtenerArchivoImagen }) {
   const [url, setUrl] = useState('')
   const imagen = useQuery({
     queryKey: ['imagenes', 'informe', 'archivo', archivo.id],
-    queryFn: () => obtenerArchivoImagen(archivo.id),
-    enabled: archivo.mime_type.startsWith('image/'),
+    queryFn: () => (archivo.mime_type === 'application/dicom' ? obtenerImagenVisible(archivo) : obtenerArchivoImagen(archivo.id)),
+    enabled: esImagenVisible(archivo.mime_type),
   })
   useEffect(() => {
     if (!imagen.data) return undefined
@@ -22,7 +23,7 @@ function ImagenAdjunta({ archivo, obtenerArchivoImagen }) {
     return () => URL.revokeObjectURL(objectUrl)
   }, [imagen.data])
 
-  if (!archivo.mime_type.startsWith('image/')) return null
+  if (!esImagenVisible(archivo.mime_type)) return null
   if (imagen.isError) return <p role="alert">No se pudo cargar {archivo.nombre_original}.</p>
   if (!url) return <p role="status">Cargando {archivo.nombre_original}…</p>
   return <figure className="img-informe-figura"><img src={url} alt={`Imagen del estudio: ${archivo.nombre_original}`} /><figcaption>{archivo.nombre_original}</figcaption></figure>
@@ -73,7 +74,7 @@ function EditorInforme({ estudio, usuario, logout, modalidad, api }) {
   }
 
   const publicado = estudio.estado === 'publicado'
-  const imagenes = estudio.informe?.archivos?.filter(a => a.mime_type.startsWith('image/')) || []
+  const imagenes = estudio.informe?.archivos?.filter(a => esImagenVisible(a.mime_type)) || []
 
   return <main className="lab-page img-page">
     <div className="lab-main">
@@ -96,7 +97,7 @@ function EditorInforme({ estudio, usuario, logout, modalidad, api }) {
             {!publicado && <label className="img-informe-campo"><span>Adjuntar archivos</span><input ref={entrada} type="file" multiple accept="image/*,application/pdf,.dcm" onChange={e => setArchivos([...e.target.files])} /></label>}
             {archivos.length > 0 && <ul className="img-archivos">{archivos.map(file => <li key={file.name}>{file.name} · {formatearTamano(file.size)}</li>)}</ul>}
             {imagenes.length > 0 ? <div className="img-informe-imagenes">{imagenes.map(archivo => <ImagenAdjunta key={archivo.id} archivo={archivo} obtenerArchivoImagen={api.obtenerArchivoImagen} />)}</div> : <p className="lab-report-empty">No hay imágenes adjuntas al informe.</p>}
-            {estudio.informe?.archivos?.filter(a => !a.mime_type.startsWith('image/')).map(a => <p className="img-meta" key={a.id}>{a.nombre_original} · {formatearTamano(a.tamano_bytes)} (vista previa no disponible)</p>)}
+            {estudio.informe?.archivos?.filter(a => !esImagenVisible(a.mime_type)).map(a => <p className="img-meta" key={a.id}>{a.nombre_original} · {formatearTamano(a.tamano_bytes)} (vista previa no disponible)</p>)}
           </section>
           {publicado && <p className="lab-report-responsible">Informe publicado{estudio.informe?.fecha_hora_publicacion ? ` el ${new Date(estudio.informe.fecha_hora_publicacion).toLocaleString('es-BO')}` : ''}. Disponible en el historial del paciente.</p>}
           <footer className="lab-report-signature img-informe-firma"><div><span /><p>Firma y sello del profesional responsable</p></div><p>Documento generado por SarcoSistema</p></footer>

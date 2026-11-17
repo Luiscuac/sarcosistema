@@ -28,7 +28,7 @@ export default function ExamenesComplementarios({ historial, pacienteId, modalid
             </div>
             <div className="med-eco-estudio-meta">
               <span>Publicado · {fecha(estudio.fecha_publicacion)}</span>
-              <span>{estudio.archivos?.length || 0} archivos</span>
+              <span>{(estudio.archivos?.length || 0) === 1 ? '1 archivo' : `${estudio.archivos?.length || 0} archivos`}</span>
             </div>
             <Link className="med-eco-estudio-accion" to={`/consultas/pacientes/${pacienteId}/${rayosX ? 'rayos-x' : 'ecografias'}/${estudio.estudio_id}/informe`}>Ver informe <span aria-hidden="true">→</span></Link>
         </article>

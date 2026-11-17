@@ -6,3 +6,5 @@ export const obtenerArchivo = async (estudio, archivo, signal) => (await api.get
 export const solicitarAnalisis = async (id, datos) => (await api.post(`/imagenes/analisis/estudios/${id}/analisis`, datos)).data
 export const obtenerAnalisis = async (id, signal) => (await api.get(`/imagenes/analisis/${id}`, { signal })).data
 export const guardarRevision = async (id, datos) => (await api.post(`/imagenes/analisis/${id}/revision`, datos)).data
+export const obtenerVista = async (estudio, archivo, signal) => (await api.get(`/imagenes/analisis/estudios/${estudio}/archivos/${archivo}/vista`, { responseType: 'blob', signal })).data
+export const obtenerConcordancia = async signal => (await api.get('/imagenes/analisis/concordancia', { signal })).data

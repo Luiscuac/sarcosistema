@@ -1,4 +1,4 @@
-"""Casos de uso del radiologo: bandeja, subida de imagenes/informe y publicacion."""
+"""Casos de uso del personal de imágenes: bandeja, subida de imagenes/informe y publicacion."""
 from app.imagenes.domain.entities import ArchivoImagen, InformeImagen
 from app.imagenes.domain.ecografia import validar_datos, texto_informe
 from app.imagenes.domain.errors import (
@@ -79,9 +79,11 @@ class GuardarInforme:
             mime = (entrada.get('mime') or '').lower()
             if mime not in self.tipos_permitidos:
                 raise FormatoNoAdmitido(f'Formato no admitido: {mime or entrada.get("nombre")}')
-            if not entrada.get('contenido'):
+            contenido = entrada.get('contenido') or b''
+            if not contenido:
                 raise ArchivoVacio('El archivo llegó vacío')
-            if len(entrada['contenido']) > self.max_bytes:
+            limite = self.max_bytes(mime) if callable(self.max_bytes) else self.max_bytes
+            if len(contenido) > limite:
                 raise ArchivoDemasiadoGrande(mime)
         for entrada in entradas:
             mime = (entrada.get('mime') or '').lower()

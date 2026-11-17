@@ -30,6 +30,7 @@ def test_preparacion_reanuda_modelo_sin_redescargar_corpus(tmp_path, monkeypatch
     manifiesto = json.dumps({'fuentes':[dict(id='SYN',archivo='test.xml',sha256=hashlib.sha256(xml).hexdigest(),url='synthetic:test',categoria='test',extractor_version='1')]})
     (carpeta/'manifest.json').write_text(manifiesto)
     monkeypatch.setattr(script, 'BASE', tmp_path)
+    monkeypatch.setattr(script, 'SOURCES', ('SYN',))
     monkeypatch.setattr(sys, 'argv', ['preparar_rag_torax','--descargar'])
     def prohibir_http(*args, **kwargs):
         pytest.fail('No debe redescargar documentos ya preparados')
@@ -43,3 +44,33 @@ def test_preparacion_reanuda_modelo_sin_redescargar_corpus(tmp_path, monkeypatch
     script.main()
     assert (tmp_path/'.models/rag-torax/manifest.json').is_file()
     assert (carpeta/'manifest.json').read_text() == manifiesto
+
+
+def test_preparacion_agrega_solo_fuentes_faltantes(tmp_path, monkeypatch):
+    import sys
+    import httpx
+    import scripts.preparar_rag_torax as script
+    carpeta = tmp_path / '.datasets' / 'rag-torax'
+    carpeta.mkdir(parents=True)
+    xml = b'<article><article-title>Synthetic test fixture</article-title><permissions><license><license-p>Creative Commons Attribution-NonCommercial-ShareAlike 4.0</license-p></license></permissions><body><p>Test text only.</p></body></article>'
+    (carpeta/'test.xml').write_bytes(xml)
+    (carpeta/'manifest.json').write_text(json.dumps({'fuentes':[dict(id='SYN',archivo='test.xml',sha256=hashlib.sha256(xml).hexdigest(),url='synthetic:test',categoria='test',extractor_version='1')]}))
+    monkeypatch.setattr(script, 'BASE', tmp_path)
+    monkeypatch.setattr(script, 'SOURCES', ('SYN', 'NUEVA'))
+    monkeypatch.setattr(sys, 'argv', ['preparar_rag_torax', '--descargar', '--solo-documentos'])
+    pedidas = []
+
+    class Cliente:
+        def __init__(self, *a, **k):
+            pass
+        def __enter__(self):
+            return self
+        def __exit__(self, *a):
+            return False
+        def get(self, url):
+            pedidas.append(url)
+            return SimpleNamespace(content=xml.replace(b'Synthetic', b'Nueva'), raise_for_status=lambda: None)
+    monkeypatch.setattr(httpx, 'Client', Cliente)
+    script.main()
+    assert len(pedidas) == 1 and 'NUEVA' in pedidas[0]
+    assert [f['id'] for f in json.loads((carpeta/'manifest.json').read_text())['fuentes']] == ['SYN', 'NUEVA']
