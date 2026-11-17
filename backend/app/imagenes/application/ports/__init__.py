@@ -19,7 +19,8 @@ class RepositorioImagen(Protocol):
     async def obtener_estudio(self, estudio_id: int) -> EstudioImagenDetalle | None: ...
 
     async def guardar_informe(
-        self, estudio_id: int, descripcion: str | None, archivos: list[dict], usuario_id: int
+        self, estudio_id: int, descripcion: str | None, archivos: list[dict], usuario_id: int,
+        datos_ecografia: dict | None = None,
     ) -> tuple[InformeImagen, bool]: ...
 
     async def publicar_informe(self, estudio_id: int, usuario_id: int) -> InformeImagen: ...

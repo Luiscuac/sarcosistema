@@ -17,6 +17,7 @@ import HistorialPacienteRxPage from '../features/rayos_x/gestion/pages/Historial
 import EstudioRayosXPage from '../features/rayos_x/estudio/pages/EstudioRayosXPage.jsx'
 import InformeImpresoRxPage from '../features/rayos_x/estudio/pages/InformeImpresoRxPage.jsx'
 import EnfermeriaPage from '../features/enfermeria/pages/EnfermeriaPage.jsx'
+import EnfermeriaInformePage from '../features/enfermeria/pages/EnfermeriaInformePage.jsx'
 import FarmaciaPage from '../features/enfermeria/pages/FarmaciaPage.jsx'
 import RayosXPage from '../features/rayos_x/pages/RayosXPage.jsx'
 // El personal de Rayos X (rayos_x) se encarga de todo el flujo: solicitud, imágenes e informe.
@@ -65,6 +66,9 @@ const router = createBrowserRouter(createRoutesFromElements(
           ['/consultas', 'busqueda'],
           ['/consultas/pacientes/:pacienteId', 'ficha'],
           ['/consultas/pacientes/:pacienteId/nueva', 'nueva'],
+          ['/consultas/pacientes/:pacienteId/recetas/nueva', 'receta_nueva'],
+          ['/consultas/pacientes/:pacienteId/recetas/:recetaId', 'receta_detalle'],
+          ['/consultas/pacientes/:pacienteId/enfermeria/:registroId', 'enfermeria_detalle'],
           ['/consultas/pacientes/:pacienteId/laboratorio/:solicitudId/informe', 'informe_laboratorio'],
           ['/consultas/pacientes/:pacienteId/ecografias/:estudioId/informe', 'informe_ecografia'],
           ['/consultas/pacientes/:pacienteId/rayos-x/:estudioId/informe', 'informe_rayos_x'],
@@ -119,6 +123,16 @@ const router = createBrowserRouter(createRoutesFromElements(
         <Route path="/enfermeria" element={
           <ProtectedRoute rolesPermitidos={['enfermeria']}>
             {({ usuario, logout }) => <EnfermeriaPage usuario={usuario} logout={logout} />}
+          </ProtectedRoute>
+        } />
+        <Route path="/enfermeria/pacientes/:pacienteId/registros/:registroId/informe" element={
+          <ProtectedRoute rolesPermitidos={['enfermeria']}>
+            {({ usuario, logout }) => <EnfermeriaInformePage usuario={usuario} logout={logout} />}
+          </ProtectedRoute>
+        } />
+        <Route path="/enfermeria/pacientes/:pacienteId/recetas/:recetaId/informe" element={
+          <ProtectedRoute rolesPermitidos={['enfermeria']}>
+            {({ usuario, logout }) => <EnfermeriaInformePage usuario={usuario} logout={logout} />}
           </ProtectedRoute>
         } />
         <Route path="/farmacia" element={

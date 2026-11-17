@@ -1,4 +1,5 @@
 """Endpoints del personal de imágenes: bandeja, subida de imagenes/informe y publicacion."""
+import json
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -6,6 +7,7 @@ from app.accesos.domain.entities import Usuario
 from app.accesos.presentation.dependencies.current_user import usuario_actual
 from app.config.database import get_db
 from app.config.settings import settings
+from app.imagenes.domain.ecografia import ORGANOS
 from app.imagenes.application.use_cases.trabajar_estudio import (
     GuardarInforme,
     ListarBandeja,
@@ -20,6 +22,7 @@ from app.imagenes.domain.errors import (
     FormatoNoAdmitido,
     InformeSinContenido,
     InformeYaPublicado,
+    SolicitudInvalida,
 )
 from app.imagenes.infrastructure.persistence.repository import RepositorioImagenSql
 from app.imagenes.infrastructure.storage.almacen_local import AlmacenLocal
@@ -31,6 +34,7 @@ from app.imagenes.presentation.schemas import (
     EstudioPendienteResponse,
     InformeImagenResponse,
     ResultadoAccionResponse,
+    SolicitudEcografiaRequest,
 )
 
 # El prefijo /imagenes lo aplica app.imagenes.router (composición única del módulo).
@@ -80,6 +84,40 @@ def _mime_por_firma(mime: str, contenido: bytes) -> str:
 def _limite_para(mime: str) -> int:
     limite = settings.imagenes_dicom_max_mb if 'dicom' in mime else settings.imagenes_max_mb
     return limite * 1024 * 1024
+
+
+@router.get('/ecografia/pacientes')
+async def pacientes_ecografia(buscar: str = Query(min_length=2, max_length=100),
+                              usuario: Usuario = Depends(usuario_actual),
+                              db: AsyncSession = Depends(get_db)):
+    _validar_rol(usuario, 'ecografia')
+    from app.consultas.infrastructure.persistence.repository import SqlAlchemyConsultaRepository
+    from app.consultas.application.use_cases.consultar_pacientes import ConsultarPacientes
+    return await ConsultarPacientes(SqlAlchemyConsultaRepository(db)).ejecutar(buscar, 1, 20)
+
+
+@router.get('/ecografia/catalogo')
+async def catalogo_ecografia(usuario: Usuario = Depends(usuario_actual),
+                             repositorio: RepositorioImagenSql = Depends(get_repositorio)):
+    _validar_rol(usuario, 'ecografia')
+    return await repositorio.listar_catalogo_imagen()
+
+
+@router.post('/ecografia/solicitudes', status_code=201)
+async def solicitud_ecografia(datos: SolicitudEcografiaRequest,
+                              usuario: Usuario = Depends(usuario_actual),
+                              repositorio: RepositorioImagenSql = Depends(get_repositorio)):
+    _validar_rol(usuario, 'ecografia')
+    from app.imagenes.application.use_cases.solicitar_ecografia import SolicitarEcografia
+    try:
+        datos.validar_estudios()
+        catalogo = await repositorio.listar_catalogo_imagen()
+        if not set(datos.tipo_estudio_ids) <= {t['id'] for t in catalogo}:
+            raise SolicitudInvalida('Selecciona tipos de ecografía activos.')
+        sid = await SolicitarEcografia(repositorio).ejecutar(datos.modelo_solicitud(), usuario.id)
+    except (SolicitudInvalida, ValueError) as error:
+        raise HTTPException(422, str(error)) from None
+    return {'solicitud_id': sid}
 
 
 @router.get('/bandeja', response_model=list[EstudioPendienteResponse])
@@ -136,6 +174,13 @@ async def detalle_estudio(
         estado=estudio.estado,
         fecha_solicitud=estudio.fecha_solicitud,
         informe=_informe(estudio.informe),
+        tipo_estudio_codigo=estudio.tipo_estudio_codigo,
+        codigo_paciente=estudio.codigo_paciente,
+        historia_clinica=estudio.historia_clinica,
+        fecha_nacimiento=estudio.fecha_nacimiento,
+        medico_solicitante=estudio.medico_solicitante,
+        organos=list(ORGANOS.get(estudio.tipo_estudio_codigo, ())),
+        max_archivos=settings.imagenes_max_archivos,
     )
 
 
@@ -147,9 +192,21 @@ async def guardar_informe(
     repositorio: RepositorioImagenSql = Depends(get_repositorio),
     descripcion: str | None = Form(default=None, max_length=8000),
     archivos: list[UploadFile] = File(default=[]),
+    datos_ecografia: str | None = Form(default=None, max_length=40000),
+    conservar_archivos: str | None = Form(default=None, max_length=4000),
 ):
     _validar_rol(usuario, modalidad)
     await _comprobar_estudio(estudio_id, modalidad, repositorio)
+    try:
+        datos = json.loads(datos_ecografia) if datos_ecografia is not None else None
+        conservar = json.loads(conservar_archivos) if conservar_archivos is not None else None
+        if (datos_ecografia is not None and (not isinstance(datos, dict) or modalidad != 'ecografia')
+                or conservar_archivos is not None and not isinstance(conservar, list)):
+            raise ValueError
+    except (ValueError, TypeError):
+        raise HTTPException(422, 'Los datos del informe o de sus adjuntos no son válidos.') from None
+    if len(archivos) > settings.imagenes_max_archivos:
+        raise HTTPException(400, f'Como máximo {settings.imagenes_max_archivos} archivos por estudio.')
     caso = GuardarInforme(
         repositorio, AlmacenLocal(), settings.imagenes_tipos_lista,
         _limite_para, settings.imagenes_max_archivos,
@@ -162,7 +219,8 @@ async def guardar_informe(
                          'contenido': contenido})
         await archivo.close()
     try:
-        informe, _ = await caso.ejecutar(estudio_id, descripcion, entradas, usuario.id)
+        informe, _ = await caso.ejecutar(estudio_id, descripcion, entradas, usuario.id,
+                                       datos_ecografia=datos, conservar_archivos=conservar)
         if modalidad == 'rayos_x' and settings.radiology_ai_enabled:
             # Triaje visual en la cola local; no bloquea la subida ni modifica el informe.
             await repositorio.encolar_triaje(estudio_id, informe.archivos)
@@ -176,6 +234,8 @@ async def guardar_informe(
         raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, str(error)) from None
     except InformeYaPublicado as error:
         raise HTTPException(status.HTTP_409_CONFLICT, str(error)) from None
+    except SolicitudInvalida as error:
+        raise HTTPException(422, str(error)) from None
     return _informe(informe)
 
 
@@ -194,6 +254,8 @@ async def publicar_informe(
         raise HTTPException(status.HTTP_404_NOT_FOUND, 'El estudio no existe.') from None
     except (InformeSinContenido, InformeYaPublicado) as error:
         raise HTTPException(status.HTTP_409_CONFLICT, str(error)) from None
+    except SolicitudInvalida as error:
+        raise HTTPException(422, str(error)) from None
     return ResultadoAccionResponse(
         estudio_id=estudio_id, estado='publicado', numero_version=informe.numero_version,
     )
@@ -207,6 +269,7 @@ def _informe(informe):
         descripcion_texto=informe.descripcion_texto, estado=informe.estado,
         fecha_hora_publicacion=informe.fecha_hora_publicacion,
         archivos=[ArchivoImagenResponse.model_validate(a) for a in informe.archivos],
+        datos_ecografia=informe.datos_ecografia,
     )
 
 

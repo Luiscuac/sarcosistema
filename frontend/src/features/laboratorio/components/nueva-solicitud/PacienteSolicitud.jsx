@@ -13,7 +13,7 @@ function detallePaciente(paciente) {
   ].filter(Boolean).join(' · ')
 }
 
-function FormularioPaciente({ datos, pendiente, onChange, onCancelar, onGuardar }) {
+export function FormularioPaciente({ datos, pendiente, onChange, onCancelar, onGuardar }) {
   return <div className="lab-inline-patient-form">
     <div className="lab-form-grid">
       <label className="lab-full-field">Nombre completo<input required minLength="2" autoFocus value={datos.nombre_completo} onChange={(e) => onChange('nombre_completo', e.target.value)} /></label>

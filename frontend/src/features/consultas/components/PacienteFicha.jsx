@@ -8,7 +8,6 @@ import SolicitudEcografia from '../../ecografia/components/SolicitudEcografia.js
 import SolicitudRayosX from '../../rayos_x/components/SolicitudRayosX.jsx'
 import ExamenesComplementarios from './ExamenesComplementarios.jsx'
 import RegistrosPublicados from '../../enfermeria/components/RegistrosPublicados.jsx'
-import DatosDemoClinicos from './DatosDemoClinicos.jsx'
 import RecetaMedica from './RecetaMedica.jsx'
 import { nombreSexo } from '../../laboratorio/utils/catalogos.js'
 
@@ -85,7 +84,11 @@ function HistorialConsultas({ historial, pagina, pacienteId }) {
 
 export default function PacienteFicha({ id, usuario }) {
   const [parametros] = useSearchParams()
-  const [seccion, setSeccion] = useState(['imagenes', 'rayos_x'].includes(parametros.get('seccion')) ? parametros.get('seccion') : 'consultas')
+  const [seccion, setSeccion] = useState(
+    ['enfermeria', 'receta', 'laboratorio', 'imagenes', 'rayos_x'].includes(parametros.get('seccion'))
+      ? parametros.get('seccion')
+      : 'consultas',
+  )
   const pagina = usePaginaHistorial(id)
   const paciente = usePaciente(id)
   const historial = useHistorial(id, pagina.pagina, seccion === 'consultas' || seccion === 'imagenes' || seccion === 'rayos_x')
@@ -113,7 +116,7 @@ export default function PacienteFicha({ id, usuario }) {
     </section>}
     {seccion === 'imagenes' && <div className="med-patient-tab-content">
       <SolicitudEcografia pacienteId={id} usuario={usuario} />
-      <ExamenesComplementarios historial={historial} pacienteId={id} ejemplo={esDemo ? <DatosDemoClinicos /> : null} />
+      <ExamenesComplementarios historial={historial} pacienteId={id} modalidad="ecografia" />
     </div>}
     {seccion === 'rayos_x' && <div className="med-patient-tab-content">
       <SolicitudRayosX pacienteId={id} usuario={usuario} />

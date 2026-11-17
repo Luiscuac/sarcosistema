@@ -2,6 +2,8 @@ import api from '../../../shared/api/httpClient.js'
 
 export const buscarPacientesEnfermeria = async (buscar, pagina = 1) =>
   (await api.get('/enfermeria/pacientes', { params: { buscar, pagina } })).data
+export const crearPacienteEnfermeria = async (paciente) =>
+  (await api.post('/enfermeria/pacientes', paciente)).data
 export const obtenerRegistrosEnfermeria = async (pacienteId) =>
   (await api.get(`/enfermeria/pacientes/${pacienteId}/registros`)).data
 export const guardarBorradorEnfermeria = async (pacienteId, datos) =>

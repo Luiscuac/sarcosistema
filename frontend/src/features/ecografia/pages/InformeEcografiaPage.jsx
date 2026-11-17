@@ -1,6 +1,7 @@
-import InformeImagenPage from '../../imagenes/components/InformeImagenPage.jsx'
-import * as ecografiaApi from '../api/ecografiaApi.js'
+import { lazy, Suspense } from 'react'
+
+const EditorEcografia = lazy(() => import('../components/EditorEcografia.jsx'))
 
 export default function InformeEcografiaPage(props) {
-  return <InformeImagenPage {...props} modalidad="ecografia" api={ecografiaApi} />
+  return <Suspense fallback={<p role="status">Cargando editor de ecografía…</p>}><EditorEcografia {...props} /></Suspense>
 }

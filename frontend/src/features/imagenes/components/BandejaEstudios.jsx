@@ -17,7 +17,7 @@ function InsigniaTriaje({ triaje }) {
   </span>
 }
 
-export default function BandejaEstudios({ usuario, logout, modalidad = 'ecografia', bandeja }) {
+export default function BandejaEstudios({ usuario, logout, modalidad = 'ecografia', bandeja, accion }) {
   const rayosX = modalidad === 'rayos_x'
   const titulo = rayosX ? 'Rayos X' : 'Ecografía'
   const rutaBandeja = rayosX ? '/rayos-x/gestion' : '/ecografia'
@@ -39,11 +39,11 @@ export default function BandejaEstudios({ usuario, logout, modalidad = 'ecografi
   const visibles = rayosX ? ordenarBandeja(filtrados, orden) : filtrados
   const tipos = [...new Set(estudios.map(e => e.tipo_estudio_nombre))].sort()
 
-  return <main className="lab-page img-page">
+  return <main className={`lab-page img-page${rayosX ? '' : ' eco-image-page'}`}>
     <div className="lab-main">
       <LaboratorioTopbar usuario={usuario} titulo={titulo} inicio={rutaBandeja} onLogout={logout} />
       <section className="lab-content">
-        <div className="lab-title-row"><div><p className="lab-eyebrow">{rayosX ? 'RAYOS X' : 'ECOGRAFÍAS'}</p><h1>Bandeja de estudios</h1><p className="lab-intro">Consulta cada estudio y prepara o revisa su informe.</p></div></div>
+        <div className="lab-title-row"><div><p className="lab-eyebrow">{rayosX ? 'RAYOS X' : 'ECOGRAFÍAS'}</p><h1>Bandeja de estudios</h1><p className="lab-intro">Consulta cada estudio y prepara o revisa su informe.</p></div><div className="lab-title-actions">{accion}</div></div>
         <section className="lab-list-panel" aria-label={`Estudios de ${titulo}`}>
           <div className="img-resumen" aria-label="Resumen de estudios">
             <button type="button" className={vista === 'pendientes' ? 'activo' : ''} onClick={() => setVista('pendientes')}><strong>{pendientes.length}</strong><span>Pendientes</span></button>
@@ -60,14 +60,33 @@ export default function BandejaEstudios({ usuario, logout, modalidad = 'ecografi
           {bandeja.isPending && <p role="status" className="img-mensaje">Cargando bandeja…</p>}
           {bandeja.isError && <p role="alert" className="img-mensaje">No se pudo cargar la bandeja.</p>}
           {bandeja.data && filtrados.length === 0 && <p className="img-mensaje">No hay estudios que coincidan con estos filtros.</p>}
-          <div className="img-tarjetas">
-            {visibles.map(estudio => <article className={`img-tarjeta${rayosX && estudio.triaje?.nivel === 'alta' ? ' es-prioritaria' : ''}`} key={estudio.estudio_id}>
-              <div className="img-tarjeta-cabecera"><div><p>{estudio.referencia_estudio}</p><h2>{estudio.tipo_estudio_nombre}</h2></div><span className={`lab-status lab-status--${estudio.estado}`}>{estadoEstudioImagen(estudio.estado)}</span></div>
-              {(estudio.prioridad === 'urgente' || rayosX) && <div className="img-insignias">{estudio.prioridad === 'urgente' && <span className="img-triaje es-urgente">Urgente</span>}{rayosX && <InsigniaTriaje triaje={estudio.triaje} />}</div>}
-              <dl><div><dt>Paciente</dt><dd>{estudio.paciente_nombre}</dd></div><div><dt>Solicitud</dt><dd>{estudio.referencia_solicitud}</dd></div><div><dt>Fecha</dt><dd>{new Date(estudio.fecha_solicitud).toLocaleDateString('es-BO')}</dd></div></dl>
-              <div className="img-tarjeta-acciones"><Link className="lab-secondary-button" to={`${rutaBandeja}/estudios/${estudio.estudio_id}/informe`}>Ver informe</Link></div>
-            </article>)}
-          </div>
+          {visibles.length > 0 && (rayosX
+            ? <div className="img-tarjetas">
+              {visibles.map(estudio => <article className={`img-tarjeta${estudio.triaje?.nivel === 'alta' ? ' es-prioritaria' : ''}`} key={estudio.estudio_id}>
+                <div className="img-tarjeta-cabecera"><div><p>{estudio.referencia_estudio}</p><h2>{estudio.tipo_estudio_nombre}</h2></div><span className={`lab-status lab-status--${estudio.estado}`}>{estadoEstudioImagen(estudio.estado)}</span></div>
+                {(estudio.prioridad === 'urgente' || rayosX) && <div className="img-insignias">{estudio.prioridad === 'urgente' && <span className="img-triaje es-urgente">Urgente</span>}{rayosX && <InsigniaTriaje triaje={estudio.triaje} />}</div>}
+                <dl><div><dt>Paciente</dt><dd>{estudio.paciente_nombre}</dd></div><div><dt>Solicitud</dt><dd>{estudio.referencia_solicitud}</dd></div><div><dt>Fecha</dt><dd>{new Date(estudio.fecha_solicitud).toLocaleDateString('es-BO')}</dd></div></dl>
+                <div className="img-tarjeta-acciones"><Link className="lab-secondary-button" to={`${rutaBandeja}/estudios/${estudio.estudio_id}/informe`}>Ver informe</Link></div>
+              </article>)}
+            </div>
+            : <div className="eco-study-list">
+              {visibles.map(estudio => <article className="eco-study-row" key={estudio.estudio_id}>
+                <div className="eco-study-name">
+                  <span>Referencia · {estudio.referencia_estudio}</span>
+                  <strong>{estudio.tipo_estudio_nombre}</strong>
+                </div>
+                <div className="eco-study-patient">
+                  <span>Paciente</span>
+                  <strong>{estudio.paciente_nombre}</strong>
+                </div>
+                <div className="eco-study-request">
+                  <span>Solicitud · {estudio.referencia_solicitud}</span>
+                  <span>Fecha · {new Date(estudio.fecha_solicitud).toLocaleDateString('es-BO')}</span>
+                </div>
+                <span className={`eco-study-status eco-study-status--${estudio.estado}`}><span aria-hidden="true" />{estadoEstudioImagen(estudio.estado)}</span>
+                <Link className="eco-study-open" to={`${rutaBandeja}/estudios/${estudio.estudio_id}/informe`}>Abrir estudio <span aria-hidden="true">→</span></Link>
+              </article>)}
+            </div>)}
         </section>
       </section>
     </div>

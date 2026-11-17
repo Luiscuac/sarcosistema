@@ -86,6 +86,55 @@ async def test_ecografia_real_solicitar_publicar_consultar_y_descargar(flujo_rea
     assert descarga.content == PNG
 
 
+async def test_ecografia_estructurada_varios_archivos_edicion_y_publicacion(flujo_real):
+    import json
+    from app.imagenes.domain.ecografia import ORGANOS
+    client, db, h, paciente, _ = flujo_real
+    codigo = await db.scalar(text('SELECT codigo_paciente FROM paciente WHERE id=:p'), {'p': paciente})
+    busqueda = await client.get('/imagenes/ecografia/pacientes', headers=h['imagenes'], params={'buscar': codigo})
+    assert busqueda.status_code == 200 and any(p['id'] == paciente for p in busqueda.json()['items'])
+    catalogo = await client.get('/imagenes/ecografia/catalogo', headers=h['imagenes'])
+    assert catalogo.status_code == 200
+    tipo = next(t['id'] for t in catalogo.json() if t['codigo'] == 'ECO_ABDOMINAL')
+    datos_solicitud = {'paciente_id': paciente, 'tipo_estudio_ids': [tipo],
+                       'medico_solicitante_nombre': 'Profesional FICTICIO', 'clave_idempotencia': str(uuid4())}
+    assert (await client.post('/imagenes/ecografia/solicitudes', headers=h['laboratorio'], json=datos_solicitud)).status_code == 403
+    solicitud = await client.post('/imagenes/ecografia/solicitudes', headers=h['imagenes'], json=datos_solicitud)
+    assert solicitud.status_code == 201
+    estudio = await db.scalar(text('SELECT id FROM estudio_solicitado WHERE solicitud_id=:s'), {'s': solicitud.json()['solicitud_id']})
+    detalle = await client.get(f'/imagenes/estudios/{estudio}', headers=h['imagenes'])
+    assert detalle.json()['organos'] == list(ORGANOS['ECO_ABDOMINAL'])
+    datos = {'version': 1, 'tipo': 'ECO_ABDOMINAL', 'fecha_estudio': '2026-11-14', 'establecimiento': 'Centro FICTICIO',
+             'conclusion': '', 'evaluaciones': {o: 'Observación FICTICIA.' for o in ORGANOS['ECO_ABDOMINAL']}}
+    url = f'/imagenes/estudios/{estudio}/informes'
+    r = await client.post(url, headers=h['imagenes'], data={'datos_ecografia': json.dumps(datos)},
+                          files=[('archivos', ('eco-uno.png', PNG, 'image/png')), ('archivos', ('eco-dos.png', PNG, 'image/png'))])
+    assert r.status_code == 200
+    primero = r.json()
+    assert len(primero['archivos']) == 2
+    assert (await client.post(url + '/publicar', headers=h['imagenes'])).status_code == 422
+    assert (await client.get(f'/consultas/pacientes/{paciente}/historial', headers=h['medico'])).json()['estudios_imagen'] == []
+    datos['conclusion'] = 'Conclusión FICTICIA escrita por el profesional.'
+    r = await client.post(url, headers=h['imagenes'], data={'datos_ecografia': json.dumps(datos)},
+                          files=[('archivos', ('eco-tres.png', PNG, 'image/png'))])
+    assert r.status_code == 200 and len(r.json()['archivos']) == 3
+    anterior = r.json()
+    r = await client.post(url, headers=h['imagenes'], data={'datos_ecografia': json.dumps(datos), 'conservar_archivos': '[999999999]'})
+    assert r.status_code == 422
+    conservar = [a['id'] for a in anterior['archivos'][1:]]
+    r = await client.post(url, headers=h['imagenes'], data={'datos_ecografia': json.dumps(datos), 'conservar_archivos': json.dumps(conservar)})
+    assert r.status_code == 200 and len(r.json()['archivos']) == 2
+    assert await db.scalar(text('SELECT count(*) FROM archivo_imagen WHERE informe_id=:i'), {'i': primero['id']}) == 2
+    assert (await client.post(url + '/publicar', headers=h['imagenes'])).status_code == 200
+    historial = await client.get(f'/consultas/pacientes/{paciente}/historial', headers=h['medico'])
+    visible = next(e for e in historial.json()['estudios_imagen'] if e['estudio_id'] == estudio)
+    assert visible['datos_ecografia']['conclusion'] == datos['conclusion']
+    assert 'HÍGADO:' in visible['descripcion_texto'] and len(visible['archivos']) == 2
+    for archivo in visible['archivos']:
+        assert (await client.get(f"/imagenes/archivos/{archivo['id']}", headers=h['medico'])).content == PNG
+    assert (await client.post(url, headers=h['imagenes'], data={'datos_ecografia': json.dumps(datos)})).status_code == 409
+
+
 async def test_laboratorio_real_muestra_borrador_publicacion_y_consulta_medica(flujo_real):
     client, db, h, paciente, medico = flujo_real
     catalogo = await client.get('/laboratorio/catalogo/estudios', headers=h['laboratorio'])
