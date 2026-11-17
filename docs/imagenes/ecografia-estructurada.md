@@ -1,5 +1,28 @@
 # Ecografía: solicitudes, observaciones por órgano y láminas
 
+## Presentación y navegación (17/11/2026)
+
+La bandeja utiliza las clases y componentes de Laboratorio: indicadores de todos,
+pendientes, en preparación y publicados; pestañas por estado; búsqueda sin depender
+de tildes; filtro por tipo y tabla con una acción según el estado del estudio.
+Los urgentes sin publicar aparecen primero. Los contadores se refieren a estudios,
+ya que una solicitud puede contener varias ecografías.
+
+La creación identifica al paciente, muestra su selección y permite marcar varios
+tipos de estudio. Al terminar muestra un aviso y devuelve la bandeja a pendientes.
+El editor separa «Registrar estudio» de «Vista previa del informe», conservando los
+datos al alternar. Incluye progreso de hallazgos, enlaces a datos/hallazgos/imágenes/
+conclusión y acciones de guardado al pie. La impresión sigue mostrando el documento
+aunque esté oculta su vista previa en pantalla.
+
+Se separaron los componentes de bandeja, imagen y documento del editor. El backend,
+las plantillas y las condiciones de publicación no se modificaron en este ajuste.
+Verificación nueva: 91 pruebas frontend, lint y build correctos. Revisión en navegador
+con respuestas simuladas y datos ficticios: bandeja, selección de paciente/estudios,
+aviso de creación, cambio de vistas sin perder texto, guardado de borrador y móvil;
+sin errores de consola. No se atribuye a esta revisión una nueva prueba con PostgreSQL
+ni una exportación PDF real. Vite mantiene un aviso de tamaño del paquete principal.
+
 ## Recorrido
 
 El rol `imagenes` abre `/ecografia` y puede crear una **Nueva solicitud**: buscar y
