@@ -59,7 +59,7 @@ export default function SolicitudRayosX({ pacienteId }) {
     <div className="med-eco-form-body">
       {catalogo.isPending && <p className="med-message">Cargando estudios disponibles…</p>}
       {catalogo.isError && <p role="alert" className="med-error">No se pudo cargar el catálogo de Rayos X.</p>}
-      {catalogo.data && <SelectorEstudiosRx catalogo={catalogo.data} valor={estudios} onChange={setEstudios} deshabilitado={enviando} />}
+      {catalogo.data && <SelectorEstudiosRx catalogo={catalogo.data} valor={estudios} onChange={setEstudios} deshabilitado={enviando} numeracion="" />}
       <label className="med-eco-group">Diagnóstico o motivo general (opcional)
         <input value={diagnostico} maxLength={500} disabled={enviando} onChange={(e) => setDiagnostico(e.target.value)} />
       </label>

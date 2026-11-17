@@ -26,7 +26,7 @@ function nombreCategoria(catalogo, codigo) {
   return catalogo?.categorias?.find((categoria) => categoria.codigo === codigo)?.nombre ?? codigo ?? 'Otros estudios'
 }
 
-export default function SelectorEstudiosRx({ catalogo, valor, onChange, deshabilitado = false }) {
+export default function SelectorEstudiosRx({ catalogo, valor, onChange, deshabilitado = false, numeracion = '2. ' }) {
   const [busqueda, setBusqueda] = useState('')
   const estudios = catalogo?.estudios?.filter((estudio) => estudio.activo !== false) ?? []
   const porId = useMemo(() => new Map(estudios.map((estudio) => [Number(estudio.id), estudio])), [estudios])
@@ -63,7 +63,7 @@ export default function SelectorEstudiosRx({ catalogo, valor, onChange, deshabil
   }
 
   return <section className="lab-form-section rxg-selector">
-    <h3>2. Estudios solicitados</h3>
+    <h3>{numeracion}Estudios solicitados</h3>
     {!catalogo && <p className="lab-form-hint">Cargando catálogo de Rayos X...</p>}
     {catalogo && estudios.length === 0 && <p className="lab-form-hint">No hay estudios activos disponibles.</p>}
     <label className="lab-search-label">Buscar estudio
