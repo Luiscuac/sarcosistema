@@ -1,6 +1,6 @@
 export const INDICADORES_RX = [
-  { codigo: 'pendiente_realizacion', nombre: 'Pendientes de realizacion', cumple: (e) => e.etapa === 'pendiente_realizacion' },
-  { codigo: 'en_adquisicion', nombre: 'En adquisicion', cumple: (e) => e.etapa === 'en_adquisicion' },
+  { codigo: 'pendiente_realizacion', nombre: 'Pendientes de realización', cumple: (e) => e.etapa === 'pendiente_realizacion' },
+  { codigo: 'en_adquisicion', nombre: 'En adquisición', cumple: (e) => e.etapa === 'en_adquisicion' },
   { codigo: 'pendiente_informe', nombre: 'Pendientes de informe', cumple: (e) => e.etapa === 'pendiente_informe' },
   { codigo: 'borrador', nombre: 'En borrador', cumple: (e) => e.etapa === 'borrador' },
   { codigo: 'urgentes', nombre: 'Urgentes', cumple: (e) => e.prioridad === 'urgente' },

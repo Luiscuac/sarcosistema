@@ -26,7 +26,7 @@ function detallePaciente(paciente) {
     paciente.fecha_nacimiento && `${describirEdad(paciente.fecha_nacimiento)} (${formatearFecha(paciente.fecha_nacimiento)})`,
     paciente.sexo && nombreSexo(paciente.sexo),
     paciente.historia_clinica && `HC ${paciente.historia_clinica}`,
-    paciente.codigo_externo && `Codigo interno ${paciente.codigo_externo}`,
+    paciente.codigo_externo && `Código interno ${paciente.codigo_externo}`,
   ].filter(Boolean).join(' · ')
 }
 
@@ -161,10 +161,10 @@ export default function NuevaSolicitudRx({ onClose, onCreated }) {
                 <label>Fecha de nacimiento<input required type="date" max={new Date().toLocaleDateString('en-CA')} value={datosPaciente.fecha_nacimiento} onChange={(e) => cambiarPaciente('fecha_nacimiento', e.target.value)} />{datosPaciente.fecha_nacimiento && <small>{describirEdad(datosPaciente.fecha_nacimiento)}</small>}</label>
                 <label>Sexo registrado<select value={datosPaciente.sexo} onChange={(e) => cambiarPaciente('sexo', e.target.value)}>{SEXOS.map((sexo) => <option key={sexo.codigo} value={sexo.codigo}>{sexo.nombre}</option>)}</select></label>
                 <label className="lab-checkbox-label lab-full-field"><input type="checkbox" checked={datosPaciente.sin_documento} onChange={(e) => cambiarPaciente('sin_documento', e.target.checked)} /> Persona sin documento</label>
-                {!datosPaciente.sin_documento && <><label>Tipo de documento<select required value={datosPaciente.tipo_documento} onChange={(e) => cambiarPaciente('tipo_documento', e.target.value)}>{TIPOS_DOCUMENTO.map((tipo) => <option key={tipo}>{tipo}</option>)}</select></label><label>Numero de documento<input required value={datosPaciente.numero_documento} onChange={(e) => cambiarPaciente('numero_documento', e.target.value)} /></label></>}
-                <label>N.º de historia clinica (opcional)<input maxLength="80" value={datosPaciente.historia_clinica} onChange={(e) => cambiarPaciente('historia_clinica', e.target.value)} /></label>
-                <label>Codigo interno (opcional)<input maxLength="80" value={datosPaciente.codigo_externo} onChange={(e) => cambiarPaciente('codigo_externo', e.target.value)} /></label>
-                <label>Telefono (opcional)<input type="tel" maxLength="40" value={datosPaciente.telefono} onChange={(e) => cambiarPaciente('telefono', e.target.value)} /></label>
+                {!datosPaciente.sin_documento && <><label>Tipo de documento<select required value={datosPaciente.tipo_documento} onChange={(e) => cambiarPaciente('tipo_documento', e.target.value)}>{TIPOS_DOCUMENTO.map((tipo) => <option key={tipo}>{tipo}</option>)}</select></label><label>Número de documento<input required value={datosPaciente.numero_documento} onChange={(e) => cambiarPaciente('numero_documento', e.target.value)} /></label></>}
+                <label>N.º de historia clínica (opcional)<input maxLength="80" value={datosPaciente.historia_clinica} onChange={(e) => cambiarPaciente('historia_clinica', e.target.value)} /></label>
+                <label>Código interno (opcional)<input maxLength="80" value={datosPaciente.codigo_externo} onChange={(e) => cambiarPaciente('codigo_externo', e.target.value)} /></label>
+                <label>Teléfono (opcional)<input type="tel" maxLength="40" value={datosPaciente.telefono} onChange={(e) => cambiarPaciente('telefono', e.target.value)} /></label>
               </div>
               <div className="rxg-inline-actions"><button type="button" onClick={() => setRegistrandoPaciente(false)}>Volver a buscar</button><button className="primary-button" type="button" disabled={pacienteMutation.isPending} onClick={registrarPaciente}>{pacienteMutation.isPending ? 'Guardando...' : 'Guardar paciente'}</button></div>
             </div> : <>
@@ -180,7 +180,7 @@ export default function NuevaSolicitudRx({ onClose, onCreated }) {
           </section>
 
           <SelectorEstudiosRx catalogo={catalogoQuery.data} valor={estudios} onChange={setEstudios} deshabilitado={ocupado} />
-          {catalogoQuery.isError && <p className="lab-form-error" role="alert">{mensajeErrorApi(catalogoQuery.error, 'No se pudo cargar el catalogo de Rayos X.')}</p>}
+          {catalogoQuery.isError && <p className="lab-form-error" role="alert">{mensajeErrorApi(catalogoQuery.error, 'No se pudo cargar el catálogo de Rayos X.')}</p>}
 
           <section className="lab-form-section">
             <h3>3. Datos del pedido</h3>
@@ -188,13 +188,13 @@ export default function NuevaSolicitudRx({ onClose, onCreated }) {
               <label>Procedencia<select value={pedido.procedencia} onChange={(e) => cambiarPedido('procedencia', e.target.value)}><option value="este_centro">Este centro</option><option value="otro_centro">Otro centro</option></select></label>
               <label>Prioridad<select value={pedido.prioridad} onChange={(e) => cambiarPedido('prioridad', e.target.value)}><option value="sin_prioridad">Sin prioridad</option><option value="urgente">Urgente</option></select></label>
               {pedido.procedencia === 'otro_centro' && <label className="lab-full-field">Establecimiento externo<input required value={pedido.establecimiento_solicitante_nombre} onChange={(e) => cambiarPedido('establecimiento_solicitante_nombre', e.target.value)} /></label>}
-              {pedido.procedencia === 'este_centro' && pedido.medico_solicitante_id ? <div className="rxg-medico-seleccionado"><span className="lab-field-label">Medico solicitante</span><span className="lab-chip">{pedido.medico_solicitante_nombre}<button type="button" onClick={() => cambiarPedido('medico_solicitante_nombre', '')}>Cambiar</button></span></div> : <label className="lab-full-field">Medico solicitante<input required autoComplete="off" value={pedido.medico_solicitante_nombre} onChange={(e) => cambiarPedido('medico_solicitante_nombre', e.target.value)} placeholder={pedido.procedencia === 'este_centro' ? 'Escribe y elige de la lista' : 'Nombre del medico'} /></label>}
+              {pedido.procedencia === 'este_centro' && pedido.medico_solicitante_id ? <div className="rxg-medico-seleccionado"><span className="lab-field-label">Médico solicitante</span><span className="lab-chip">{pedido.medico_solicitante_nombre}<button type="button" onClick={() => cambiarPedido('medico_solicitante_nombre', '')}>Cambiar</button></span></div> : <label className="lab-full-field">Médico solicitante<input required autoComplete="off" value={pedido.medico_solicitante_nombre} onChange={(e) => cambiarPedido('medico_solicitante_nombre', e.target.value)} placeholder={pedido.procedencia === 'este_centro' ? 'Escribe y elige de la lista' : 'Nombre del médico'} /></label>}
               {pedido.procedencia === 'este_centro' && !pedido.medico_solicitante_id && medicoDiferido.length >= 2 && <div className="lab-full-field">
-                {medicosQuery.isFetching && <p className="lab-form-hint">Buscando medicos...</p>}
-                {medicosQuery.isError && <p className="lab-form-error" role="alert">{mensajeErrorApi(medicosQuery.error, 'No se pudo buscar medicos.')}</p>}
+                {medicosQuery.isFetching && <p className="lab-form-hint">Buscando médicos...</p>}
+                {medicosQuery.isError && <p className="lab-form-error" role="alert">{mensajeErrorApi(medicosQuery.error, 'No se pudo buscar médicos.')}</p>}
                 {(medicosQuery.data ?? []).map((medico) => <button className="rxg-opcion-persona" type="button" key={medico.id} onClick={() => setPedido((actual) => ({ ...actual, medico_solicitante_id: medico.id, medico_solicitante_nombre: medico.nombre }))}><strong>{medico.nombre}</strong></button>)}
               </div>}
-              <label className="lab-full-field">Diagnostico o motivo general (opcional)<textarea rows="3" value={pedido.diagnostico_principal} onChange={(e) => cambiarPedido('diagnostico_principal', e.target.value)} /></label>
+              <label className="lab-full-field">Diagnóstico o motivo general (opcional)<textarea rows="3" value={pedido.diagnostico_principal} onChange={(e) => cambiarPedido('diagnostico_principal', e.target.value)} /></label>
             </div>
           </section>
           {errores.length > 0 && <div className="rxg-errores" role="alert"><strong>Revisa la solicitud:</strong><ul>{errores.map((error) => <li key={error}>{error}</li>)}</ul></div>}
@@ -216,6 +216,6 @@ export default function NuevaSolicitudRx({ onClose, onCreated }) {
       })}</ul></div>
       <p>Solicitante: <strong>{pedido.medico_solicitante_nombre}</strong>{pedido.procedencia === 'otro_centro' && ` · ${pedido.establecimiento_solicitante_nombre}`}.</p>
     </ConfirmarAccion>}
-    {confirmarCierre && <ConfirmarAccion titulo="¿Descartar la solicitud?" textoConfirmar="Descartar" textoCancelar="Seguir editando" peligro onConfirmar={onClose} onCancelar={() => setConfirmarCierre(false)}><p>Los datos ingresados se perderan.</p></ConfirmarAccion>}
+    {confirmarCierre && <ConfirmarAccion titulo="¿Descartar la solicitud?" textoConfirmar="Descartar" textoCancelar="Seguir editando" peligro onConfirmar={onClose} onCancelar={() => setConfirmarCierre(false)}><p>Los datos ingresados se perderán.</p></ConfirmarAccion>}
   </>
 }

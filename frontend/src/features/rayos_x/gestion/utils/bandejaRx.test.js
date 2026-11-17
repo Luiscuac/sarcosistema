@@ -9,11 +9,11 @@ const estudios = [
   { estudio_id: 4, solicitud_id: 12, referencia_solicitud: 'RX-12', paciente_nombre: 'Ciro', paciente_documento: '333', categoria: 'torax', etapa: 'pendiente_informe', prioridad: 'sin_prioridad', fecha_solicitud: '2026-11-01', triaje: null },
 ]
 
-test('filtra texto sin depender de tildes y aplica categoria e indicador', () => {
+test('filtra texto sin depender de tildes y aplica categoría e indicador', () => {
   assert.deepEqual(filtrarYOrdenarEstudios(estudios, { busqueda: 'ana pérez', categoria: 'torax', indicador: 'pendiente_informe' }).map((e) => e.estudio_id), [1])
 })
 
-test('ordena urgentes, indice de triaje y antiguedad', () => {
+test('ordena urgentes, índice de triaje y antiguedad', () => {
   assert.deepEqual(filtrarYOrdenarEstudios(estudios).map((e) => e.estudio_id), [2, 1, 3, 4])
 })
 

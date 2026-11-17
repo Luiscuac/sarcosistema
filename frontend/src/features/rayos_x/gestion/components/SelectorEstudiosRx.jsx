@@ -69,10 +69,10 @@ export default function SelectorEstudiosRx({ catalogo, valor, onChange, deshabil
 
   return <section className="lab-form-section rxg-selector">
     <h3>2. Estudios solicitados</h3>
-    {!catalogo && <p className="lab-form-hint">Cargando catalogo de Rayos X...</p>}
+    {!catalogo && <p className="lab-form-hint">Cargando catálogo de Rayos X...</p>}
     {catalogo && estudios.length === 0 && <p className="lab-form-hint">No hay estudios activos disponibles.</p>}
     <label className="lab-search-label">Buscar estudio
-      <input type="search" value={busqueda} disabled={deshabilitado} onChange={(evento) => setBusqueda(evento.target.value)} placeholder="Nombre, codigo o region" />
+      <input type="search" value={busqueda} disabled={deshabilitado} onChange={(evento) => setBusqueda(evento.target.value)} placeholder="Nombre, código o región" />
     </label>
     <div className="rxg-catalogo">
       {grupos.map((grupo) => <section key={grupo.codigo} className="rxg-catalogo-grupo">
@@ -81,15 +81,15 @@ export default function SelectorEstudiosRx({ catalogo, valor, onChange, deshabil
           const disponible = sePuedeAnadir(estudio)
           return <button key={estudio.id} type="button" className="rxg-catalogo-estudio" disabled={deshabilitado || !disponible}
             onClick={() => onChange([...valor, nuevaConfiguracion(estudio, valor)])}>
-            <strong>{estudio.nombre}</strong><span>{disponible ? 'Anadir estudio' : 'Ya se eligieron las opciones disponibles'}</span>
+            <strong>{estudio.nombre}</strong><span>{disponible ? 'Añadir estudio' : 'Ya se eligieron las opciones disponibles'}</span>
           </button>
         })}</div>
       </section>)}
-      {catalogo && termino && visibles.length === 0 && <p className="lab-form-hint">No hay estudios que coincidan con la busqueda.</p>}
+      {catalogo && termino && visibles.length === 0 && <p className="lab-form-hint">No hay estudios que coincidan con la búsqueda.</p>}
     </div>
 
     <div className="rxg-estudios-seleccionados" aria-live="polite">
-      <h4>{valor.length ? `Estudios seleccionados (${valor.length})` : 'Ningun estudio seleccionado todavia'}</h4>
+      <h4>{valor.length ? `Estudios seleccionados (${valor.length})` : 'Ningún estudio seleccionado todavía'}</h4>
       {valor.map((seleccion, indice) => {
         const estudio = porId.get(Number(seleccion.tipo_estudio_id))
         if (!estudio) return null

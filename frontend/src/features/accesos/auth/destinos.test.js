@@ -15,6 +15,7 @@ test('Inicio lleva al médico a Consultas y a cada rol a su área disponible', (
   assert.equal(redireccionDesdeInicio('medico'), '/consultas')
   assert.equal(redireccionDesdeInicio('imagenes'), '/ecografia')
   assert.equal(redireccionDesdeInicio('rayos_x'), '/rayos-x/gestion')
+  assert.equal(redireccionDesdeInicio('radiologo'), '/rayos-x/gestion')
   assert.equal(redireccionDesdeInicio('farmacia'), '/farmacia')
   assert.equal(redireccionDesdeInicio('rrhh'), null)
 })

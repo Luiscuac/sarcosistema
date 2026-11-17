@@ -10,11 +10,16 @@ import ProtectedRoute from '../features/accesos/auth/ProtectedRoute.jsx'
 import ConsultasPage from '../features/consultas/pages/ConsultasPage.jsx'
 import EcografiaPage from '../features/ecografia/pages/EcografiaPage.jsx'
 import InformeEcografiaPage from '../features/ecografia/pages/InformeEcografiaPage.jsx'
-import RayosXImagenesPage from '../features/rayos_x/pages/RayosXImagenesPage.jsx'
+import PanelRayosXPage from '../features/rayos_x/gestion/pages/PanelRayosXPage.jsx'
+import SolicitudRayosXPage from '../features/rayos_x/gestion/pages/SolicitudRayosXPage.jsx'
+import HistorialPacienteRxPage from '../features/rayos_x/gestion/pages/HistorialPacienteRxPage.jsx'
 import InformeRayosXPage from '../features/rayos_x/pages/InformeRayosXPage.jsx'
 import EnfermeriaPage from '../features/enfermeria/pages/EnfermeriaPage.jsx'
 import FarmaciaPage from '../features/enfermeria/pages/FarmaciaPage.jsx'
 import RayosXPage from '../features/rayos_x/pages/RayosXPage.jsx'
+// Recepción y técnico (rayos_x) y médico informante (radiologo) comparten el área de gestión.
+const ROLES_RAYOS_X = ['rayos_x', 'radiologo']
+
 const router = createBrowserRouter(createRoutesFromElements(
   <>
         <Route path="/" element={<Navigate to="/inicio" replace />} />
@@ -78,11 +83,15 @@ const router = createBrowserRouter(createRoutesFromElements(
             {({ usuario, logout }) => <InformeEcografiaPage usuario={usuario} logout={logout} />}
           </ProtectedRoute>
         } />
-        <Route path="/rayos-x/gestion" element={
-          <ProtectedRoute rolesPermitidos={['rayos_x']}>
-            {({ usuario, logout }) => <RayosXImagenesPage usuario={usuario} logout={logout} />}
+        {[
+          ['/rayos-x/gestion', PanelRayosXPage],
+          ['/rayos-x/gestion/solicitudes/:solicitudId', SolicitudRayosXPage],
+          ['/rayos-x/gestion/pacientes/:pacienteId', HistorialPacienteRxPage],
+        ].map(([path, Pagina]) => <Route key={path} path={path} element={
+          <ProtectedRoute rolesPermitidos={ROLES_RAYOS_X}>
+            {({ usuario, logout }) => <Pagina usuario={usuario} logout={logout} />}
           </ProtectedRoute>
-        } />
+        } />)}
         <Route path="/rayos-x/gestion/estudios/:estudioId/informe" element={
           <ProtectedRoute rolesPermitidos={['rayos_x']}>
             {({ usuario, logout }) => <InformeRayosXPage usuario={usuario} logout={logout} />}

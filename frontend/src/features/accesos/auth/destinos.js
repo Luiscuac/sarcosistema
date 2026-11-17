@@ -7,6 +7,7 @@ export const DESTINO_POR_ROL = {
   enfermeria: '/enfermeria',
   imagenes: '/ecografia',
   rayos_x: '/rayos-x/gestion',
+  radiologo: '/rayos-x/gestion',
   farmacia: '/farmacia',
 }
 

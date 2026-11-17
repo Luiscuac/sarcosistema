@@ -9,14 +9,14 @@ import '../gestion.css'
 
 const ACTUALIZACION_MS = 45_000
 const ETAPAS = [
-  ['pendiente_realizacion', 'Pendiente de realizacion'], ['en_adquisicion', 'En adquisicion'],
+  ['pendiente_realizacion', 'Pendiente de realización'], ['en_adquisicion', 'En adquisición'],
   ['pendiente_informe', 'Pendiente de informe'], ['borrador', 'En borrador'],
   ['validado', 'Validado'], ['entregado', 'Entregado'], ['no_realizado', 'No realizado'], ['anulado', 'Anulado'],
 ]
 const LATERALIDAD = { derecha: 'Derecha', izquierda: 'Izquierda', bilateral: 'Bilateral' }
 
 function categoriaVisible(codigo) {
-  return codigo ? codigo.replaceAll('_', ' ').replace(/^./, (letra) => letra.toLocaleUpperCase()) : 'Sin categoria'
+  return codigo ? codigo.replaceAll('_', ' ').replace(/^./, (letra) => letra.toLocaleUpperCase()) : 'Sin categoría'
 }
 
 function fechaVisible(fecha) {
@@ -35,7 +35,7 @@ function GrupoSolicitud({ solicitud }) {
       </div>
       <dl>
         <div><dt>Prioridad</dt><dd>{solicitud.prioridad === 'urgente' ? 'Urgente' : 'Sin prioridad'}</dd></div>
-        <div><dt>Medico</dt><dd>{solicitud.medico_solicitante || 'No registrado'}</dd></div>
+        <div><dt>Médico</dt><dd>{solicitud.medico_solicitante || 'No registrado'}</dd></div>
       </dl>
     </header>
     <div className="rxg-estudios-lista">{solicitud.estudios.map((estudio) => <div className="rxg-estudio-fila" key={estudio.estudio_id}>
@@ -93,12 +93,12 @@ export default function PanelRayosXPage({ usuario, logout }) {
       <div className="lab-list-tabs" role="tablist" aria-label="Vista de estudios"><button type="button" role="tab" aria-selected={vista === 'activos'} className={vista === 'activos' ? 'is-active' : ''} onClick={() => cambiarVista('activos')}>En curso</button><button type="button" role="tab" aria-selected={vista === 'finalizados'} className={vista === 'finalizados' ? 'is-active' : ''} onClick={() => cambiarVista('finalizados')}>Finalizados</button></div>
       <div className="rxg-filtros">
         <label>Buscar<input type="search" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Paciente, documento o referencia" /></label>
-        <label>Categoria anatomica<select value={categoria} onChange={(e) => setCategoria(e.target.value)}><option value="">Todas</option>{categorias.map((codigo) => <option key={codigo} value={codigo}>{categoriaVisible(codigo)}</option>)}</select></label>
+        <label>Categoría anatómica<select value={categoria} onChange={(e) => setCategoria(e.target.value)}><option value="">Todas</option>{categorias.map((codigo) => <option key={codigo} value={codigo}>{categoriaVisible(codigo)}</option>)}</select></label>
         <label>Etapa<select value={etapa} onChange={(e) => setEtapa(e.target.value)}><option value="">Todas</option>{ETAPAS.map(([codigo, nombre]) => <option key={codigo} value={codigo}>{nombre}</option>)}</select></label>
       </div>
-      {consulta.isLoading && <div className="rxg-estado"><strong>Cargando estudios...</strong><span>La bandeja estara disponible en un momento.</span></div>}
-      {consulta.isError && <div className="rxg-estado" role="alert"><strong>No se pudo cargar la bandeja.</strong><span>{mensajeErrorApi(consulta.error, 'Comprueba la conexion e intenta nuevamente.')}</span></div>}
-      {consulta.isSuccess && solicitudes.length === 0 && <div className="rxg-estado"><strong>{!listaBaseVacia && hayFiltros ? 'No hay estudios con esos filtros.' : vista === 'activos' ? 'No hay estudios en curso.' : 'Todavia no hay estudios finalizados.'}</strong><span>{!listaBaseVacia && hayFiltros ? 'Prueba otra busqueda o quita los filtros activos.' : vista === 'activos' ? usuario?.rol === 'rayos_x' ? 'Registra una nueva solicitud para iniciar el recorrido.' : 'Los estudios apareceran cuando el personal tecnico complete la adquisicion.' : 'Los estudios apareceran aqui cuando concluyan su recorrido.'}</span></div>}
+      {consulta.isLoading && <div className="rxg-estado"><strong>Cargando estudios...</strong><span>La bandeja estará disponible en un momento.</span></div>}
+      {consulta.isError && <div className="rxg-estado" role="alert"><strong>No se pudo cargar la bandeja.</strong><span>{mensajeErrorApi(consulta.error, 'Comprueba la conexión e intenta nuevamente.')}</span></div>}
+      {consulta.isSuccess && solicitudes.length === 0 && <div className="rxg-estado"><strong>{!listaBaseVacia && hayFiltros ? 'No hay estudios con esos filtros.' : vista === 'activos' ? 'No hay estudios en curso.' : 'Todavía no hay estudios finalizados.'}</strong><span>{!listaBaseVacia && hayFiltros ? 'Prueba otra búsqueda o quita los filtros activos.' : vista === 'activos' ? usuario?.rol === 'rayos_x' ? 'Registra una nueva solicitud para iniciar el recorrido.' : 'Los estudios aparecerán cuando el personal técnico complete la adquisición.' : 'Los estudios aparecerán aquí cuando concluyan su recorrido.'}</span></div>}
       {consulta.isSuccess && solicitudes.length > 0 && <div className="rxg-solicitudes">{solicitudes.map((solicitud) => <GrupoSolicitud key={solicitud.id} solicitud={solicitud} />)}</div>}
     </section>
     {mostrarNueva && <NuevaSolicitudRx onClose={() => setMostrarNueva(false)} onCreated={setCreada} />}
