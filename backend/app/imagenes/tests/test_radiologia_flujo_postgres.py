@@ -3,7 +3,9 @@
 Casos: torax, rodilla derecha (lateralidad y plantilla distinta), columna lumbar, solicitud multiple,
 borrador y validacion con permisos, imagenes y restricciones de acceso.
 """
-import io
+import importlib.util
+import struct
+import zlib
 from uuid import uuid4
 
 import pytest
@@ -19,13 +21,20 @@ from app.main import app
 R = '/imagenes/radiologia'
 
 
+FIRMA_PNG = bytes([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])
+
+
 def png(valor: int) -> bytes:
-    from PIL import Image
-    salida = io.BytesIO()
-    imagen = Image.new('L', (48, 48), valor)
-    imagen.putpixel((0, 0), 255 - valor)  # contraste minimo para la vista previa
-    imagen.save(salida, format='PNG')
-    return salida.getvalue()
+    """PNG gris de 48x48 escrito a mano (zlib + struct): no depende de Pillow, que es opcional en CI."""
+    ancho = alto = 48
+    filas = bytearray()
+    for y in range(alto):
+        filas.append(0)  # filtro "None"
+        filas.extend(bytes([255 - valor if (y == 0) else valor]) + bytes([valor]) * (ancho - 1))
+    def bloque(tipo: bytes, datos: bytes) -> bytes:
+        return struct.pack('>I', len(datos)) + tipo + datos + struct.pack('>I', zlib.crc32(tipo + datos) & 0xFFFFFFFF)
+    cabecera = struct.pack('>IIBBBBB', ancho, alto, 8, 0, 0, 0, 0)  # 8 bits, escala de grises
+    return FIRMA_PNG + bloque(b'IHDR', cabecera) + bloque(b'IDAT', zlib.compress(bytes(filas))) + bloque(b'IEND', b'')
 
 
 @pytest.fixture
@@ -290,8 +299,9 @@ async def test_caso_6_imagenes_multiples_vinculo_retiro_y_acceso(rx):
     # Acceso a binarios: personal de Rayos X si; medico solo tras validar; otros roles y anonimos no.
     archivo = imagenes[0]['archivo_id']
     assert (await c.get(f'/imagenes/archivos/{archivo}', headers=h['rayos_x'])).content == png(60)
-    vista = await c.get(f'/imagenes/archivos/{archivo}/vista', headers=h['rayos_x'])
-    assert vista.headers['content-type'] == 'image/png', vista.text
+    if importlib.util.find_spec('PIL'):  # la vista previa usa Pillow (dependencia opcional de radiología)
+        vista = await c.get(f'/imagenes/archivos/{archivo}/vista', headers=h['rayos_x'])
+        assert vista.headers['content-type'] == 'image/png', vista.text
     assert (await c.get(f'/imagenes/archivos/{archivo}', headers=h['medico'])).status_code == 403
     assert (await c.get(f'/imagenes/archivos/{archivo}', headers=h['laboratorio'])).status_code == 403
     assert (await c.get(f'/imagenes/archivos/{archivo}')).status_code == 401
