@@ -180,8 +180,6 @@ def pendientes_para_completar_adquisicion(config: dict, adquisicion: dict | None
         faltan.append('Indica la fecha y hora de adquisición.')
     if imagenes < 1:
         faltan.append('Adjunta al menos una imagen.')
-    if (adquisicion or {}).get('repeticiones') and not (adquisicion or {}).get('motivo_repeticion'):
-        faltan.append('Indica el motivo de las repeticiones.')
     return faltan
 
 

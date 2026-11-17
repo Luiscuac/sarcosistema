@@ -49,7 +49,8 @@ def test_completar_adquisicion_exige_lo_realizado_no_lo_solicitado():
     assert len(r.pendientes_para_completar_adquisicion(rodilla, None, 0)) == 4
     completa = {'proyecciones_realizadas': ['AP'], 'lateralidad_realizada': 'derecha', 'fecha_hora_adquisicion': 'x', 'repeticiones': 0}
     assert r.pendientes_para_completar_adquisicion(rodilla, completa, 1) == []
-    assert r.pendientes_para_completar_adquisicion(rodilla, completa | {'repeticiones': 2}, 1) == ['Indica el motivo de las repeticiones.']
+    # Las repeticiones ya no se piden en la interfaz: un valor guardado no bloquea completar la adquisición.
+    assert r.pendientes_para_completar_adquisicion(rodilla, completa | {'repeticiones': 2}, 1) == []
 
 
 @pytest.mark.parametrize('estado,adquisicion,contenido,entregado,etapa', [
