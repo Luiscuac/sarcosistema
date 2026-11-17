@@ -118,6 +118,7 @@ def test_segmentacion_ausente_no_bloquea_el_analisis(tmp_path):
 
 
 def test_segmentacion_alterada_falla_integridad(tmp_path):
+    pytest.importorskip('safetensors')  # dependencia opcional de radiología
     import json
     from app.imagenes.domain.vision import ErrorVision
     from app.imagenes.infrastructure.vision.segmentacion import ESTRUCTURAS, MANIFIESTO, PESOS, cargar_segmentador
