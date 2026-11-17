@@ -22,9 +22,9 @@ export function VeredictoAsistente({ vision, prioridad }) {
   const indice = vision?.indice_pulmonar?.valor
   return <section className={`rx-ia-veredicto es-${clave}`} aria-label="Resultado del asistente">
     <h3>{veredicto.titulo}</h3>
-    <p>{principales.length
+    <p>{clave !== 'baja' && principales.length
       ? <>Se parece a: <strong>{principales.map(h => nombreHallazgo(h.name)).join(', ')}</strong></>
-      : 'Sin hallazgos por encima del punto de corte.'}</p>
+      : 'No se encontraron señales relevantes.'}</p>
     <dl className="rx-ia-datos">
       {typeof indice === 'number' && <div><dt>Índice de prioridad</dt><dd>{Math.round(indice * 100)} de 100</dd></div>}
       {calidad && <div><dt>Calidad de la imagen</dt><dd className={calidad.estado === 'ok' ? undefined : 'es-aviso'}>{calidad.estado === 'ok' ? 'Adecuada' : 'Revisar'}</dd></div>}

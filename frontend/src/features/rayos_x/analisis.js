@@ -116,7 +116,9 @@ export function sugerenciasDeVision(vision) {
 export function nivelSenal(score) {
   if (typeof score !== 'number' || !Number.isFinite(score)) return { clave: 'sin_dato', texto: 'Sin dato' }
   if (score >= 0.75) return { clave: 'alta', texto: 'Señal alta' }
-  if (score >= 0.5) return { clave: 'moderada', texto: 'Señal moderada' }
+  if (score >= 0.55) return { clave: 'moderada', texto: 'Señal moderada' }
+  // Justo sobre el punto de corte: en radiografías normales aparece con frecuencia; es ruido del modelo.
+  if (score >= 0.5) return { clave: 'limite', texto: 'Señal límite' }
   return { clave: 'baja', texto: 'Sin señal relevante' }
 }
 

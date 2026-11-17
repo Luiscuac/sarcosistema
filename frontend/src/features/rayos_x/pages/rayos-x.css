@@ -240,3 +240,5 @@
 .rx-ia-visor.es-analizando .rx-visor-lienzo { animation: rx-ia-pulso 1.6s ease-in-out infinite; }
 @keyframes rx-ia-pulso { 50% { opacity: .85; } }
 @media (prefers-reduced-motion: reduce) { .rx-ia-visor.es-analizando .rx-visor-lienzo { animation: none; } }
+.rx-ia-nivel.es-limite { color: var(--ia-tenue); font-weight: 600; }
+.rx-ia-nivel.es-limite .rx-ia-puntos i:first-child { background: var(--ia-media); }
