@@ -117,13 +117,13 @@
 }
 
 /* Nueva solicitud en pantalla completa */
-.rxg-nueva-columnas { display: grid; grid-template-columns: minmax(0, 1fr) minmax(380px, 460px); gap: var(--rx-espacio-5); align-items: start; }
+.rxg-nueva-columnas { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: var(--rx-espacio-5); align-items: start; }
 .rxg-nueva-izquierda, .rxg-nueva-derecha { display: grid; gap: var(--rx-espacio-4); min-width: 0; }
 .rxg-nueva-derecha { position: sticky; top: var(--rx-espacio-4); max-height: calc(100vh - 2 * var(--rx-espacio-4)); overflow: auto; padding: var(--rx-espacio-4); border: 1px solid var(--rx-linea); border-radius: var(--rx-radio-m); background: var(--rx-superficie, #fff); }
 .rxg-nueva .rxg-catalogo { max-height: none; overflow: visible; }
 .rxg-nueva .rxg-catalogo-opciones { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); }
 .rxg-nueva-derecha .rxg-estudios-seleccionados { margin-top: 0; }
-.rxg-estudio-campos { display: grid; grid-template-columns: minmax(130px, 170px) minmax(0, 1fr); gap: var(--rx-espacio-3); }
+.rxg-estudio-campos { display: grid; grid-template-columns: minmax(150px, 220px) minmax(0, 1fr); gap: var(--rx-espacio-3); }
 .rxg-estudio-campos label, .rxg-mas-opciones label { display: grid; gap: var(--rx-espacio-1); font-size: var(--rx-texto-xs); }
 .rxg-estudio-campos .rxg-campo-completo, .rxg-mas-opciones .rxg-campo-completo { grid-column: 1 / -1; }
 .rxg-estudio-campos input, .rxg-estudio-campos select, .rxg-mas-opciones textarea { width: 100%; box-sizing: border-box; }
@@ -165,3 +165,13 @@
 @media (max-width: 720px) { .rxg-pasos { grid-template-columns: 1fr; } }
 .rxg-nueva .rxg-catalogo-estudio { align-content: center; min-height: 44px; }
 .rxg-catalogo-estudio[data-anadido] { border-color: var(--rx-marca); background: var(--rx-marca-suave); }
+
+/* Campos de cada estudio con el mismo aspecto que el resto del formulario */
+.rxg-estudio-config input:not([type="checkbox"]), .rxg-estudio-config select, .rxg-estudio-config textarea { width: 100%; box-sizing: border-box; min-height: 40px; padding: 9px 11px; border: 1px solid var(--rx-linea-fuerte); border-radius: var(--rx-radio-s); background: var(--rx-superficie); color: var(--rx-tinta); font: inherit; font-size: var(--rx-texto-s); }
+.rxg-estudio-config textarea { min-height: 64px; resize: vertical; line-height: 1.4; }
+.rxg-estudio-config ::placeholder { color: var(--rx-tenue); opacity: .85; }
+.rxg-estudio-config input:focus-visible, .rxg-estudio-config select:focus-visible, .rxg-estudio-config textarea:focus-visible { outline: none; border-color: var(--rx-marca); box-shadow: var(--rx-foco); }
+.rxg-estudio-config label { color: var(--rx-tenue); font-weight: 600; }
+.rxg-estudio-campos[data-sin-lateralidad] { grid-template-columns: 1fr; }
+.rxg-estudio-config { scroll-margin: var(--rx-espacio-4); }
+.rxg-estudio-config:focus-within { border-color: var(--rx-marca); }

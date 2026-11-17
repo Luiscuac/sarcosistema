@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 export { erroresDeEstudios } from '../utils/solicitud.js'
 
@@ -88,6 +88,22 @@ export function CatalogoEstudiosRx({ catalogo, valor, onChange, deshabilitado = 
 /** Estudios elegidos: lateralidad e indicación a la vista; lo demás, plegado en "Más opciones". */
 export function EstudiosSeleccionadosRx({ catalogo, valor, onChange, deshabilitado = false, titulo }) {
   const { porId } = useCatalogo(catalogo)
+  const contenedor = useRef(null)
+  const anteriores = useRef(valor.length)
+
+  // Al añadir un estudio, lleva la vista y el foco a su primer campo para completarlo de inmediato.
+  useEffect(() => {
+    if (valor.length > anteriores.current) {
+      const tarjetas = contenedor.current?.querySelectorAll('fieldset.rxg-estudio-config')
+      const nueva = tarjetas?.[tarjetas.length - 1]
+      if (nueva) {
+        const reducir = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+        nueva.scrollIntoView({ block: 'nearest', behavior: reducir ? 'auto' : 'smooth' })
+        nueva.querySelector('select:not(:disabled), textarea:not(:disabled), input:not(:disabled)')?.focus({ preventScroll: true })
+      }
+    }
+    anteriores.current = valor.length
+  }, [valor.length])
 
   function actualizar(indice, cambios) {
     onChange(valor.map((item, posicion) => posicion === indice ? { ...item, ...cambios } : item))
@@ -98,7 +114,7 @@ export function EstudiosSeleccionadosRx({ catalogo, valor, onChange, deshabilita
     actualizar(indice, { proyecciones: actuales.includes(codigo) ? actuales.filter((item) => item !== codigo) : [...actuales, codigo] })
   }
 
-  return <section className="rxg-estudios-seleccionados" aria-live="polite">
+  return <section className="rxg-estudios-seleccionados" aria-live="polite" ref={contenedor}>
     <h3>{titulo ?? (valor.length ? `Estudios seleccionados (${valor.length})` : 'Estudios seleccionados')}</h3>
     {valor.length === 0 && <div className="rxg-vacio"><strong>Todavía no elegiste estudios</strong><span>Busca o toca un estudio del catálogo y aparecerá aquí para configurarlo.</span></div>}
     {valor.map((seleccion, indice) => {
@@ -111,7 +127,7 @@ export function EstudiosSeleccionadosRx({ catalogo, valor, onChange, deshabilita
       return <fieldset className="rxg-estudio-config" key={`${seleccion.tipo_estudio_id}-${indice}`} disabled={deshabilitado}>
         <legend><span>{estudio.nombre}</span><small>{nombreCategoria(catalogo, config.categoria)}</small></legend>
         <button type="button" className="rxg-quitar" onClick={() => onChange(valor.filter((_, posicion) => posicion !== indice))}>Quitar</button>
-        <div className="rxg-estudio-campos">
+        <div className="rxg-estudio-campos" data-sin-lateralidad={config.requiere_lateralidad ? undefined : ''}>
           {config.requiere_lateralidad && <label>Lateralidad
             <select required value={seleccion.lateralidad ?? ''} onChange={(evento) => actualizar(indice, { lateralidad: evento.target.value })}>
               <option value="" disabled>Selecciona</option>
@@ -119,8 +135,8 @@ export function EstudiosSeleccionadosRx({ catalogo, valor, onChange, deshabilita
                 <option key={item.codigo} value={item.codigo} disabled={lateralidadesUsadas.has(item.codigo)}>{item.nombre}</option>)}
             </select>
           </label>}
-          <label className="rxg-campo-ancho">Indicación clínica
-            <input value={seleccion.indicacion ?? ''} onChange={(evento) => actualizar(indice, { indicacion: evento.target.value })} placeholder="Motivo del estudio (opcional)" />
+          <label className="rxg-campo-completo">Motivo o indicación clínica (opcional)
+            <textarea rows="2" value={seleccion.indicacion ?? ''} onChange={(evento) => actualizar(indice, { indicacion: evento.target.value })} placeholder="¿Por qué se pide? Ej.: dolor tras una caída, control de fractura" />
           </label>
           {config.detalle_requerido && <label className="rxg-campo-completo">{config.detalle_requerido}
             <input required value={seleccion.detalle_region ?? ''} onChange={(evento) => actualizar(indice, { detalle_region: evento.target.value })} />
