@@ -42,6 +42,7 @@ function sePuedeAnadir(estudio, valor) {
 /** Catálogo: buscador y estudios agrupados por región; un clic añade el estudio. */
 export function CatalogoEstudiosRx({ catalogo, valor, onChange, deshabilitado = false, titulo = '2. Estudios solicitados' }) {
   const [busqueda, setBusqueda] = useState('')
+  const [region, setRegion] = useState('')
   const { estudios } = useCatalogo(catalogo)
   const termino = busqueda.trim().toLocaleLowerCase()
   const visibles = estudios.filter((estudio) => [estudio.nombre, estudio.codigo, estudio.config?.region]
@@ -53,6 +54,7 @@ export function CatalogoEstudiosRx({ catalogo, valor, onChange, deshabilitado = 
   const sinCategoria = visibles.filter((estudio) => !(catalogo?.categorias ?? [])
     .some((categoria) => categoria.codigo === estudio.config?.categoria))
   if (sinCategoria.length) grupos.push({ codigo: 'otros', nombre: 'Otros estudios', estudios: sinCategoria })
+  const gruposVisibles = region ? grupos.filter((grupo) => grupo.codigo === region) : grupos
 
   return <section className="lab-form-section rxg-selector">
     <h3>{titulo}</h3>
@@ -61,8 +63,12 @@ export function CatalogoEstudiosRx({ catalogo, valor, onChange, deshabilitado = 
     <label className="lab-search-label">Buscar estudio
       <input type="search" value={busqueda} disabled={deshabilitado} onChange={(evento) => setBusqueda(evento.target.value)} placeholder="Nombre, código o región" />
     </label>
-    <div className="rxg-catalogo">
-      {grupos.map((grupo) => <section key={grupo.codigo} className="rxg-catalogo-grupo">
+    {grupos.length > 1 && <div className="rxg-regiones" role="group" aria-label="Filtrar por región">
+      <button type="button" aria-pressed={!region} onClick={() => setRegion('')}>Todas</button>
+      {grupos.map((grupo) => <button key={grupo.codigo} type="button" aria-pressed={region === grupo.codigo} onClick={() => setRegion(grupo.codigo)}>{grupo.nombre}</button>)}
+    </div>}
+    <div className="rxg-catalogo" tabIndex={0} aria-label="Estudios disponibles">
+      {gruposVisibles.map((grupo) => <section key={grupo.codigo} className="rxg-catalogo-grupo">
         <h4>{grupo.nombre}</h4>
         <div className="rxg-catalogo-opciones">{grupo.estudios.map((estudio) => {
           const disponible = sePuedeAnadir(estudio, valor)
@@ -94,7 +100,7 @@ export function EstudiosSeleccionadosRx({ catalogo, valor, onChange, deshabilita
 
   return <section className="rxg-estudios-seleccionados" aria-live="polite">
     <h3>{titulo ?? (valor.length ? `Estudios seleccionados (${valor.length})` : 'Estudios seleccionados')}</h3>
-    {valor.length === 0 && <p className="lab-form-hint">Elige un estudio del catálogo para empezar.</p>}
+    {valor.length === 0 && <div className="rxg-vacio"><strong>Todavía no elegiste estudios</strong><span>Busca o toca un estudio del catálogo y aparecerá aquí para configurarlo.</span></div>}
     {valor.map((seleccion, indice) => {
       const estudio = porId.get(Number(seleccion.tipo_estudio_id))
       if (!estudio) return null

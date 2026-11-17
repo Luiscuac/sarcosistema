@@ -144,10 +144,22 @@ export default function NuevaSolicitudRx({ onClose, onCreated }) {
   }
 
   const resultadosPacientes = pacientesQuery.data ?? []
+  const pedidoListo = Boolean(pedido.procedencia === 'este_centro' ? pedido.medico_solicitante_id : pedido.medico_solicitante_nombre.trim() && pedido.establecimiento_solicitante_nombre.trim())
+  const pasos = [
+    { nombre: 'Paciente', listo: Boolean(paciente), detalle: paciente ? paciente.nombre_completo : 'Sin elegir' },
+    { nombre: 'Estudios', listo: estudios.length > 0, detalle: estudios.length ? `${estudios.length} ${estudios.length === 1 ? 'elegido' : 'elegidos'}` : 'Ninguno' },
+    { nombre: 'Pedido', listo: pedidoListo, detalle: pedidoListo ? (pedido.prioridad === 'urgente' ? 'Urgente' : 'Completo') : 'Falta el médico solicitante' },
+  ]
   const solicitarCierre = () => hayDatos ? setConfirmarCierre(true) : onClose()
 
   return <>
     <form className="rxg-nueva" onSubmit={revisar}>
+      <ol className="rxg-pasos" aria-label="Avance de la solicitud">
+        {pasos.map((paso, indice) => <li key={paso.nombre} data-listo={paso.listo}>
+          <span className="rxg-paso-marca" aria-hidden="true">{paso.listo ? '✓' : indice + 1}</span>
+          <span className="rxg-paso-texto"><strong>{paso.nombre}</strong><small>{paso.detalle}<span className="rxg-sr">{paso.listo ? ' (completo)' : ' (pendiente)'}</span></small></span>
+        </li>)}
+      </ol>
       <div className="rxg-nueva-columnas">
         <div className="rxg-nueva-izquierda">
           <section className="lab-form-section">
@@ -185,7 +197,7 @@ export default function NuevaSolicitudRx({ onClose, onCreated }) {
         <aside className="rxg-nueva-derecha">
           <EstudiosSeleccionadosRx catalogo={catalogoQuery.data} valor={estudios} onChange={setEstudios} deshabilitado={ocupado} titulo={estudios.length ? `Estudios seleccionados (${estudios.length})` : 'Estudios seleccionados'} />
           <section className="lab-form-section">
-            <h3>Datos del pedido</h3>
+            <h3>3. Datos del pedido</h3>
             <div className="lab-form-grid">
               <label>Procedencia<select value={pedido.procedencia} onChange={(e) => cambiarPedido('procedencia', e.target.value)}><option value="este_centro">Este centro</option><option value="otro_centro">Otro centro</option></select></label>
               <label>Prioridad<select value={pedido.prioridad} onChange={(e) => cambiarPedido('prioridad', e.target.value)}><option value="sin_prioridad">Sin prioridad</option><option value="urgente">Urgente</option></select></label>
