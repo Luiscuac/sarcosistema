@@ -15,8 +15,15 @@ const ETAPAS = [
 ]
 const LATERALIDAD = { derecha: 'Derecha', izquierda: 'Izquierda', bilateral: 'Bilateral' }
 
+const CATEGORIAS = {
+  torax: 'Tórax', abdomen: 'Abdomen', columna: 'Columna vertebral', pelvis_cadera: 'Pelvis y cadera',
+  extremidad_superior: 'Extremidades superiores', extremidad_inferior: 'Extremidades inferiores',
+  craneo_cara: 'Cráneo y estructuras faciales', cuello: 'Cuello y partes blandas',
+}
+
 function categoriaVisible(codigo) {
-  return codigo ? codigo.replaceAll('_', ' ').replace(/^./, (letra) => letra.toLocaleUpperCase()) : 'Sin categoría'
+  if (!codigo) return 'Sin categoría'
+  return CATEGORIAS[codigo] ?? codigo.replaceAll('_', ' ').replace(/^./, (letra) => letra.toLocaleUpperCase())
 }
 
 function fechaVisible(fecha) {

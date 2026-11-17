@@ -8,14 +8,9 @@ const LATERALIDADES = [
   { codigo: 'bilateral', nombre: 'Bilateral' },
 ]
 
-function nuevaConfiguracion(estudio, valor) {
-  const config = estudio.config ?? {}
-  let lateralidad = null
-  if (config.requiere_lateralidad) {
-    const opciones = LATERALIDADES.filter((item) => item.codigo !== 'bilateral' || config.permite_bilateral)
-    lateralidad = opciones.find((item) => !valor.some((actual) =>
-      Number(actual.tipo_estudio_id) === Number(estudio.id) && actual.lateralidad === item.codigo))?.codigo ?? null
-  }
+function nuevaConfiguracion(estudio) {
+  // Sin lateralidad por defecto: el usuario debe elegirla (evita solicitar el lado equivocado).
+  const lateralidad = null
   return {
     tipo_estudio_id: estudio.id,
     lateralidad,
@@ -80,7 +75,7 @@ export default function SelectorEstudiosRx({ catalogo, valor, onChange, deshabil
         <div className="rxg-catalogo-opciones">{grupo.estudios.map((estudio) => {
           const disponible = sePuedeAnadir(estudio)
           return <button key={estudio.id} type="button" className="rxg-catalogo-estudio" disabled={deshabilitado || !disponible}
-            onClick={() => onChange([...valor, nuevaConfiguracion(estudio, valor)])}>
+            onClick={() => onChange([...valor, nuevaConfiguracion(estudio)])}>
             <strong>{estudio.nombre}</strong><span>{disponible ? 'Añadir estudio' : 'Ya se eligieron las opciones disponibles'}</span>
           </button>
         })}</div>
@@ -123,7 +118,7 @@ export default function SelectorEstudiosRx({ catalogo, valor, onChange, deshabil
                 {proyeccion.nombre}
               </label>)}</div>
             </fieldset>}
-            <label className="lab-full-field">Indicacion clinica
+            <label className="lab-full-field">Indicación clínica
               <textarea rows="2" value={seleccion.indicacion ?? ''} onChange={(evento) => actualizar(indice, { indicacion: evento.target.value })} />
             </label>
             <label className="lab-full-field">Observaciones

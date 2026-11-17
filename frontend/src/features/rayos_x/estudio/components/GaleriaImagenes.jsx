@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import Dialogo from '../../../laboratorio/components/Dialogo.jsx'
 import VisorRadiografia from '../../components/VisorRadiografia.jsx'
 import { obtenerVistaImagen } from '../../api/radiologiaApi.js'
+import { tamanoLegible } from '../utils/informe.js'
 
 export function useVistaImagen(archivoId) {
   const [url, setUrl] = useState(null)
@@ -25,7 +26,7 @@ function Miniatura({ imagen, proyecciones, editable, ocupado, onAsignar, onRetir
     <button type="button" className="rxe-miniatura-imagen" onClick={() => onAbrir(imagen)} disabled={!url}>
       {url ? <img src={url} alt={`Vista de ${imagen.nombre_original}`} /> : <span>Cargando vista...</span>}
     </button>
-    <div><strong>{imagen.nombre_original}</strong><small>{(imagen.tamano_bytes / 1024 / 1024).toFixed(1)} MB · {new Date(imagen.fecha_carga).toLocaleString('es-BO')}</small></div>
+    <div><strong>{imagen.nombre_original}</strong><small>{tamanoLegible(imagen.tamano_bytes)} · {new Date(imagen.fecha_carga).toLocaleString('es-BO')}</small></div>
     <label>Proyección<select value={imagen.proyeccion_codigo || ''} disabled={!editable || ocupado} onChange={e => onAsignar(imagen.id, e.target.value || null)}>
       <option value="">Sin asignar</option>{proyecciones.map(p => <option key={p.codigo} value={p.codigo}>{p.nombre}</option>)}
     </select></label>

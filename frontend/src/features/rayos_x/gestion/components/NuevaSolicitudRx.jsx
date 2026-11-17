@@ -168,7 +168,7 @@ export default function NuevaSolicitudRx({ onClose, onCreated }) {
               </div>
               <div className="rxg-inline-actions"><button type="button" onClick={() => setRegistrandoPaciente(false)}>Volver a buscar</button><button className="primary-button" type="button" disabled={pacienteMutation.isPending} onClick={registrarPaciente}>{pacienteMutation.isPending ? 'Guardando...' : 'Guardar paciente'}</button></div>
             </div> : <>
-              <label className="lab-search-label">Buscar por nombre, documento, historia clinica o codigo
+              <label className="lab-search-label">Buscar por nombre, documento, historia clínica o código
                 <input autoFocus type="search" value={terminoPaciente} onChange={(e) => setTerminoPaciente(e.target.value)} placeholder="Escribe al menos 2 caracteres" />
               </label>
               {terminoPaciente.trim().length >= 2 && (pacientesQuery.isFetching || terminoPaciente.trim() !== pacienteDiferido) && <p className="lab-form-hint">Buscando pacientes...</p>}
