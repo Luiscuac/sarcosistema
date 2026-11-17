@@ -206,3 +206,9 @@
 @media (prefers-reduced-motion: reduce) { .rx-ia-girando { animation: none; } }
 .rx-ia-visor select { min-height: 30px; padding: 2px 8px; border: 1px solid #26343a; border-radius: 4px; background: #1b262b; color: #d9e3e6; font: inherit; font-size: 13px; }
 .rx-ia-visor select:focus-visible { outline: 2px solid #5fb3ab; outline-offset: 1px; }
+.rx-ia-hallazgos { display: grid; gap: 12px; }
+.rx-ia-hallazgos > h4 { margin: 0; }
+.rx-ia-hallazgos > .rx-nota { margin: -6px 0 0; }
+.rx-ia-lista.es-sugerencias { counter-reset: sugerencia; }
+.rx-ia-lista.es-sugerencias li { counter-increment: sugerencia; border-color: #c3cdd1; }
+.rx-ia-lista.es-sugerencias li > strong::before { content: counter(sugerencia) '. '; color: var(--ia-tenue); }

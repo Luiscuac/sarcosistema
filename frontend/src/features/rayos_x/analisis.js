@@ -100,6 +100,18 @@ export const porcentaje = valor => (typeof valor === 'number' && Number.isFinite
 /** Lectura del médico en la revisión: '' (no indicada), 'si' o 'no' -> true/false/null. */
 export const lecturaAnormal = valor => (valor === 'si' ? true : valor === 'no' ? false : null)
 
+/** Sugerencias del modelo: las señales más fuertes primero; el resto son señales débiles (falsas alarmas frecuentes). */
+export const MAX_SUGERENCIAS = 3
+export function sugerenciasDeVision(vision) {
+  const { todas } = hallazgosDeVision(vision)
+  const sobreCorte = todas.filter(h => h.above_operating_point).sort((a, b) => b.score - a.score)
+  return {
+    principales: sobreCorte.slice(0, MAX_SUGERENCIAS),
+    debiles: sobreCorte.slice(MAX_SUGERENCIAS),
+    sinSenal: todas.filter(h => !h.above_operating_point).sort((a, b) => b.score - a.score),
+  }
+}
+
 /** Nivel de señal en lenguaje simple a partir del score normalizado (0,5 = punto de corte del modelo). */
 export function nivelSenal(score) {
   if (typeof score !== 'number' || !Number.isFinite(score)) return { clave: 'sin_dato', texto: 'Sin dato' }

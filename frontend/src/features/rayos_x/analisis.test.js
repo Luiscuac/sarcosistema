@@ -94,3 +94,14 @@ test('nivel de señal en lenguaje simple', () => {
   assert.equal(nivelSenal(0.2).clave, 'baja')
   assert.equal(nivelSenal(undefined).clave, 'sin_dato')
 })
+
+import { sugerenciasDeVision } from './analisis.js'
+
+test('sugerencias: tres principales por score y el resto como débiles', () => {
+  const h = (name, score) => ({ name, score, above_operating_point: score >= 0.5 })
+  const vision = { all_findings: [h('A', 0.6), h('B', 0.9), h('C', 0.55), h('D', 0.7), h('E', 0.2)] }
+  const { principales, debiles, sinSenal } = sugerenciasDeVision(vision)
+  assert.deepEqual(principales.map(x => x.name), ['B', 'D', 'A'])
+  assert.deepEqual(debiles.map(x => x.name), ['C'])
+  assert.deepEqual(sinSenal.map(x => x.name), ['E'])
+})
