@@ -135,3 +135,8 @@
 .rxe-informe-bloqueado { display: grid; justify-items: start; gap: var(--rx-espacio-2); }
 .rxe-informe-bloqueado strong { color: var(--rx-tinta); font-size: var(--rx-texto-m); }
 .rxe-informe-bloqueado p { margin: 0 0 var(--rx-espacio-2); color: var(--rx-tenue); font-size: var(--rx-texto-s); }
+.rxe-cierre { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--rx-espacio-3) var(--rx-espacio-5); }
+.rxe-cierre h2 { margin: 0 0 var(--rx-espacio-1); }
+.rxe-cierre p { margin: 0; color: var(--rx-tenue); font-size: var(--rx-texto-s); }
+.rxe-cierre .rxe-pendientes { grid-column: 1 / -1; }
+@media (max-width: 720px) { .rxe-cierre { grid-template-columns: 1fr; } }

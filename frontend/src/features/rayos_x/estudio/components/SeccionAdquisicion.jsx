@@ -110,13 +110,16 @@ export default function SeccionAdquisicion({ estudioId, detalle }) {
         <label className="rxe-span">Limitaciones<textarea value={form.limitaciones || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, limitaciones: e.target.value })} /></label>
         <label className="rxe-span">Motivo de repetición<textarea value={form.motivo_repeticion || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, motivo_repeticion: e.target.value })} /></label>
         <label className="rxe-span">Observaciones<textarea value={form.observaciones || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, observaciones: e.target.value })} /></label>
-        {editableRegistro && <div className="rxe-acciones rxe-span"><button type="submit" className="lab-secondary-button" disabled={ocupado}>Guardar registro</button><button type="button" className="primary-button" disabled={ocupado} onClick={() => { setPendientes(detalle.pendientes?.adquisicion || []); if (!(detalle.pendientes?.adquisicion || []).length) completar.mutate() }}>Completar adquisición</button></div>}
+        {editableRegistro && <div className="rxe-acciones rxe-span"><button type="submit" className="lab-secondary-button" disabled={ocupado}>Guardar registro</button></div>}
       </form>
-      {pendientes.length > 0 && <div className="rxe-pendientes" role="alert"><strong>Pendientes antes de completar:</strong><ul>{pendientes.map(p => <li key={p}>{p}</li>)}</ul><button type="button" className="primary-button" disabled={ocupado} onClick={() => completar.mutate()}>Comprobar y completar</button></div>}
     </section>
     <section className="rxe-bloque"><h2>Imágenes</h2>{editableImagenes && <ZonaCarga proyecciones={proyecciones} disabled={ocupado} onSubir={(archivos, proys, fin) => subir.mutate({ archivos, proyecciones: proys, fin })} />}
       <GaleriaImagenes imagenes={detalle.imagenes || []} proyecciones={proyecciones} editable={editableImagenes} ocupado={ocupado} onAsignar={(id, codigo) => asignar.mutate({ id, codigo })} onRetirar={(id, motivo, fin) => motivo.trim() && retirar.mutate({ id, motivo: motivo.trim(), fin })} />
     </section>
+    {editableRegistro && <section className="rxe-bloque rxe-cierre"><div><h2>Completar adquisición</h2><p>Cuando el registro técnico esté guardado y las imágenes subidas, completa la adquisición para pasar al informe.</p></div>
+      <button type="button" className="primary-button" disabled={ocupado} onClick={() => { setPendientes(detalle.pendientes?.adquisicion || []); if (!(detalle.pendientes?.adquisicion || []).length) completar.mutate() }}>Completar adquisición</button>
+      {pendientes.length > 0 && <div className="rxe-pendientes" role="alert"><strong>Pendientes antes de completar:</strong><ul>{pendientes.map(p => <li key={p}>{p}</li>)}</ul><button type="button" className="primary-button" disabled={ocupado} onClick={() => completar.mutate()}>Comprobar y completar</button></div>}
+    </section>}
     <InformesExternos estudioId={estudioId} informes={detalle.informes_externos || []} editable={Boolean(detalle.permisos.adjuntar_externo)} actualizar={actualizar} />
   </div>
 }
