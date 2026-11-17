@@ -12,7 +12,7 @@ const LATERALIDADES = { derecha: 'Derecha', izquierda: 'Izquierda', bilateral: '
 const nombresProyecciones = detalle => (detalle.adquisicion?.proyecciones_realizadas || []).map(c => detalle.config?.proyecciones?.find(p => p.codigo === c)?.nombre || c).join(', ') || 'No registradas'
 function AnexoImagen({ imagen, detalle, indice }) {
   const url = useVistaImagen(imagen.archivo_id); const proyeccion = detalle.config?.proyecciones?.find(p => p.codigo === imagen.proyeccion_codigo)?.nombre || imagen.proyeccion_codigo || 'Sin asignar'
-  return <section className="rxe-anexo-pagina"><h2>Anexo de imágenes · {indice + 1}</h2>{url ? <img src={url} alt={imagen.nombre_original} /> : <p>Cargando imagen...</p>}<p>{proyeccion} · {imagen.nombre_original}</p></section>
+  return <section className="rxe-anexo-pagina"><h2>Anexo de imágenes · {indice + 1}</h2>{url ? <img src={url} alt={imagen.nombre_original} /> : <p>{url === false ? 'No se pudo cargar la imagen.' : 'Cargando imagen…'}</p>}<p>{proyeccion} · {imagen.nombre_original}</p></section>
 }
 
 export function DocumentoInformeRx({ detalle, incluirImagenes }) {

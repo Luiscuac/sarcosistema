@@ -174,7 +174,7 @@ export default function NuevaSolicitudRx({ onClose, onCreated }) {
               {terminoPaciente.trim().length >= 2 && (pacientesQuery.isFetching || terminoPaciente.trim() !== pacienteDiferido) && <p className="lab-form-hint">Buscando pacientes...</p>}
               {pacientesQuery.isError && <p className="lab-form-error" role="alert">{mensajeErrorApi(pacientesQuery.error, 'No se pudo buscar pacientes.')}</p>}
               {resultadosPacientes.map((item) => <button className="rxg-opcion-persona" type="button" key={item.id} onClick={() => { setPaciente(item); setErrores([]) }}><strong>{item.nombre_completo}</strong><span>{detallePaciente(item)}</span></button>)}
-              {pacientesQuery.isSuccess && !pacientesQuery.isFetching && pacienteDiferido.length >= 2 && resultadosPacientes.length === 0 && <p className="lab-form-hint">No se encontro el paciente. Revisa la escritura o registralo.</p>}
+              {pacientesQuery.isSuccess && !pacientesQuery.isFetching && pacienteDiferido.length >= 2 && resultadosPacientes.length === 0 && <p className="lab-form-hint">No se encontró el paciente. Revisa la escritura o regístralo.</p>}
               <button className="rxg-text-button" type="button" onClick={() => setRegistrandoPaciente(true)}>Registrar paciente nuevo</button>
             </>}
           </section>
@@ -207,7 +207,7 @@ export default function NuevaSolicitudRx({ onClose, onCreated }) {
       </form>
     </Dialogo>
     {confirmarRegistro && <ConfirmarAccion titulo="Confirmar nueva solicitud" textoConfirmar="Registrar solicitud" pendiente={solicitudMutation.isPending} onConfirmar={confirmar} onCancelar={() => setConfirmarRegistro(false)}>
-      <p>Se registrara la solicitud para <strong>{paciente?.nombre_completo}</strong> con {estudios.length} {estudios.length === 1 ? 'estudio' : 'estudios'}.</p>
+      <p>Se registrará la solicitud para <strong>{paciente?.nombre_completo}</strong> con {estudios.length} {estudios.length === 1 ? 'estudio' : 'estudios'}.</p>
       <p>Prioridad: <strong>{pedido.prioridad === 'urgente' ? 'Urgente' : 'Sin prioridad'}</strong>.</p>
       <div className="lab-confirm-study"><h3>Resumen de estudios</h3><ul>{estudios.map((seleccion, indice) => {
         const estudio = catalogoQuery.data?.estudios?.find((item) => Number(item.id) === Number(seleccion.tipo_estudio_id))

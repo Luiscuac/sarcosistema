@@ -24,7 +24,7 @@ function PanelImagenes({ imagenes }) {
   const teclado = e => { if (!['ArrowLeft', 'ArrowRight'].includes(e.key) || !imagenes.length) return; e.preventDefault(); setIndice(i => e.key === 'ArrowRight' ? (i + 1) % imagenes.length : (i - 1 + imagenes.length) % imagenes.length) }
   return <aside className="rxe-work-visor"><div ref={tira} className="rxe-tira" role="tablist" aria-label="Imágenes del estudio" onKeyDown={teclado}>
     {imagenes.map((imagen, i) => <BotonMiniatura key={imagen.id} imagen={imagen} activa={i === indice} onClick={() => setIndice(i)} />)}
-  </div><div className="rxe-visor-principal">{seleccionada && url ? <VisorRadiografia url={url} alt={seleccionada.nombre_original} vision={undefined} mapa={null} onMapa={() => {}} /> : <p>{imagenes.length ? 'Cargando imagen...' : 'No hay imágenes disponibles.'}</p>}</div></aside>
+  </div><div className="rxe-visor-principal">{seleccionada && url ? <VisorRadiografia url={url} alt={seleccionada.nombre_original} vision={undefined} mapa={null} onMapa={() => {}} /> : <p role={url === false ? 'alert' : undefined}>{imagenes.length ? (url === false ? 'No se pudo cargar la imagen.' : 'Cargando imagen…') : 'No hay imágenes disponibles.'}</p>}</div></aside>
 }
 
 function TextoInforme({ texto }) {

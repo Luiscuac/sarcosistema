@@ -46,7 +46,7 @@ function GrupoSolicitud({ solicitud }) {
       </dl>
     </header>
     <div className="rxg-estudios-lista">{solicitud.estudios.map((estudio) => <div className="rxg-estudio-fila" key={estudio.estudio_id}>
-      <div className="rxg-estudio-identidad"><strong>{estudio.tipo_estudio_nombre}</strong><span>{LATERALIDAD[estudio.lateralidad] ?? 'Sin lateralidad'} · {estudio.imagenes ?? 0} {(estudio.imagenes ?? 0) === 1 ? 'imagen' : 'imagenes'}</span></div>
+      <div className="rxg-estudio-identidad"><strong>{estudio.tipo_estudio_nombre}</strong><span>{LATERALIDAD[estudio.lateralidad] ?? 'Sin lateralidad'} · {estudio.imagenes ?? 0} {(estudio.imagenes ?? 0) === 1 ? 'imagen' : 'imágenes'}</span></div>
       <div className="rxg-insignias"><span className={`rxg-etapa rxg-etapa--${estudio.etapa}`}>{estudio.etapa_texto}</span>{estudio.triaje && <span className={`rxg-triaje rxg-triaje--${estudio.triaje.nivel ?? 'neutro'}`}>Prioridad IA: {estudio.triaje.nivel ?? 'sin nivel'}</span>}</div>
       <Link className="lab-secondary-button rxg-abrir" to={`/rayos-x/gestion/estudios/${estudio.estudio_id}`}>Abrir estudio</Link>
     </div>)}</div>

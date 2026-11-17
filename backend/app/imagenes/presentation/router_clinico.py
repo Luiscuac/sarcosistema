@@ -149,6 +149,9 @@ async def guardar_informe(
     archivos: list[UploadFile] = File(default=[]),
 ):
     _validar_rol(usuario, modalidad)
+    if modalidad == 'rayos_x' and archivos and usuario.rol != 'rayos_x':
+        # La carga de imágenes es del técnico; el radiólogo solo informa (API de radiología convencional).
+        raise HTTPException(status.HTTP_403_FORBIDDEN, 'Solo el personal de Rayos X sube imágenes del estudio.')
     await _comprobar_estudio(estudio_id, modalidad, repositorio)
     caso = GuardarInforme(
         repositorio, AlmacenLocal(), settings.imagenes_tipos_lista,
