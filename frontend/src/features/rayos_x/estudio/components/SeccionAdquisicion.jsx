@@ -106,9 +106,6 @@ export default function SeccionAdquisicion({ estudioId, detalle }) {
         <label>Fecha y hora<input type="datetime-local" value={form.fecha_hora_adquisicion || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, fecha_hora_adquisicion: e.target.value })} /></label>
         <label>Operador<input value={form.operador_nombre || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, operador_nombre: e.target.value })} /></label>
         <label>Calidad<select value={form.calidad || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, calidad: e.target.value })}><option value="">Seleccionar</option><option value="adecuada">Adecuada</option><option value="limitada">Limitada</option><option value="no_diagnostica">No diagnóstica</option></select></label>
-        <label>Repeticiones<input type="number" min="0" value={form.repeticiones} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, repeticiones: e.target.value })} /></label>
-        <label className="rxe-span">Limitaciones<textarea value={form.limitaciones || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, limitaciones: e.target.value })} /></label>
-        <label className="rxe-span">Motivo de repetición<textarea value={form.motivo_repeticion || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, motivo_repeticion: e.target.value })} /></label>
         <label className="rxe-span">Observaciones<textarea value={form.observaciones || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, observaciones: e.target.value })} /></label>
         {editableRegistro && <div className="rxe-acciones rxe-span"><button type="submit" className="lab-secondary-button" disabled={ocupado}>Guardar registro</button></div>}
       </form>
