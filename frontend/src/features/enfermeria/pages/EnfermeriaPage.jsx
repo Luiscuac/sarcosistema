@@ -2,10 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import { useBlocker, useLocation, useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  actualizarBorradorEnfermeria, buscarPacientesEnfermeria,
+  actualizarBorradorEnfermeria, buscarPacientesEnfermeria, crearPacienteEnfermeria,
   guardarBorradorEnfermeria, obtenerRecetasRecibidasEnfermeria, obtenerRegistrosEnfermeria,
   publicarRegistroEnfermeria,
 } from '../api/enfermeriaApi.js'
+import { FormularioPaciente } from '../../laboratorio/components/nueva-solicitud/PacienteSolicitud.jsx'
 import '../../laboratorio/pages/laboratorio.css'
 import './enfermeria.css'
 import RecetasRecibidas from '../components/RecetasRecibidas.jsx'
@@ -39,6 +40,11 @@ function mensajeErrorApi(error, porDefecto) {
 }
 const edadTexto = (nacimiento) => describirEdad(nacimiento) || 'Edad no registrada'
 const MENSAJE_PUBLICADO = 'Registro publicado. Ya está disponible en la ficha médica del paciente.'
+const PACIENTE_VACIO = {
+  nombre_completo: '', fecha_nacimiento: '', sexo: 'no_especificado',
+  tipo_documento: 'CI', numero_documento: '', sin_documento: false,
+  historia_clinica: '', codigo_externo: '', telefono: '',
+}
 
 function ResumenValores({ lineas }) {
   return <dl className="enf-summary">{lineas.map(({ campo, etiqueta, valor }) =>
@@ -71,6 +77,9 @@ export default function EnfermeriaPage({ usuario, logout }) {
   const [entrada, setEntrada] = useState('')
   const [buscar, setBuscar] = useState('')
   const [pagina, setPagina] = useState(1)
+  const [nuevoPaciente, setNuevoPaciente] = useState(false)
+  const [datosPaciente, setDatosPaciente] = useState(PACIENTE_VACIO)
+  const [errorPaciente, setErrorPaciente] = useState('')
   const [paciente, setPaciente] = useState(() => location.state?.paciente || null)
   const [buscando, setBuscando] = useState(() => !location.state?.paciente)
   const [form, setForm] = useState(() => location.state?.edicion
@@ -129,6 +138,50 @@ export default function EnfermeriaPage({ usuario, logout }) {
     setForm((actual) => ({ ...actual, [campo]: valor }))
   }
 
+  function cambiarDatosPaciente(campo, valor) {
+    setDatosPaciente((actual) => (campo === 'sin_documento' && valor
+      ? { ...actual, sin_documento: true, tipo_documento: '', numero_documento: '' }
+      : { ...actual, [campo]: valor, ...(campo === 'sin_documento' ? { tipo_documento: 'CI' } : {}) }))
+    setErrorPaciente('')
+  }
+
+  async function registrarPaciente() {
+    if (ocupado) return
+    if (datosPaciente.nombre_completo.trim().length < 2) {
+      setErrorPaciente('Escribe el nombre completo del paciente.')
+      return
+    }
+    if (!datosPaciente.fecha_nacimiento) {
+      setErrorPaciente('Selecciona la fecha de nacimiento del paciente.')
+      return
+    }
+    if (!datosPaciente.sin_documento && (!datosPaciente.tipo_documento.trim() || !datosPaciente.numero_documento.trim())) {
+      setErrorPaciente('Ingresa el documento o marca “Persona sin documento”.')
+      return
+    }
+    setOcupado(true)
+    setErrorPaciente('')
+    try {
+      const creado = await crearPacienteEnfermeria({
+        ...datosPaciente,
+        nombre_completo: datosPaciente.nombre_completo.trim(),
+        tipo_documento: datosPaciente.sin_documento ? null : datosPaciente.tipo_documento.trim(),
+        numero_documento: datosPaciente.sin_documento ? null : datosPaciente.numero_documento.trim(),
+        historia_clinica: datosPaciente.historia_clinica.trim() || null,
+        codigo_externo: datosPaciente.codigo_externo.trim() || null,
+        telefono: datosPaciente.telefono.trim() || null,
+      })
+      await cache.invalidateQueries({ queryKey: ['enfermeria', 'pacientes'] })
+      abrirPaciente(creado)
+      setEntrada('')
+      notificar('Paciente registrado. Ya puedes completar su admisión.', 'exito')
+    } catch (err) {
+      setErrorPaciente(mensajeErrorApi(err, 'No se pudo registrar el paciente. Revisa los datos e inténtalo de nuevo.'))
+    } finally {
+      setOcupado(false)
+    }
+  }
+
   function limpiarFormulario() {
     setForm(FORMULARIO_VACIO); setEdicion(null)
   }
@@ -136,6 +189,9 @@ export default function EnfermeriaPage({ usuario, logout }) {
   function abrirPaciente(item) {
     setPaciente(item)
     setBuscando(false)
+    setNuevoPaciente(false)
+    setDatosPaciente(PACIENTE_VACIO)
+    setErrorPaciente('')
     limpiarFormulario()
     setPantalla('admision')
     setError('')
@@ -251,7 +307,19 @@ export default function EnfermeriaPage({ usuario, logout }) {
         </section>
         : <section className="enf-panel enf-search-workspace" aria-label="Búsqueda de pacientes">
           <div className="enf-panel-heading"><h2>Buscar paciente</h2>
-            {paciente && <button type="button" className="enf-change-patient" onClick={() => setBuscando(false)}>Volver a {paciente.nombre_completo}</button>}</div>
+            <div className="enf-search-heading-actions">
+              {paciente && <button type="button" className="enf-change-patient" onClick={() => setBuscando(false)}>Volver a {paciente.nombre_completo}</button>}
+              {!nuevoPaciente && <button type="button" className="primary-button" onClick={() => { setNuevoPaciente(true); setErrorPaciente('') }}>+ Registrar paciente nuevo</button>}
+            </div>
+          </div>
+          {nuevoPaciente
+            ? <div className="enf-new-patient">
+              <p>Registra la ficha para poder continuar con la admisión.</p>
+              {errorPaciente && <p className="lab-form-error" role="alert">{errorPaciente}</p>}
+              <FormularioPaciente datos={datosPaciente} pendiente={ocupado} onChange={cambiarDatosPaciente}
+                onCancelar={() => { setNuevoPaciente(false); setErrorPaciente('') }} onGuardar={registrarPaciente} />
+            </div>
+            : <>
           <label className="enf-search-field">
             <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8" /><path d="m16 16 4.5 4.5" /></svg>
             <span className="sr-only">Buscar por nombre, documento, historia clínica o código</span>
@@ -280,7 +348,7 @@ export default function EnfermeriaPage({ usuario, logout }) {
                 </div>
                 : !pacientes.data?.items.length
                   ? <div className="enf-search-state">
-                    <div><h3>No encontramos coincidencias</h3><p>Prueba con otro nombre, documento o código.</p></div>
+                    <div><h3>No encontramos coincidencias</h3><p>Revisa los datos o registra una ficha nueva para continuar.</p></div>
                   </div>
                   : <>
                     <div className="enf-search-results-heading">
@@ -313,6 +381,7 @@ export default function EnfermeriaPage({ usuario, logout }) {
                       </div>
                     </div>}
                   </>}
+            </>}
         </section>}
 
       {paciente && !buscando && <>

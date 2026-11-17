@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.accesos.domain.entities import Usuario
@@ -9,6 +10,10 @@ from app.enfermeria.application.use_cases.registrar_admision import RegistrarAdm
 from app.enfermeria.infrastructure.persistence.repository import SqlAlchemyRegistroEnfermeriaRepository
 from app.enfermeria.presentation.schemas import AdmisionRequest
 from app.enfermeria.presentation.recetas import RecetaRequest
+from app.laboratorio.application.use_cases.service import LaboratorioService
+from app.laboratorio.domain.entities import PacienteNuevo
+from app.laboratorio.infrastructure.persistence.repository import SqlAlchemyExamenRepository
+from app.laboratorio.presentation.schemas import CrearPacienteRequest, PacienteResponse
 from sqlalchemy import text
 import json
 
@@ -18,6 +23,9 @@ router = APIRouter(prefix='/enfermeria', tags=['enfermeria'])
 def get_repository(db: AsyncSession = Depends(get_db)):
     return SqlAlchemyRegistroEnfermeriaRepository(db)
 
+def get_paciente_service(db: AsyncSession = Depends(get_db)):
+    return LaboratorioService(SqlAlchemyExamenRepository(db))
+
 
 @router.get('/pacientes', dependencies=[Depends(requiere_rol('enfermeria'))])
 async def buscar_pacientes(
@@ -26,6 +34,33 @@ async def buscar_pacientes(
     repo: SqlAlchemyRegistroEnfermeriaRepository = Depends(get_repository),
 ):
     return await repo.buscar_pacientes(buscar.strip(), pagina, 20)
+
+
+@router.post('/pacientes', response_model=PacienteResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(requiere_rol('enfermeria'))])
+async def crear_paciente(
+    datos: CrearPacienteRequest,
+    usuario: Usuario = Depends(usuario_actual),
+    service: LaboratorioService = Depends(get_paciente_service),
+):
+    paciente = PacienteNuevo(
+        nombre_completo=datos.nombre_completo,
+        fecha_nacimiento=datos.fecha_nacimiento,
+        sexo=datos.sexo,
+        tipo_documento=datos.tipo_documento,
+        numero_documento=datos.numero_documento,
+        sin_documento=datos.sin_documento,
+        historia_clinica=datos.historia_clinica,
+        codigo_externo=datos.codigo_externo,
+        telefono=datos.telefono,
+    )
+    try:
+        return await service.crear_paciente(paciente, usuario.id)
+    except IntegrityError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail='Ya existe un paciente con ese tipo y número de documento.',
+        ) from None
 
 
 @router.post('/pacientes/{paciente_id}/registros', status_code=201,
