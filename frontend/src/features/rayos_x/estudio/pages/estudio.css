@@ -149,3 +149,7 @@
 .rxe-desplegable > summary:focus-visible { outline: none; box-shadow: var(--rx-foco); border-radius: var(--rx-radio-s); }
 .rxe-desplegable[open] > summary { margin-bottom: var(--rx-espacio-4); }
 @media (prefers-reduced-motion: reduce) { .rxe-desplegable > summary::after { transition: none; } }
+/* El visor del diálogo también va sobre negatoscopio, como el del espacio de trabajo */
+.rxe-visor-dialogo { padding: var(--rx-espacio-3); border-radius: var(--rx-radio-m); background: var(--rx-negatoscopio, #121b1f); color: var(--rx-negatoscopio-texto, #d9e3e6); }
+.rxe-visor-dialogo .rx-visor-ayuda, .rxe-work-visor .rx-visor-ayuda { color: var(--rx-negatoscopio-tenue, #93a5ab); }
+.rxe-work-visor { color: var(--rx-negatoscopio-texto, #d9e3e6); }

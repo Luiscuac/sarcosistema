@@ -79,7 +79,7 @@ export default function EstudioDetalle({ id, usuario, habilitada, onVolver }) {
     </header>
 
     <div className="rx-ia-cuerpo">
-      <aside className="rx-ia-visor" aria-label="Radiografía">
+      <aside className={`rx-ia-visor${procesando ? ' es-analizando' : ''}`} aria-label="Radiografía" aria-busy={procesando}>
         {imagen.isFetching && <p role="status">Cargando radiografía…</p>}
         {imagen.error && <p role="alert">{mensajeError(imagen.error)}</p>}
         {archivoId && imagen.data && url && <VisorRadiografia url={url} alt={`Radiografía del estudio ${d.referencia}`} vision={resultado?.vision} mapa={mapa} onMapa={setMapa} />}
@@ -95,7 +95,7 @@ export default function EstudioDetalle({ id, usuario, habilitada, onVolver }) {
 
         {procesando && <section className="rx-ia-tarjeta rx-ia-proceso" role="status">
           <span className="rx-ia-girando" aria-hidden="true" />
-          <div><h3>{analisis.data.estado === 'en_cola' ? 'En cola' : 'Analizando…'}</h3><p>Unos segundos.</p></div>
+          <div><h3>{analisis.data.estado === 'en_cola' ? 'En cola' : 'Analizando…'}</h3><p>Puede tardar hasta un minuto. No cierres esta pantalla.</p></div>
         </section>}
 
         {solicitar.error && <p role="alert" className="rx-ia-error">{mensajeError(solicitar.error)}</p>}
