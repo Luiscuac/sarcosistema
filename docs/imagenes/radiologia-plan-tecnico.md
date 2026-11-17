@@ -27,7 +27,7 @@ No existe Caja ni Facturación en el proyecto: no se integra.
 | Sin registro técnico | Adquisición: proyecciones realizadas, posición, calidad, repeticiones y parámetros opcionales |
 | Archivos ligados a cada versión del informe; cada guardado creaba una versión | Imágenes ligadas al estudio y a su proyección; el borrador se edita en su sitio |
 | Informe de texto libre | Informe estructurado por plantilla, con texto final revisable |
-| El rol `rayos_x` redactaba y publicaba | `rayos_x` recibe y adquiere; solo `radiologo` redacta y valida |
+| El rol `rayos_x` redactaba y publicaba | `rayos_x` hace todo el flujo (recibe, adquiere, redacta y valida); `radiologo` se conserva como opcional |
 | Sin correcciones posteriores | Adendas con autor, motivo y fecha |
 | PDF adjunto sin semántica | Informe externo como entidad aparte, siempre rotulado como externo |
 | El rol `rayos_x` podía publicar por la ruta anterior | La ruta anterior también exige `radiologo` para publicar Rayos X |
@@ -61,11 +61,13 @@ No se crean tablas por tipo de radiografía ni se cambian los estados de `estudi
 
 ## 4. Roles
 
+> Actualizado 17/11/2026: por decisión del usuario, **un solo rol se encarga de todo el flujo**: `rayos_x`.
+
 | Rol | Puede |
 |---|---|
-| `rayos_x` (recepción y técnico) | Crear solicitudes, registrar adquisición, subir y retirar imágenes, adjuntar informe externo, marcar no realizado, entregar |
-| `radiologo` (médico informante) | Ver imágenes, redactar, guardar borrador, validar, agregar adendas, habilitar o deshabilitar estudios del catálogo |
-| `medico` (solicitante) | Solicitar desde la ficha del paciente y ver los informes validados de sus solicitudes |
+| `rayos_x` (recepción, técnico e informante) | Todo el flujo: crear solicitudes, registrar adquisición, subir y retirar imágenes, adjuntar informe externo, marcar no realizado, redactar, guardar borrador, validar, agregar adendas, entregar y habilitar o deshabilitar estudios del catálogo |
+| `radiologo` (opcional, conservado) | Ver imágenes, redactar, validar, agregar adendas y gestionar el catálogo. No crea solicitudes ni adquiere |
+| `medico` (solicitante) | Solicitar desde la ficha del paciente y ver los informes validados |
 
 ## 5. Reparto del trabajo
 

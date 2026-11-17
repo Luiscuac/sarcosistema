@@ -100,8 +100,8 @@ def test_validar_exige_conclusion_hallazgo_e_imagenes():
 
 @pytest.mark.parametrize('rol,estado,etapa,esperados', [
     ('rayos_x', 'pendiente_muestra', 'pendiente_realizacion', {'registrar_adquisicion', 'gestionar_imagenes', 'adjuntar_externo', 'marcar_no_realizado'}),
-    ('rayos_x', 'resultado_en_preparacion', 'borrador', {'registrar_adquisicion', 'gestionar_imagenes', 'adjuntar_externo'}),
-    ('rayos_x', 'publicado', 'validado', {'adjuntar_externo', 'entregar'}),
+    ('rayos_x', 'resultado_en_preparacion', 'borrador', {'registrar_adquisicion', 'gestionar_imagenes', 'adjuntar_externo', 'redactar_informe', 'validar'}),
+    ('rayos_x', 'publicado', 'validado', {'adjuntar_externo', 'entregar', 'agregar_adenda'}),
     ('radiologo', 'pendiente_muestra', 'en_adquisicion', {'adjuntar_externo'}),
     ('radiologo', 'resultado_en_preparacion', 'pendiente_informe', {'redactar_informe', 'validar', 'adjuntar_externo'}),
     ('radiologo', 'publicado', 'validado', {'agregar_adenda', 'adjuntar_externo'}),
@@ -111,4 +111,5 @@ def test_validar_exige_conclusion_hallazgo_e_imagenes():
 def test_permisos_por_rol_y_estado(rol, estado, etapa, esperados):
     concedidos = {k for k, v in permisos(rol, {'estudio': {'estado': estado, 'etapa': etapa}}).items() if v}
     assert concedidos == esperados
-    assert 'validar' not in permisos('rayos_x', {'estudio': {'estado': estado, 'etapa': etapa}}) or not permisos('rayos_x', {'estudio': {'estado': estado, 'etapa': etapa}})['validar']
+    # El personal de Rayos X también redacta y valida (un solo rol a cargo de todo el flujo).
+    assert permisos('rayos_x', {'estudio': {'estado': 'resultado_en_preparacion', 'etapa': 'borrador'}})['validar']

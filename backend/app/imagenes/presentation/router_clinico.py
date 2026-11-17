@@ -37,9 +37,9 @@ from app.imagenes.presentation.schemas import (
 router = APIRouter(tags=['imagenes'])
 
 ROL_POR_MODALIDAD = {'ecografia': 'imagenes', 'rayos_x': 'rayos_x'}
-# En Rayos X el médico radiólogo consulta el área y es el único que publica (valida) informes.
+# En Rayos X el personal del área y el médico radiólogo publican (validan) informes.
 ROLES_POR_MODALIDAD = {'ecografia': ('imagenes',), 'rayos_x': ('rayos_x', 'radiologo')}
-ROLES_PUBLICAN = {'ecografia': ('imagenes',), 'rayos_x': ('radiologo',)}
+ROLES_PUBLICAN = {'ecografia': ('imagenes',), 'rayos_x': ('rayos_x', 'radiologo')}
 
 
 def _validar_rol(usuario: Usuario, modalidad: str, publicar: bool = False) -> None:

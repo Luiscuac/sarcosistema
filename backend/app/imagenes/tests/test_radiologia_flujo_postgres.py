@@ -219,13 +219,13 @@ async def test_caso_5_borrador_retomado_validacion_y_permisos(rx):
     assert antes.status_code == 409  # sin adquisicion completada no hay informe
     await adquirir(rx, estudio_id, ['PA'], imagenes=(40,))
 
-    # El tecnico y el medico solicitante no redactan ni validan.
-    for rol in ('rayos_x', 'medico', 'laboratorio'):
+    # El medico solicitante y otros roles no redactan ni validan (el personal de Rayos X si, igual que el radiologo).
+    for rol in ('medico', 'laboratorio'):
         r = await c.put(f'{url}/informe/borrador', headers=h[rol], json={'contenido': {}, 'texto_final': None, 'version_edicion': None})
         assert r.status_code == 403
         r = await c.post(f'{url}/informe/validar', headers=h[rol], json={'version_edicion': 1, 'responsable_nombre': 'Alguien', 'confirmo': True})
         assert r.status_code == 403
-    heredado = await c.post(f'/imagenes/estudios/{estudio_id}/informes/publicar?modalidad=rayos_x', headers=h['rayos_x'])
+    heredado = await c.post(f'/imagenes/estudios/{estudio_id}/informes/publicar?modalidad=rayos_x', headers=h['medico'])
     assert heredado.status_code == 403  # tampoco por la ruta anterior
 
     incompleto = await informar(rx, estudio_id, {'generales': {}, 'apartados': {'campos_pulmonares': 'Opacidad basal derecha.'}}, validar=False)
@@ -348,9 +348,9 @@ async def test_recepcion_busca_y_registra_pacientes_y_medicos(rx):
 async def test_radiologo_habilita_y_deshabilita_estudios_del_catalogo(rx):
     c, h = rx['c'], rx['h']
     craneo = rx['tipos']['RX_CRANEO']['id']
-    assert (await c.patch(f'{R}/catalogo/estudios/{craneo}', json={'activo': False}, headers=h['rayos_x'])).status_code == 403
+    assert (await c.patch(f'{R}/catalogo/estudios/{craneo}', json={'activo': False}, headers=h['medico'])).status_code == 403
     assert (await c.patch(f'{R}/catalogo/estudios/{craneo}', json={'activo': False}, headers=h['radiologo'])).json()['activo'] is False
-    visibles = {e['codigo'] for e in (await c.get(f'{R}/catalogo', headers=h['rayos_x'])).json()['estudios']}
+    visibles = {e['codigo'] for e in (await c.get(f'{R}/catalogo', headers=h['medico'])).json()['estudios']}
     assert 'RX_CRANEO' not in visibles
     todos = {e['codigo'] for e in (await c.get(f'{R}/catalogo?todos=true', headers=h['radiologo'])).json()['estudios']}
     assert 'RX_CRANEO' in todos

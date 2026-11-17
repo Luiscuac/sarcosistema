@@ -1,7 +1,7 @@
 """Radiologia convencional: recepcion, adquisicion, imagenes e informe estructurado.
 
 Contrato: docs/imagenes/radiologia-api.md. Roles: `rayos_x` (recepcion y tecnico),
-`radiologo` (medico informante; unico que redacta y valida) y `medico` (solicitante).
+`radiologo` (medico informante; tambien redacta y valida, igual que `rayos_x`) y `medico` (solicitante).
 """
 from __future__ import annotations
 
@@ -60,7 +60,8 @@ def permisos(rol: str, detalle: dict) -> dict:
     estado = detalle['estudio']['estado']
     etapa = detalle['estudio']['etapa']
     abierto = estado in ('pendiente_muestra', 'resultado_en_preparacion')
-    tecnico, radiologo = rol == TECNICO, rol == RADIOLOGO
+    tecnico = rol == TECNICO
+    radiologo = rol in (RADIOLOGO, TECNICO)  # el personal de Rayos X también informa y valida
     return {
         'registrar_adquisicion': tecnico and abierto,
         'gestionar_imagenes': tecnico and abierto,
@@ -189,11 +190,11 @@ class CambioCatalogo(BaseModel):
 @router.get('/catalogo')
 async def catalogo(todos: bool = False, usuario: Usuario = Depends(con_rol(TECNICO, RADIOLOGO, MEDICO)),
                    repositorio: RepositorioRadiologiaSql = Depends(get_repositorio)):
-    return await repositorio.catalogo(incluir_inactivos=todos and usuario.rol == RADIOLOGO)
+    return await repositorio.catalogo(incluir_inactivos=todos and usuario.rol in (RADIOLOGO, TECNICO))
 
 
 @router.patch('/catalogo/estudios/{tipo_estudio_id}')
-async def cambiar_catalogo(tipo_estudio_id: int, datos: CambioCatalogo, usuario: Usuario = Depends(con_rol(RADIOLOGO)),
+async def cambiar_catalogo(tipo_estudio_id: int, datos: CambioCatalogo, usuario: Usuario = Depends(con_rol(RADIOLOGO, TECNICO)),
                            repositorio: RepositorioRadiologiaSql = Depends(get_repositorio)):
     estudio = await repositorio.cambiar_activo(tipo_estudio_id, datos.activo, usuario.id)
     if estudio is None:
@@ -386,7 +387,7 @@ async def no_realizado(estudio_id: int, datos: Motivo, usuario: Usuario = Depend
 # ---------- informe ----------
 
 @router.post('/estudios/{estudio_id}/informe/vista-previa')
-async def vista_previa(estudio_id: int, datos: ContenidoInforme, _: Usuario = Depends(con_rol(RADIOLOGO)),
+async def vista_previa(estudio_id: int, datos: ContenidoInforme, _: Usuario = Depends(con_rol(RADIOLOGO, TECNICO)),
                        repositorio: RepositorioRadiologiaSql = Depends(get_repositorio)):
     try:
         config = (await repositorio.base(estudio_id))['config']
@@ -396,21 +397,21 @@ async def vista_previa(estudio_id: int, datos: ContenidoInforme, _: Usuario = De
 
 
 @router.put('/estudios/{estudio_id}/informe/borrador')
-async def guardar_borrador(estudio_id: int, datos: BorradorInforme, usuario: Usuario = Depends(con_rol(RADIOLOGO)),
+async def guardar_borrador(estudio_id: int, datos: BorradorInforme, usuario: Usuario = Depends(con_rol(RADIOLOGO, TECNICO)),
                            repositorio: RepositorioRadiologiaSql = Depends(get_repositorio)):
     return await _operar(repositorio.guardar_borrador(estudio_id, datos.contenido, datos.texto_final, datos.version_edicion, usuario.id),
                          repositorio, estudio_id, usuario)
 
 
 @router.post('/estudios/{estudio_id}/informe/validar')
-async def validar_informe(estudio_id: int, datos: Validacion, usuario: Usuario = Depends(con_rol(RADIOLOGO)),
+async def validar_informe(estudio_id: int, datos: Validacion, usuario: Usuario = Depends(con_rol(RADIOLOGO, TECNICO)),
                           repositorio: RepositorioRadiologiaSql = Depends(get_repositorio)):
     return await _operar(repositorio.validar(estudio_id, datos.version_edicion, datos.responsable_nombre,
                                              datos.registro_profesional or None, usuario.id), repositorio, estudio_id, usuario)
 
 
 @router.post('/estudios/{estudio_id}/adendas')
-async def agregar_adenda(estudio_id: int, datos: AdendaNueva, usuario: Usuario = Depends(con_rol(RADIOLOGO)),
+async def agregar_adenda(estudio_id: int, datos: AdendaNueva, usuario: Usuario = Depends(con_rol(RADIOLOGO, TECNICO)),
                          repositorio: RepositorioRadiologiaSql = Depends(get_repositorio)):
     return await _operar(repositorio.agregar_adenda(estudio_id, datos.motivo, datos.texto, datos.autor_nombre,
                                                     datos.registro_profesional or None, usuario.id), repositorio, estudio_id, usuario)
