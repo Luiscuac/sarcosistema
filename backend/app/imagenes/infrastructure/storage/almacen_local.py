@@ -12,7 +12,9 @@ class AlmacenLocal:
     """
 
     def __init__(self, directorio: str | None = None):
-        self.directorio = Path(directorio or settings.imagenes_storage_dir)
+        directorio = Path(directorio or settings.imagenes_storage_dir)
+        # Relativa a backend/ (como la lectura del visor y la IA), no al directorio de arranque.
+        self.directorio = directorio if directorio.is_absolute() else Path(__file__).resolve().parents[4] / directorio
 
     def _carpeta_estudio(self, estudio_id: int) -> Path:
         return self.directorio / str(estudio_id)

@@ -112,3 +112,32 @@ def validar_casos(casos: list[dict]) -> None:
     for c in casos:
         if c['synthetic'] is not True or set(c['referencia']) != set(TERMINOS) or not set(c['referencia'].values()) <= estados:
             raise ValueError('Etiquetado incompatible')
+
+
+# Ampliación v3: las 18 categorías del modelo con un término canónico en español cada una.
+TERMINOS_18 = {
+    'Atelectasis': 'atelectasia', 'Consolidation': 'consolidación', 'Infiltration': 'infiltrado',
+    'Pneumothorax': 'neumotórax', 'Edema': 'edema pulmonar', 'Emphysema': 'enfisema', 'Fibrosis': 'fibrosis',
+    'Effusion': 'derrame pleural', 'Pneumonia': 'neumonía', 'Pleural_Thickening': 'engrosamiento pleural',
+    'Cardiomegaly': 'cardiomegalia', 'Nodule': 'nódulo pulmonar', 'Mass': 'masa pulmonar', 'Hernia': 'hernia hiatal',
+    'Lung Lesion': 'lesión pulmonar cavitada', 'Fracture': 'fractura costal', 'Lung Opacity': 'opacidad pulmonar',
+    'Enlarged Cardiomediastinum': 'ensanchamiento mediastínico',
+}
+
+
+def generar_casos_18() -> list[dict]:
+    """1800 informes sintéticos (100 plantillas x 18 categorías). NO es validación clínica."""
+    casos = []
+    for grupo, plantillas in [('positivo', POSITIVOS), ('negativo', NEGATIVOS),
+                              ('ambiguo', AMBIGUOS), ('contradictorio', CONTRADICTORIOS)]:
+        for objetivo, termino in TERMINOS_18.items():
+            for numero, plantilla in enumerate(plantillas, 1):
+                estado = {'positivo': 'descrito', 'negativo': 'negado', 'contradictorio': 'ambiguo'}.get(grupo)
+                if grupo == 'ambiguo':
+                    plantilla, estado = plantilla
+                referencia = {k: 'no_mencionado' for k in TERMINOS_18}
+                referencia[objetivo] = estado
+                casos.append({'id': f'SYN18-{grupo}-{objetivo}-{numero:02d}', 'synthetic': True, 'grupo': grupo,
+                              'objetivo': objetivo, 'informe': plantilla.format(t=termino, T=termino.capitalize()),
+                              'referencia': referencia})
+    return casos

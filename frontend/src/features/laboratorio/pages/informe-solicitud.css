@@ -53,3 +53,65 @@
   /* Se conserva el rojo al imprimir o guardar PDF (los navegadores quitan colores por defecto). */
   .lab-report-legend strong, .lab-report-section tr.is-out-of-range td:nth-child(2) { color: #b42318 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+/* Informe de laboratorio compacto: pensado para archivo en historial y lectura del médico.
+   Las reglas base anteriores siguen sirviendo a los informes de ecografía y rayos X. */
+.lab-report-document.is-compact { padding: 24px 28px; font-size: 12px; }
+.is-compact .lab-report-header { align-items: baseline; padding-bottom: 8px; }
+.is-compact .lab-report-header h1 { margin: 2px 0 0; font-size: 18px; }
+.is-compact .lab-report-institution { font-size: 11px; }
+.is-compact .lab-report-meta { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px 16px; margin: 10px 0 12px; }
+.is-compact .lab-report-meta .is-wide { grid-column: span 2; }
+.is-compact .lab-report-meta dt { font-size: 10px; }
+.is-compact .lab-report-meta dd { margin: 1px 0 0; font-size: 12px; }
+.is-compact .lab-report-legend { margin: 0 0 8px; font-size: 10px; }
+.lab-report-area { margin-top: 10px; break-inside: auto; }
+.lab-report-area table { width: 100%; border-collapse: collapse; table-layout: fixed; text-align: left; font-size: 11.5px; }
+.lab-report-area caption { padding: 4px 0; caption-side: top; text-align: left; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; border-bottom: 2px solid #26323c; }
+.lab-report-area th, .lab-report-area td { padding: 3px 8px; border-bottom: 1px solid #e6e9ed; vertical-align: top; overflow-wrap: anywhere; }
+.lab-report-area thead th { color: #617180; font-size: 10px; font-weight: 600; border-bottom: 1px solid #c9d0d6; }
+.lab-report-area thead th:first-child { width: 40%; }
+.lab-report-area tbody th { font-weight: 400; }
+.lab-report-area tbody td:nth-child(2) { font-weight: 600; }
+.lab-report-area td:nth-child(n+3) { color: #53606b; }
+.lab-report-area tr.lab-report-row-study th { padding-top: 6px; font-weight: 600; background: #f7f8fa; }
+.lab-report-area tr.lab-report-row-section th { padding-left: 14px; color: #617180; font-size: 10.5px; font-style: italic; }
+.lab-report-area tr.is-indented th { padding-left: 14px; }
+.lab-report-area tr.is-out-of-range td:nth-child(2) { color: #b42318; }
+.is-compact .lab-report-empty { color: #617180; font-style: italic; }
+.is-compact .lab-report-observation { margin: 4px 0 0; font-size: 11px; }
+.is-compact .lab-report-area .lab-report-responsible { margin: 3px 0 0; color: #617180; font-size: 10.5px; text-align: right; }
+.is-compact .lab-report-not-performed { margin-top: 12px; padding-top: 0; border-top: 0; }
+.is-compact .lab-report-not-performed h2 { padding: 4px 0; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; border-bottom: 2px solid #26323c; }
+.is-compact .lab-report-not-performed ul { margin: 4px 0 0; padding-left: 18px; font-size: 11px; line-height: 1.45; }
+.is-compact .lab-report-not-performed li span { color: #617180; }
+.is-compact .lab-report-signature { margin-top: 28px; }
+.is-compact .lab-report-signature > div:first-child { width: auto; text-align: left; }
+.is-compact .lab-report-signature > div:first-child p { margin: 2px 0 0; font-size: 10px; }
+.is-compact .lab-report-signature .lab-report-sign-line { flex: 0 0 200px; width: 200px; text-align: center; }
+.is-compact .lab-report-signature .lab-report-sign-line p { margin-top: 4px; font-size: 10px; }
+@media (max-width: 700px) {
+  .lab-report-document.is-compact { padding: 16px 12px; }
+  .is-compact .lab-report-meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lab-report-area { overflow-x: auto; }
+  .lab-report-area table { min-width: 480px; }
+  .is-compact .lab-report-signature { flex-direction: column; align-items: flex-start; }
+}
+@media print {
+  .lab-report-document.is-compact { padding: 0; font-size: 10pt; }
+  .lab-report-area table { font-size: 9.5pt; }
+  .lab-report-area thead { display: table-header-group; }
+  .lab-report-area tr, .lab-report-area caption { break-inside: avoid; }
+  .lab-report-area caption { break-after: avoid; }
+  .lab-report-area tr.lab-report-row-study, .lab-report-area tr.lab-report-row-section { break-after: avoid; }
+  .lab-report-area tr.lab-report-row-study th { background: #f7f8fa !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .lab-report-area tr.is-out-of-range td:nth-child(2) { color: #b42318 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
+/* Resumen en texto plano para copiar a la nota SOAP (solo pantalla). */
+.lab-report-copy { margin-bottom: 14px; padding: 14px 16px; border: 1px solid var(--line); border-left: 3px solid var(--brand); border-radius: 6px; background: #fff; }
+.lab-report-copy-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 8px; }
+.lab-report-copy h2 { margin: 0; font-size: 14px; }
+.lab-report-copy-head p, .lab-report-copy-hint { margin: 2px 0 0; color: #617180; font-size: 11px; }
+.lab-report-copy textarea { display: block; width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; background: #f7f8fa; color: #26323c; font: 12px/1.5 ui-monospace, Consolas, monospace; resize: vertical; }
+@media print { .lab-report-copy { display: none !important; } }

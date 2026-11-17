@@ -92,10 +92,12 @@ class SqlAlchemyExamenRepository:
         medico_id = await self._medico_de_usuario(usuario_id)
         if medico_id is None:
             return None
-        autorizado = (await self.db.execute(
-            select(Solicitud.id).where(Solicitud.id == solicitud_id, Solicitud.medico_solicitante_id == medico_id)
+        # Cualquier médico activo consulta la solicitud de laboratorio del paciente, no solo quien la pidió.
+        es_laboratorio = (await self.db.execute(
+            select(EstudioSolicitado.id).join(Servicio, Servicio.id == EstudioSolicitado.servicio_id)
+            .where(EstudioSolicitado.solicitud_id == solicitud_id, Servicio.codigo == "LAB").limit(1)
         )).scalar_one_or_none()
-        return await self.obtener_solicitud(solicitud_id) if autorizado is not None else None
+        return await self.obtener_solicitud(solicitud_id) if es_laboratorio is not None else None
 
     async def obtener_resultado_medico(self, estudio_id: int, usuario_id: int):
         medico_id = await self._medico_de_usuario(usuario_id)
@@ -103,11 +105,11 @@ class SqlAlchemyExamenRepository:
             return None
         publicado = (await self.db.execute(
             select(EstudioSolicitado.id)
-            .join(Solicitud, Solicitud.id == EstudioSolicitado.solicitud_id)
+            .join(Servicio, Servicio.id == EstudioSolicitado.servicio_id)
             .where(
                 EstudioSolicitado.id == estudio_id,
                 EstudioSolicitado.estado == "publicado",
-                Solicitud.medico_solicitante_id == medico_id,
+                Servicio.codigo == "LAB",
             )
         )).scalar_one_or_none()
         if publicado is None:
@@ -120,7 +122,12 @@ class SqlAlchemyExamenRepository:
         if medico_id is None:
             return []
         ids = (await self.db.execute(
-            select(Solicitud.id).where(Solicitud.paciente_id == paciente_id, Solicitud.medico_solicitante_id == medico_id)
+            select(Solicitud.id).where(
+                Solicitud.paciente_id == paciente_id,
+                # Solo solicitudes de laboratorio: la tabla de solicitudes es compartida con imágenes.
+                exists().where(EstudioSolicitado.solicitud_id == Solicitud.id,
+                               EstudioSolicitado.servicio_id == select(Servicio.id).where(Servicio.codigo == "LAB").scalar_subquery()),
+            )
             .order_by(Solicitud.id.desc()).limit(30)
         )).scalars().all()
         return [await self.obtener_solicitud(solicitud_id) for solicitud_id in ids]

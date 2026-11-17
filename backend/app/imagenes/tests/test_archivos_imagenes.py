@@ -41,3 +41,12 @@ def test_no_lee_enlace_fuera_de_raiz(tmp_path):
         pytest.skip('Crear symlinks requiere privilegio en este Windows')
     with pytest.raises(ValueError):
         leer_archivo_local(raiz, metadata(b'x'))
+
+
+def test_admite_dicom_por_firma_y_rechaza_mime_que_no_coincide(tmp_path):
+    datos = b'\x00' * 128 + b'DICM' + b'fixture'
+    (tmp_path/'rx.dcm').write_bytes(datos)
+    meta = metadata(datos, 'rx.dcm') | {'mime_type': 'application/dicom'}
+    assert leer_archivo_local(tmp_path, meta) == (datos, 'application/dicom')
+    with pytest.raises(ValueError):
+        leer_archivo_local(tmp_path, meta | {'mime_type': 'image/png'})

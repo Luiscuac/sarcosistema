@@ -1,0 +1,121 @@
+import { useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
+import { listarEstudios, mensajeErrorApi } from '../../api/radiologiaApi.js'
+import RayosXLayout from '../../components/RayosXLayout.jsx'
+import { agruparPorSolicitud, contarIndicadores, filtrarYOrdenarEstudios, INDICADORES_RX } from '../utils/bandejaRx.js'
+import '../../../laboratorio/components/solicitudes/solicitudes-panel.css'
+import '../gestion.css'
+
+const ACTUALIZACION_MS = 45_000
+const ETAPAS = [
+  ['pendiente_realizacion', 'Pendiente de realización'], ['en_adquisicion', 'En adquisición'],
+  ['pendiente_informe', 'Pendiente de informe'], ['borrador', 'En borrador'],
+  ['validado', 'Validado'], ['entregado', 'Entregado'], ['no_realizado', 'No realizado'], ['anulado', 'Anulado'],
+]
+const LATERALIDAD = { derecha: 'Derecha', izquierda: 'Izquierda', bilateral: 'Bilateral' }
+
+const CATEGORIAS = {
+  torax: 'Tórax', abdomen: 'Abdomen', columna: 'Columna vertebral', pelvis_cadera: 'Pelvis y cadera',
+  extremidad_superior: 'Extremidades superiores', extremidad_inferior: 'Extremidades inferiores',
+  craneo_cara: 'Cráneo y estructuras faciales', cuello: 'Cuello y partes blandas',
+}
+
+function categoriaVisible(codigo) {
+  if (!codigo) return 'Sin categoría'
+  return CATEGORIAS[codigo] ?? codigo.replaceAll('_', ' ').replace(/^./, (letra) => letra.toLocaleUpperCase())
+}
+
+function fechaVisible(fecha) {
+  if (!fecha) return 'Fecha no registrada'
+  const valor = new Date(fecha)
+  return Number.isNaN(valor.getTime()) ? 'Fecha no registrada' : valor.toLocaleString('es-BO', { dateStyle: 'medium', timeStyle: 'short' })
+}
+
+// Siguiente paso del estudio según su etapa (mismo patrón que la bandeja de Laboratorio).
+const SIGUIENTE_PASO = {
+  pendiente_realizacion: 'Realizar estudio', en_adquisicion: 'Continuar', pendiente_informe: 'Informar',
+  borrador: 'Continuar informe', validado: 'Ver informe', entregado: 'Ver informe',
+}
+
+function FilaEstudio({ solicitud, estudio }) {
+  const urgente = solicitud.prioridad === 'urgente'
+  const imagenes = estudio.imagenes ?? 0
+  return <tr className={`lab-table-row${urgente ? ' lab-table-row--urgent' : ''}`}>
+    <td className="rxg-celda-paciente">
+      <strong>{solicitud.paciente_nombre}</strong>
+      <span>{solicitud.paciente_documento ? `Doc. ${solicitud.paciente_documento}` : 'Sin documento'}</span>
+      <Link to={`/rayos-x/gestion/solicitudes/${solicitud.id}`}>{solicitud.referencia}</Link>
+    </td>
+    <td className="rxg-celda-estudio">
+      <strong>{estudio.tipo_estudio_nombre}</strong>
+      <span>{[LATERALIDAD[estudio.lateralidad], `${imagenes} ${imagenes === 1 ? 'imagen' : 'imágenes'}`].filter(Boolean).join(' · ')}</span>
+      {urgente && <em className="rxg-urgente">Urgente</em>}
+    </td>
+    <td className="rxg-celda-medico"><span>{solicitud.medico_solicitante || 'No registrado'}</span><small>{fechaVisible(solicitud.fecha_solicitud)}</small></td>
+    <td><div className="rxg-insignias"><span className={`rxg-etapa rxg-etapa--${estudio.etapa}`}>{estudio.etapa_texto}</span>{estudio.triaje && <span className={`rxg-triaje rxg-triaje--${estudio.triaje.nivel ?? 'neutro'}`}>IA: {estudio.triaje.nivel ?? 'sin nivel'}</span>}</div></td>
+    <td className="lab-row-action"><Link className="lab-next-action" to={`/rayos-x/gestion/estudios/${estudio.estudio_id}`}>{SIGUIENTE_PASO[estudio.etapa] ?? 'Abrir estudio'}</Link></td>
+  </tr>
+}
+
+function TablaEstudios({ solicitudes }) {
+  return <div className="lab-table-wrap rxg-tabla"><table className="lab-table">
+    <thead><tr><th scope="col">Paciente / solicitud</th><th scope="col">Estudio</th><th scope="col">Médico / fecha</th><th scope="col">Etapa</th><th scope="col">Acción</th></tr></thead>
+    <tbody>{solicitudes.flatMap((solicitud) => solicitud.estudios.map((estudio) => <FilaEstudio key={estudio.estudio_id} solicitud={solicitud} estudio={estudio} />))}</tbody>
+  </table></div>
+}
+
+export default function PanelRayosXPage({ usuario, logout }) {
+  const indicadorInicial = 'pendiente_realizacion'
+  const [vista, setVista] = useState('activos')
+  const [indicador, setIndicador] = useState(indicadorInicial)
+  const [busqueda, setBusqueda] = useState('')
+  const [categoria, setCategoria] = useState('')
+  const [etapa, setEtapa] = useState('')
+  const activosQuery = useQuery({ queryKey: ['radiologia', 'estudios', 'activos'], queryFn: ({ signal }) => listarEstudios('activos', signal), refetchInterval: ACTUALIZACION_MS })
+  const finalizadosQuery = useQuery({ queryKey: ['radiologia', 'estudios', 'finalizados'], queryFn: ({ signal }) => listarEstudios('finalizados', signal), enabled: vista === 'finalizados', refetchInterval: ACTUALIZACION_MS })
+  const consulta = vista === 'activos' ? activosQuery : finalizadosQuery
+  const conteos = contarIndicadores(activosQuery.data ?? [])
+  const categorias = [...new Set((consulta.data ?? []).map((estudio) => estudio.categoria).filter(Boolean))].sort()
+  const visibles = useMemo(() => filtrarYOrdenarEstudios(consulta.data ?? [], {
+    busqueda, categoria, etapa, indicador: vista === 'activos' ? indicador : '',
+  }), [consulta.data, busqueda, categoria, etapa, indicador, vista])
+  const solicitudes = agruparPorSolicitud(visibles)
+  const hayFiltros = Boolean(busqueda.trim() || categoria || etapa || (vista === 'activos' && indicador))
+  const listaBaseVacia = (consulta.data ?? []).length === 0
+
+  function cambiarVista(nuevaVista) {
+    setVista(nuevaVista)
+    setIndicador(nuevaVista === 'activos' ? indicadorInicial : '')
+    setCategoria('')
+    setEtapa('')
+  }
+
+  return <RayosXLayout usuario={usuario} logout={logout}>
+    <div className="lab-title-row">
+      <div><p className="lab-eyebrow">RAYOS X</p><h1>Estudios de Rayos X</h1></div>
+      {usuario?.rol === 'rayos_x' && <div className="lab-title-actions"><Link className="primary-button" to="/rayos-x/gestion/solicitudes/nueva">Nueva solicitud</Link></div>}
+    </div>
+
+    <div className="lab-summary rxg-resumen" aria-label="Indicadores de Rayos X">{INDICADORES_RX.map((item) => {
+      const activo = vista === 'activos' && indicador === item.codigo
+      return <button type="button" key={item.codigo} aria-pressed={activo} className={activo ? 'lab-summary-card is-active' : 'lab-summary-card'} onClick={() => { setVista('activos'); setIndicador(activo ? '' : item.codigo) }}>
+        <strong>{activosQuery.isLoading ? '…' : activosQuery.isError ? '—' : conteos[item.codigo]}</strong><span>{item.nombre}</span>{activosQuery.isError && <small>No disponible</small>}
+      </button>
+    })}</div>
+
+    <section className="lab-list-panel rxg-panel">
+      <div className="lab-list-toolbar"><h2>{vista === 'activos' ? 'Estudios en curso' : 'Estudios finalizados'}</h2><span className="lab-pending-tag">{consulta.isFetching && !consulta.isLoading ? 'Actualizando...' : 'Se actualiza cada 45 segundos'}</span></div>
+      <div className="lab-list-tabs" role="tablist" aria-label="Vista de estudios"><button type="button" role="tab" aria-selected={vista === 'activos'} className={vista === 'activos' ? 'is-active' : ''} onClick={() => cambiarVista('activos')}>En curso</button><button type="button" role="tab" aria-selected={vista === 'finalizados'} className={vista === 'finalizados' ? 'is-active' : ''} onClick={() => cambiarVista('finalizados')}>Finalizados</button></div>
+      <div className="rxg-filtros">
+        <label>Buscar<input type="search" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Paciente, documento o referencia" /></label>
+        <label>Categoría anatómica<select value={categoria} onChange={(e) => setCategoria(e.target.value)}><option value="">Todas</option>{categorias.map((codigo) => <option key={codigo} value={codigo}>{categoriaVisible(codigo)}</option>)}</select></label>
+        <label>Etapa<select value={etapa} onChange={(e) => setEtapa(e.target.value)}><option value="">Todas</option>{ETAPAS.map(([codigo, nombre]) => <option key={codigo} value={codigo}>{nombre}</option>)}</select></label>
+      </div>
+      {consulta.isLoading && <div className="rxg-estado"><strong>Cargando estudios...</strong><span>La bandeja estará disponible en un momento.</span></div>}
+      {consulta.isError && <div className="rxg-estado" role="alert"><strong>No se pudo cargar la bandeja.</strong><span>{mensajeErrorApi(consulta.error, 'Comprueba la conexión e intenta nuevamente.')}</span></div>}
+      {consulta.isSuccess && solicitudes.length === 0 && <div className="rxg-estado"><strong>{!listaBaseVacia && hayFiltros ? 'No hay estudios con esos filtros.' : vista === 'activos' ? 'No hay estudios en curso.' : 'Todavía no hay estudios finalizados.'}</strong><span>{!listaBaseVacia && hayFiltros ? 'Prueba otra búsqueda o quita los filtros activos.' : vista === 'activos' ? usuario?.rol === 'rayos_x' ? 'Registra una nueva solicitud para iniciar el recorrido.' : 'Los estudios aparecerán cuando el personal técnico complete la adquisición.' : 'Los estudios aparecerán aquí cuando concluyan su recorrido.'}</span></div>}
+      {consulta.isSuccess && solicitudes.length > 0 && <TablaEstudios solicitudes={solicitudes} />}
+    </section>
+  </RayosXLayout>
+}

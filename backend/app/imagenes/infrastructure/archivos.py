@@ -3,13 +3,30 @@ from pathlib import Path, PureWindowsPath
 
 from app.imagenes.domain.vision import MAX_IMAGE_BYTES
 
+MIMES_RADIOGRAFIA = {'png': 'image/png', 'jpeg': 'image/jpeg', 'dicom': 'application/dicom'}
+BASE = Path(__file__).resolve().parents[3]
 
-def leer_archivo_local(raiz: Path, archivo: dict) -> tuple[bytes, str]:
+
+def raices_archivos() -> list[Path]:
+    """Raíces de lectura: subidas del rol Rayos X (IMAGENES_STORAGE_DIR) y demo (RADIOLOGY_STORAGE_DIR)."""
+    from app.config.settings import settings
+    raices = []
+    for ruta in (settings.imagenes_storage_dir, settings.radiology_storage_dir):
+        raiz = Path(ruta) if Path(ruta).is_absolute() else BASE / ruta
+        if raiz not in raices:
+            raices.append(raiz)
+    return raices
+
+
+def leer_archivo_local(raiz: Path | list[Path], archivo: dict) -> tuple[bytes, str]:
+    if isinstance(raiz, (list, tuple)):
+        candidatas = [r for r in raiz if (r / archivo['url_archivo']).is_file()] if isinstance(archivo.get('url_archivo'), str) else []
+        raiz = candidatas[0] if candidatas else raiz[0]
     ruta = archivo['url_archivo']
     relativa = Path(ruta)
     if (not archivo['activo'] or relativa.is_absolute() or PureWindowsPath(ruta).drive
             or ':' in ruta or '..' in ruta.replace('\\', '/').split('/')
-            or archivo['mime_type'] not in ('image/png', 'image/jpeg')
+            or archivo['mime_type'] not in MIMES_RADIOGRAFIA.values()
             or not 0 < archivo['tamano_bytes'] <= MAX_IMAGE_BYTES):
         raise ValueError('Archivo local no disponible o incompatible.')
     base = raiz.resolve()
@@ -24,8 +41,8 @@ def leer_archivo_local(raiz: Path, archivo: dict) -> tuple[bytes, str]:
     if (len(datos) != archivo['tamano_bytes'] or len(datos) > MAX_IMAGE_BYTES
             or hashlib.sha256(datos).hexdigest() != archivo['hash_sha256']):
         raise ValueError('Archivo local con integridad incompatible.')
-    mime = 'image/png' if datos.startswith(b'\x89PNG\r\n\x1a\n') else (
-        'image/jpeg' if datos.startswith(b'\xff\xd8\xff') else None)
+    from app.imagenes.infrastructure.vision.preprocesamiento import detectar_formato
+    mime = MIMES_RADIOGRAFIA.get(detectar_formato(datos))
     if mime != archivo['mime_type']:
         raise ValueError('Formato de imagen incompatible.')
     return datos, mime

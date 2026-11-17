@@ -1,11 +1,11 @@
 """Entidades del modulo de examenes complementarios de imagen."""
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 
 
 @dataclass(frozen=True, slots=True)
 class SolicitudEcografia:
-    """Pedido del medico: genera solicitud y estudio pendiente para el radiologo."""
+    """Pedido del medico: genera solicitud y estudio pendiente para el personal de imágenes."""
 
     paciente_id: int
     tipo_estudio_ids: tuple[int, ...]
@@ -17,7 +17,7 @@ class SolicitudEcografia:
 
 @dataclass(frozen=True, slots=True)
 class EstudioImagenPendiente:
-    """Estudio de imagen en bandeja del radiologo."""
+    """Estudio de imagen en bandeja del personal de imágenes."""
 
     estudio_id: int
     referencia_estudio: str
@@ -56,11 +56,12 @@ class InformeImagen:
     motivo_rectificacion: str | None
     fecha_hora_publicacion: datetime | None
     archivos: tuple[ArchivoImagen, ...] = ()
+    datos_ecografia: dict | None = None
 
 
 @dataclass(frozen=True, slots=True)
 class EstudioImagenDetalle:
-    """Vista de trabajo del radiologo: estudio + ultima version del informe."""
+    """Vista de trabajo del personal de imágenes: estudio + ultima version del informe."""
 
     estudio_id: int
     referencia_estudio: str
@@ -70,6 +71,11 @@ class EstudioImagenDetalle:
     estado: str
     fecha_solicitud: datetime
     informe: InformeImagen | None
+    tipo_estudio_codigo: str = ''
+    codigo_paciente: str = ''
+    historia_clinica: str | None = None
+    fecha_nacimiento: date | None = None
+    medico_solicitante: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -83,3 +89,4 @@ class EstudioImagenPublicado:
     fecha_publicacion: datetime | None
     descripcion_texto: str | None
     archivos: tuple[ArchivoImagen, ...] = ()
+    datos_ecografia: dict | None = None

@@ -1,23 +1,55 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { obtenerEstudio, obtenerArchivo, solicitarAnalisis, obtenerAnalisis, guardarRevision } from '../api/rayosXAiApi.js'
-import { enProceso, validarRevision, mensajeError, erroresAnalisis, snapshotCompatible, revisionVigente } from '../analisis.js'
+import { obtenerEstudio, obtenerArchivo, obtenerVista, solicitarAnalisis, obtenerAnalisis, guardarRevision } from '../api/rayosXAiApi.js'
+import VisorRadiografia from './VisorRadiografia.jsx'
+import PanelAsistente, { VeredictoAsistente } from './PanelAsistente.jsx'
+import PanelInforme from './PanelInforme.jsx'
+import { DECISIONES, enProceso, validarRevision, mensajeError, erroresAnalisis, snapshotCompatible, revisionVigente, lecturaAnormal } from '../analisis.js'
 
-const nombres = { Consolidation: 'Consolidación', Effusion: 'Derrame pleural', Cardiomegaly: 'Cardiomegalia' }
-export default function EstudioDetalle({ id, usuario, habilitada }) {
+// Vista PNG generada en el servidor (DICOM, 16 bits, paleta); si no está disponible, el archivo original.
+const cargarImagen = async (id, archivoId, signal) => {
+  try { return await obtenerVista(id, archivoId, signal) } catch (error) {
+    if (signal?.aborted) throw error
+    return obtenerArchivo(id, archivoId, signal)
+  }
+}
+
+// Distancia coseno del buscador documental -> relación en lenguaje simple.
+const relacionEvidencia = d => typeof d !== 'number' ? { clave: 'media', texto: 'Relación media' } : d < 0.35 ? { clave: 'alta', texto: 'Relación alta' } : d < 0.5 ? { clave: 'media', texto: 'Relación media' } : { clave: 'baja', texto: 'Relación baja' }
+
+const PESTANAS = [['hallazgos', 'Hallazgos'], ['informe', 'Informe y comparación'], ['evidencia', 'Lecturas y límites'], ['revision', 'Tu revisión']]
+const OPCIONES_DECISION = [['aceptada_como_propuesta', 'Acepto'], ['corregida', 'Corrijo'], ['rechazada', 'Rechazo']]
+
+function SolicitarAnalisis({ confirmado, setConfirmado, proyeccion, setProyeccion, deshabilitado, onAnalizar, habilitada, compacto }) {
+  return <div className={`rx-ia-solicitar${compacto ? ' es-compacto' : ''}`}>
+    <label className="rx-ia-check"><input type="checkbox" checked={confirmado} onChange={e => setConfirmado(e.target.checked)} /> Confirmo que es una radiografía de tórax frontal</label>
+    <label className="rx-ia-campo">Proyección<select value={proyeccion} onChange={e => setProyeccion(e.target.value)}>
+      <option value="PA">Posteroanterior (PA)</option><option value="AP">Anteroposterior (AP)</option><option value="frontal_no_especificada">Frontal no especificada</option>
+    </select></label>
+    <button type="button" className="primary-button" disabled={deshabilitado} onClick={onAnalizar}>{compacto ? 'Analizar de nuevo' : 'Analizar con IA'}</button>
+    {!habilitada && <p className="rx-nota">La asistencia de IA está deshabilitada en este servidor; el informe sigue disponible.</p>}
+  </div>
+}
+
+export default function EstudioDetalle({ id, usuario, habilitada, onVolver }) {
   const cache = useQueryClient()
   const [analisisId, setAnalisisId] = useState(null)
   const [confirmado, setConfirmado] = useState(false)
-  const [proyeccion, setProyeccion] = useState('PA')
+  const [proyeccion, setProyeccionBase] = useState('PA')
   const [clave, setClave] = useState(() => crypto.randomUUID())
   const [decision, setDecision] = useState('')
   const [motivo, setMotivo] = useState('')
   const [correccion, setCorreccion] = useState('')
+  const [anormal, setAnormal] = useState('')
   const [versionBorrador, setVersionBorrador] = useState(null)
   const [url, setUrl] = useState('')
-  const detalle = useQuery({ queryKey: ['imagenes', usuario.id, 'estudio', id], queryFn: ({ signal }) => obtenerEstudio(id, signal) })
+  const [mapa, setMapa] = useState(null)
+  const [pestana, setPestana] = useState('hallazgos')
+  const setProyeccion = valor => { setProyeccionBase(valor); setClave(crypto.randomUUID()) }
+  // Sin reintentos ante 404/403: no es un fallo pasajero y dejaría la pantalla "cargando" varios segundos.
+  const detalle = useQuery({ queryKey: ['imagenes', usuario.id, 'estudio', id], queryFn: ({ signal }) => obtenerEstudio(id, signal), retry: (intentos, error) => ![403, 404].includes(error?.response?.status) && intentos < 2 })
   const archivoId = detalle.data?.archivo?.id
-  const imagen = useQuery({ queryKey: ['imagenes', usuario.id, 'archivo', id, archivoId], queryFn: ({ signal }) => obtenerArchivo(id, archivoId, signal), enabled: Boolean(archivoId), gcTime: 0, staleTime: 0 })
+  const imagen = useQuery({ queryKey: ['imagenes', usuario.id, 'archivo', id, archivoId], queryFn: ({ signal }) => cargarImagen(id, archivoId, signal), enabled: Boolean(archivoId), gcTime: 0, staleTime: 0 })
   useEffect(() => {
     if (!imagen.data) { setUrl(''); return }
     const objectUrl = URL.createObjectURL(imagen.data)
@@ -28,54 +60,132 @@ export default function EstudioDetalle({ id, usuario, habilitada }) {
     if (!analisisId && detalle.data?.analisis_reciente) setAnalisisId(detalle.data.analisis_reciente)
   }, [analisisId, detalle.data?.analisis_reciente])
   const analisis = useQuery({ queryKey: ['imagenes', usuario.id, 'analisis', analisisId], queryFn: ({ signal }) => obtenerAnalisis(analisisId, signal), enabled: Boolean(analisisId), refetchInterval: q => enProceso(q.state.data?.estado) ? 2000 : false })
-  const solicitar = useMutation({ mutationFn: () => solicitarAnalisis(id, { confirmar_torax_frontal: confirmado, proyeccion, clave }), onSuccess: a => { setAnalisisId(a.id); setClave(crypto.randomUUID()); setDecision(''); setMotivo(''); setCorreccion(''); setVersionBorrador(null) } })
-  const revision = useMutation({ mutationFn: () => guardarRevision(analisisId, { version: versionBorrador, decision, motivo, correccion }), onSuccess: a => { cache.setQueryData(['imagenes', usuario.id, 'analisis', analisisId], a); setDecision(''); setMotivo(''); setCorreccion(''); setVersionBorrador(null) } })
+  const limpiarRevision = () => { setDecision(''); setMotivo(''); setCorreccion(''); setAnormal(''); setVersionBorrador(null) }
+  const solicitar = useMutation({ mutationFn: () => solicitarAnalisis(id, { confirmar_torax_frontal: confirmado, proyeccion, clave }), onSuccess: a => { setAnalisisId(a.id); setClave(crypto.randomUUID()); limpiarRevision(); setMapa(null); setPestana('hallazgos') } })
+  const revision = useMutation({ mutationFn: () => guardarRevision(analisisId, { version: versionBorrador, decision, motivo, correccion, anormal_confirmado: lecturaAnormal(anormal) }), onSuccess: a => { cache.setQueryData(['imagenes', usuario.id, 'analisis', analisisId], a); limpiarRevision() } })
   const compatible = snapshotCompatible(analisis.data, detalle.data)
   const resultado = compatible ? analisis.data?.resultado : null
+  const procesando = enProceso(analisis.data?.estado)
   const conflicto = versionBorrador !== null && !revisionVigente(versionBorrador, analisis.data?.version_revision)
   const iniciarBorrador = () => { if (versionBorrador === null) setVersionBorrador(analisis.data.version_revision) }
-  if (detalle.isPending) return <p role="status">Cargando detalle…</p>
-  if (detalle.error) return <p role="alert">{mensajeError(detalle.error)}</p>
-  return <section className="rx-detalle" aria-label="Detalle del estudio">
-    <h2>{detalle.data.referencia} · {detalle.data.estudio}</h2>
-    <div className="rx-columnas"><div>
-      <h3>Radiografía local</h3>
-      {imagen.isFetching && <p role="status">Cargando radiografía…</p>}
-      {imagen.error && <p role="alert">{mensajeError(imagen.error)}</p>}
-      {archivoId && imagen.data && url && <img className="rx-imagen" src={url} alt={`Radiografía del estudio ${detalle.data.referencia}`} />}
-      {!archivoId && <p>No hay archivo activo disponible.</p>}
-    </div><div><h3>Informe publicado · solo lectura</h3><p className="rx-texto">{detalle.data.informe_texto || 'No hay informe publicado disponible.'}</p><p>No se modificará al analizar ni al revisar propuestas.</p></div></div>
-    <div className="rx-solicitud"><label><input type="checkbox" checked={confirmado} onChange={e => setConfirmado(e.target.checked)} /> Confirmo que es una radiografía de tórax frontal</label><label>Proyección <select value={proyeccion} onChange={e => { setProyeccion(e.target.value); setClave(crypto.randomUUID()) }}><option value="PA">PA</option><option value="AP">AP</option><option value="frontal_no_especificada">Frontal no especificada</option></select></label>
-      <button type="button" className="primary-button" disabled={!habilitada || !confirmado || !archivoId || solicitar.isPending || enProceso(analisis.data?.estado)} onClick={() => solicitar.mutate()}>Analizar con IA local</button>
-      {!habilitada && <p>La asistencia de IA local está deshabilitada; el informe sigue disponible.</p>}
+  const puedeAnalizar = habilitada && confirmado && archivoId && !solicitar.isPending && !procesando
+
+  if (detalle.isPending) return <p role="status">Cargando estudio…</p>
+  if (detalle.error) return <section className="rx-ia"><header className="rx-ia-cabecera">{onVolver && <button type="button" className="lab-secondary-button" onClick={onVolver}>← Volver a la lista</button>}</header>
+    <div className="rx-ia-tarjeta" role="alert"><h3>No se puede abrir este estudio en el asistente</h3>
+      <p>{detalle.error?.response?.status === 404 ? 'El asistente de IA solo analiza radiografías de tórax con informe publicado. Este estudio no cumple esa condición; su informe sigue disponible en la ficha del paciente.' : mensajeError(detalle.error)}</p></div></section>
+  const d = detalle.data
+  const advertencias = resultado ? [...new Set([...(resultado.fusion.advertencias || []), ...(resultado.rag.advertencias || []), ...(resultado.vision.warnings || [])])] : []
+
+  return <section className="rx-ia" aria-label="Asistente de IA del estudio">
+    <header className="rx-ia-cabecera">
+      {onVolver && <button type="button" className="lab-secondary-button" onClick={onVolver}>← Volver a la lista</button>}
+      <div><p className="rx-ia-etiqueta">{d.estudio} · {d.referencia}</p><h2>{d.paciente || 'Paciente'}</h2></div>
+      <span className="rx-ia-experimental">IA experimental · no diagnostica</span>
+    </header>
+
+    <div className="rx-ia-cuerpo">
+      <aside className={`rx-ia-visor${procesando ? ' es-analizando' : ''}`} aria-label="Radiografía" aria-busy={procesando}>
+        {imagen.isFetching && <p role="status">Cargando radiografía…</p>}
+        {imagen.error && <p role="alert">{mensajeError(imagen.error)}</p>}
+        {archivoId && imagen.data && url && <VisorRadiografia url={url} alt={`Radiografía del estudio ${d.referencia}`} vision={resultado?.vision} mapa={mapa} onMapa={setMapa} />}
+        {!archivoId && <p>No hay archivo activo disponible.</p>}
+      </aside>
+
+      <div className="rx-ia-flujo">
+        {!resultado && !procesando && <section className="rx-ia-tarjeta">
+          <h3>Analizar con IA</h3>
+          <p>Sugiere hallazgos, marca dónde se fijó y lo compara con el informe.</p>
+          <SolicitarAnalisis {...{ confirmado, setConfirmado, proyeccion, setProyeccion, habilitada }} deshabilitado={!puedeAnalizar} onAnalizar={() => solicitar.mutate()} />
+        </section>}
+
+        {procesando && <section className="rx-ia-tarjeta rx-ia-proceso" role="status">
+          <span className="rx-ia-girando" aria-hidden="true" />
+          <div><h3>{analisis.data.estado === 'en_cola' ? 'En cola' : 'Analizando…'}</h3><p>Puede tardar hasta un minuto. No cierres esta pantalla.</p></div>
+        </section>}
+
+        {solicitar.error && <p role="alert" className="rx-ia-error">{mensajeError(solicitar.error)}</p>}
+        {analisis.error && <p role="alert" className="rx-ia-error">{mensajeError(analisis.error)}</p>}
+        {analisis.data && !compatible && <p role="alert" className="rx-ia-error">El análisis anterior corresponde a otra versión del informe o de la imagen. Solicita un análisis nuevo.</p>}
+        {['error', 'interrumpido'].includes(analisis.data?.estado) && <p role="alert" className="rx-ia-error">{erroresAnalisis[analisis.data.error_codigo] || 'El análisis falló; el informe no se modificó.'}</p>}
+
+        {resultado && <>
+          <VeredictoAsistente vision={resultado.vision} prioridad={analisis.data.prioridad} />
+          <nav className="rx-ia-pestanas" role="tablist" aria-label="Detalle del análisis">
+            {PESTANAS.map(([clavePestana, nombre]) => <button key={clavePestana} type="button" role="tab" aria-selected={pestana === clavePestana} onClick={() => setPestana(clavePestana)}>{nombre}</button>)}
+          </nav>
+          <div className="rx-ia-contenido" role="tabpanel">
+            {pestana === 'hallazgos' && <PanelAsistente vision={resultado.vision} mapa={mapa} onMapa={setMapa} />}
+
+            {pestana === 'informe' && <>
+              <section className="rx-ia-informe"><h4>Informe publicado</h4><p className="rx-texto">{d.informe_texto || 'No hay informe publicado disponible.'}</p></section>
+              <PanelInforme fusion={resultado.fusion} mapa={mapa} onMapa={setMapa} conMapa={nombre => Boolean(resultado.vision?.mapas_calor?.mapas?.[nombre])} />
+            </>}
+
+            {pestana === 'evidencia' && <>
+              <section><h4>Lecturas de apoyo</h4>
+                <p className="rx-nota">Fragmentos de artículos médicos abiertos que el sistema encontró parecidos a lo que sugiere la IA. Están en inglés y sirven para consultar; no confirman nada del paciente.</p>
+                {(resultado.rag.evidencia || []).length
+                  ? <ul className="rx-ia-lecturas">{resultado.rag.evidencia.map(e => {
+                      const relacion = relacionEvidencia(e.distancia_coseno)
+                      return <li key={e.id}>
+                        <div className="rx-ia-lectura-cabecera"><strong>{e.seccion?.split(' / ').pop() || 'Fragmento'}</strong><span className={`rx-ia-relacion es-${relacion.clave}`}>{relacion.texto}</span></div>
+                        <small>{e.titulo}</small>
+                        <div className="rx-ia-lectura-acciones">
+                          <details><summary>Ver fragmento</summary><blockquote>{e.cita}</blockquote></details>
+                          {/^https:\/\//.test(e.fuente || '') && <a href={e.fuente} target="_blank" rel="noopener noreferrer">Abrir artículo ↗</a>}
+                        </div>
+                      </li>
+                    })}</ul>
+                  : <p className="rx-ia-vacio">No hay lecturas de apoyo para este análisis.</p>}
+              </section>
+              <section><h4>Qué tener en cuenta</h4>
+                <ul className="rx-ia-limites">
+                  <li>Solo analiza radiografías de tórax frontales.</li>
+                  <li>Sugiere parecidos, no diagnostica: un resultado bajo no descarta enfermedad.</li>
+                  <li>La comparación con el informe busca palabras clave; puede no entender redacciones poco habituales.</li>
+                </ul>
+                <details className="rx-ia-plegable"><summary>Detalle técnico ({advertencias.length})</summary>
+                  <ul className="rx-ia-limites">{advertencias.map((a, i) => <li key={i}>{a}</li>)}</ul>
+                  <p className="rx-nota">{resultado.fusion.criterio_tecnico.descripcion} Punto de corte técnico: {resultado.fusion.criterio_tecnico.umbral}.</p>
+                </details>
+              </section>
+            </>}
+
+            {pestana === 'revision' && <>
+              <p className="rx-nota">¿Coincide con tu lectura? No cambia el informe.</p>
+              <form className="rx-ia-revision" onSubmit={e => { e.preventDefault(); revision.mutate() }}>
+                <fieldset><legend>Tu decisión</legend>
+                  <div className="rx-ia-opciones">{OPCIONES_DECISION.map(([valor, titulo]) => <label key={valor} className={decision === valor ? 'es-elegida' : undefined}>
+                    <input type="radio" name="rx-decision" value={valor} checked={decision === valor} onChange={() => { iniciarBorrador(); setDecision(valor) }} />
+                    <strong>{titulo}</strong></label>)}</div>
+                </fieldset>
+                {decision === 'corregida' && <label className="rx-ia-campo">Corrección<textarea value={correccion} maxLength={4000} onChange={e => { iniciarBorrador(); setCorreccion(e.target.value) }} placeholder="¿Qué cambiarías de la propuesta?" /></label>}
+                {decision && decision !== 'aceptada_como_propuesta' && <label className="rx-ia-campo">Motivo<textarea value={motivo} maxLength={2000} onChange={e => { iniciarBorrador(); setMotivo(e.target.value) }} /></label>}
+                <fieldset className="rx-ia-lectura"><legend>La radiografía es… <small>(opcional)</small></legend>
+                  {[['si', 'Anormal'], ['no', 'Normal'], ['', 'Prefiero no indicarlo']].map(([valor, texto]) => <label key={texto}><input type="radio" name="rx-anormal" value={valor} checked={anormal === valor} onChange={() => { iniciarBorrador(); setAnormal(valor) }} />{texto}</label>)}
+                </fieldset>
+                {conflicto && <p role="alert" className="rx-ia-error">Otra persona guardó una revisión más reciente. Tu borrador no se guardará encima.</p>}
+                <div className="rx-ia-acciones">
+                  <button className="primary-button" disabled={revision.isPending || conflicto || !revisionVigente(versionBorrador, analisis.data.version_revision) || !validarRevision(decision, motivo, correccion)}>Guardar revisión</button>
+                  {versionBorrador !== null && <button type="button" className="lab-secondary-button" onClick={() => { limpiarRevision(); analisis.refetch() }}>Descartar cambios</button>}
+                </div>
+                {revision.error && <p role="alert" className="rx-ia-error">{mensajeError(revision.error)}</p>}
+                {revision.isSuccess && <p role="status" className="rx-ia-ok">Revisión guardada. El informe no cambió.</p>}
+              </form>
+              {(analisis.data.revisiones || []).length > 0 && <details className="rx-ia-plegable"><summary>Revisiones anteriores ({analisis.data.revisiones.length})</summary>
+                <ul className="rx-ia-historial">{analisis.data.revisiones.map(r => <li key={r.version}><strong>{DECISIONES[r.decision] || 'Revisión'}</strong> · {new Date(r.fecha).toLocaleString('es-BO')}
+                  {r.motivo && <p>{r.motivo}</p>}{r.correccion && <p>Corrección: {r.correccion}</p>}{r.anormal_confirmado != null && <p>Lectura: {r.anormal_confirmado ? 'anormal' : 'normal'}</p>}</li>)}</ul>
+              </details>}
+            </>}
+          </div>
+          <details className="rx-ia-plegable rx-ia-nuevo"><summary>Volver a analizar</summary>
+            <SolicitarAnalisis compacto {...{ confirmado, setConfirmado, proyeccion, setProyeccion, habilitada }} deshabilitado={!puedeAnalizar} onAnalizar={() => solicitar.mutate()} />
+          </details>
+        </>}
+
+        {!resultado && <section className="rx-ia-tarjeta rx-ia-informe"><h3>Informe publicado</h3><p className="rx-texto">{d.informe_texto || 'No hay informe publicado disponible.'}</p></section>}
+      </div>
     </div>
-    {solicitar.error && <p role="alert">{mensajeError(solicitar.error)}</p>}
-    {analisis.error && <p role="alert">{mensajeError(analisis.error)}</p>}
-    {analisis.data && !compatible && <p role="alert">El análisis pertenece a otra versión del informe o archivo. No se mostrará junto al estudio actual; solicita un análisis nuevo.</p>}
-    {enProceso(analisis.data?.estado) && <p role="status">{analisis.data.estado === 'en_cola' ? 'Análisis en cola' : 'Analizando localmente'} · puede tardar varios minutos. No cierres el servidor.</p>}
-    {['error', 'interrumpido'].includes(analisis.data?.estado) && <p role="alert">{erroresAnalisis[analisis.data.error_codigo] || 'El análisis local falló; el informe clínico no se modificó.'}</p>}
-    {resultado && <>
-      <h3>Hallazgos del modelo experimental</h3><p className="rx-advertencia">Scores normalizados, no probabilidades clínicas ni porcentajes de certeza.</p>
-      <ul>{resultado.vision.findings.map(h => <li key={h.name}>{nombres[h.name] || h.name}: <strong>{Number(h.score).toFixed(3)}</strong></li>)}</ul>
-      <h3>Términos del informe · extracción limitada</h3><ul>{Object.entries(resultado.fusion.informe).map(([nombre, d]) => <li key={nombre}><strong>{nombres[nombre]}: {d.estado}</strong>{d.evidencia.map((e, i) => <blockquote key={i}>{e}</blockquote>)}</li>)}</ul>
-      <h3>Coincidencias y discrepancias para revisión</h3>
-      {[...resultado.fusion.discrepancias, ...resultado.fusion.coincidencias].map((d, i) => <p key={i}>{nombres[d.hallazgo]}: {d.mensaje}</p>)}
-      {!resultado.fusion.discrepancias.length && !resultado.fusion.coincidencias.length && <p>No se identificaron comparaciones concluyentes en las categorías evaluadas. Esto no descarta enfermedad.</p>}
-      <p>{resultado.fusion.criterio_tecnico.descripcion} Umbral técnico: {resultado.fusion.criterio_tecnico.umbral}.</p>
-      <h3>Evidencia documental local</h3><p>{resultado.rag.mensaje}</p>
-      {(resultado.rag.evidencia || []).map(e => <details key={e.id}><summary>{e.titulo} · {e.seccion}</summary><blockquote>{e.cita}</blockquote><p>Referencia original: {e.fuente}</p><small>Documento {e.documento_id}; caracteres {e.inicio}–{e.fin}; SHA-256 {e.sha256}</small></details>)}
-      {[...(resultado.fusion.advertencias || []), ...(resultado.rag.advertencias || []), ...(resultado.vision.warnings || [])].map((a, i) => <p className="rx-advertencia" key={i}>{a}</p>)}
-      <h3>Revisión médica de la propuesta</h3><p>Guardar una revisión no publica un diagnóstico ni modifica el informe.</p>
-      <form onSubmit={e => { e.preventDefault(); revision.mutate() }}>
-        <label htmlFor="rx-decision">Decisión</label><select id="rx-decision" value={decision} onChange={e => { iniciarBorrador(); setDecision(e.target.value) }}><option value="">Selecciona una decisión</option><option value="aceptada_como_propuesta">Aceptar como propuesta experimental</option><option value="corregida">Corregir propuesta</option><option value="rechazada">Rechazar propuesta</option></select>
-        <label htmlFor="rx-motivo">Motivo</label><textarea id="rx-motivo" value={motivo} maxLength={2000} onChange={e => { iniciarBorrador(); setMotivo(e.target.value) }} />
-        {decision === 'corregida' && <><label htmlFor="rx-correccion">Corrección de la propuesta</label><textarea id="rx-correccion" value={correccion} maxLength={4000} onChange={e => { iniciarBorrador(); setCorreccion(e.target.value) }} /></>}
-        <button className="primary-button" disabled={revision.isPending || conflicto || !revisionVigente(versionBorrador, analisis.data.version_revision) || !validarRevision(decision, motivo, correccion)}>Guardar revisión explícita</button>
-      </form>
-      {conflicto && <p role="alert">Hay una revisión más reciente. Tu borrador conserva su versión original y no se guardará encima.</p>}
-      <button type="button" className="lab-secondary-button" onClick={() => { if (window.confirm('¿Descartar el borrador y cargar la revisión actual?')) { setDecision(''); setMotivo(''); setCorreccion(''); setVersionBorrador(null); analisis.refetch() } }}>Descartar borrador y recargar revisión</button>
-      {revision.error && <p role="alert">{mensajeError(revision.error)}</p>}{revision.isSuccess && <p role="status">Revisión guardada; el informe clínico permanece sin cambios.</p>}
-      <h4>Historial de revisiones</h4><ul>{(analisis.data.revisiones || []).map(r => <li key={r.version}>Versión {r.version}: {r.decision} · {new Date(r.fecha).toLocaleString('es-BO')} · actor {r.usuario_id}<p>{r.motivo}</p>{r.correccion && <p>{r.correccion}</p>}</li>)}</ul>
-    </>}
   </section>
 }

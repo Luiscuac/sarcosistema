@@ -54,3 +54,20 @@ def test_licencia_ambigua_o_negada_se_rechaza(declaracion):
     xml = f'<article><article-title>Fixture</article-title><permissions><license><license-p>{declaracion}</license-p></license></permissions><body><p>Test only.</p></body></article>'
     with pytest.raises(ValueError, match='licencia'):
         extraer_articulo(xml.encode())
+
+
+@pytest.mark.parametrize('declaracion', [
+    'Open Access This article is licensed under a Creative Commons Attribution 4.0 International License, which permits use, sharing, adaptation. If material is not included in the article&#8217;s Creative Commons licence and your intended use is not permitted by statutory regulation, you will need permission.',
+    'This is an open access article distributed under the terms of the Creative Commons Attribution License, which permits unrestricted use, distribution, and reproduction in any medium.',
+])
+def test_cc_by_4_se_acepta_aunque_incluya_condiciones(declaracion):
+    xml = f'<article><article-title>Fixture</article-title><permissions><license><license-p>{declaracion}</license-p></license></permissions><body><sec><title>Findings</title><p>Test only.</p></sec></body></article>'
+    assert 'Creative Commons' in extraer_articulo(xml.encode())['licencia']
+
+
+@pytest.mark.parametrize('declaracion', ['Creative Commons Attribution 4.0 International License. All rights reserved.',
+                                         'Not licensed under a Creative Commons Attribution 4.0 International License'])
+def test_cc_by_negada_o_reservada_se_rechaza(declaracion):
+    xml = f'<article><article-title>Fixture</article-title><permissions><license><license-p>{declaracion}</license-p></license></permissions><body><p>Test only.</p></body></article>'
+    with pytest.raises(ValueError, match='licencia'):
+        extraer_articulo(xml.encode())

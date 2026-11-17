@@ -62,3 +62,17 @@
 .med-eco-archivos { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .med-eco-archivos li { display: flex; gap: 10px; align-items: center; font-size: 13px; }
 .med-eco-archivos small { color: #6b7a99; }
+
+/* Prioridad IA (solo bandeja de Rayos X) */
+.img-insignias { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 8px; }
+.img-triaje { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 99px; font-size: 12px; font-weight: 600; border: 1px solid transparent; }
+.img-triaje.es-alta { background: #fdecea; color: #9e2f1a; border-color: #f2b8ad; }
+.img-triaje.es-media { background: #fff4e0; color: #7a5410; border-color: #f0d29a; }
+.img-triaje.es-baja { background: #e9f3f3; color: #2f6265; border-color: #bcd9da; }
+.img-triaje.es-proceso { background: #eef1f8; color: #3c4a74; }
+.img-triaje.es-sin { background: #f2f2f2; color: #666; font-weight: 500; }
+.img-triaje.es-urgente { background: #9e2f1a; color: #fff; }
+.img-tarjeta.es-prioritaria { border-left: 4px solid #c0562f; }
+.img-aviso-ia { margin: 0 0 12px; font-size: 12px; color: var(--muted); }
+/* Enlaces con aspecto de botón secundario (p. ej. "Abrir con asistente IA") */
+a.lab-secondary-button { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }

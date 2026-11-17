@@ -1,5 +1,5 @@
 """Esquemas HTTP del modulo de imagen (ecografia clinica y asistencia RAG)."""
-from datetime import datetime
+from datetime import date, datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -16,7 +16,7 @@ class SolicitudEcografiaRequest(BaseModel):
 
     def validar_estudios(self) -> None:
         if any(tipo_id <= 0 for tipo_id in self.tipo_estudio_ids):
-            raise SolicitudInvalida('Cada estudio debe tener un identificador vÃ¡lido')
+            raise SolicitudInvalida('Cada estudio debe tener un identificador válido')
         if len(self.tipo_estudio_ids) != len(set(self.tipo_estudio_ids)):
             raise SolicitudInvalida('No repitas el mismo estudio en una solicitud')
 
@@ -52,8 +52,24 @@ class InformeImagenResponse(BaseModel):
     estado: str
     fecha_hora_publicacion: datetime | None
     archivos: list[ArchivoImagenResponse]
+    datos_ecografia: dict | None = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class ContribucionTriaje(BaseModel):
+    name: str
+    aporte: float
+
+
+class TriajeResumen(BaseModel):
+    """Prioridad visual experimental para ordenar la bandeja; no es diagnóstico."""
+    estado: str
+    indice: float | None = None
+    nivel: str | None = None
+    calidad: str | None = None
+    contribuciones: list[ContribucionTriaje] = []
+    radiografias: int = 0
 
 
 class EstudioPendienteResponse(BaseModel):
@@ -66,6 +82,7 @@ class EstudioPendienteResponse(BaseModel):
     prioridad: str
     estado: str
     fecha_solicitud: datetime
+    triaje: TriajeResumen | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -79,6 +96,13 @@ class EstudioDetalleResponse(BaseModel):
     estado: str
     fecha_solicitud: datetime
     informe: InformeImagenResponse | None
+    tipo_estudio_codigo: str = ''
+    codigo_paciente: str = ''
+    historia_clinica: str | None = None
+    fecha_nacimiento: date | None = None
+    medico_solicitante: str | None = None
+    organos: list[str] = Field(default_factory=list)
+    max_archivos: int = 10
 
 
 class InformeRequest(BaseModel):
@@ -99,6 +123,7 @@ class EstudioPublicadoResponse(BaseModel):
     fecha_publicacion: datetime | None
     descripcion_texto: str | None
     archivos: list[ArchivoImagenResponse]
+    datos_ecografia: dict | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -117,11 +142,13 @@ class RevisionNueva(BaseModel):
     decision: Literal['aceptada_como_propuesta','corregida','rechazada']
     motivo: str = Field(default='',max_length=2000)
     correccion: str | None = Field(default=None,max_length=4000)
+    # Lectura del médico (opcional): ¿la radiografía es anormal? Alimenta la calibración local.
+    anormal_confirmado: bool | None = None
 
     @model_validator(mode='after')
     def datos_obligatorios(self):
         if self.decision != 'aceptada_como_propuesta' and not self.motivo.strip():
             raise ValueError('Se requiere motivo para corregir o rechazar.')
         if self.decision == 'corregida' and not (self.correccion or '').strip():
-            raise ValueError('Se requiere el texto de correcciÃ³n.')
+            raise ValueError('Se requiere el texto de corrección.')
         return self

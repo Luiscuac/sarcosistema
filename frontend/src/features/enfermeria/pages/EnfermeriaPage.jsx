@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import { useBlocker } from 'react-router-dom'
+import { useBlocker, useLocation, useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  actualizarBorradorEnfermeria, buscarPacientesEnfermeria,
+  actualizarBorradorEnfermeria, buscarPacientesEnfermeria, crearPacienteEnfermeria,
   guardarBorradorEnfermeria, obtenerRecetasRecibidasEnfermeria, obtenerRegistrosEnfermeria,
   publicarRegistroEnfermeria,
 } from '../api/enfermeriaApi.js'
+import { FormularioPaciente } from '../../laboratorio/components/nueva-solicitud/PacienteSolicitud.jsx'
 import '../../laboratorio/pages/laboratorio.css'
 import './enfermeria.css'
 import RecetasRecibidas from '../components/RecetasRecibidas.jsx'
@@ -39,38 +40,55 @@ function mensajeErrorApi(error, porDefecto) {
 }
 const edadTexto = (nacimiento) => describirEdad(nacimiento) || 'Edad no registrada'
 const MENSAJE_PUBLICADO = 'Registro publicado. Ya está disponible en la ficha médica del paciente.'
+const PACIENTE_VACIO = {
+  nombre_completo: '', fecha_nacimiento: '', sexo: 'no_especificado',
+  tipo_documento: 'CI', numero_documento: '', sin_documento: false,
+  historia_clinica: '', codigo_externo: '', telefono: '',
+}
 
 function ResumenValores({ lineas }) {
   return <dl className="enf-summary">{lineas.map(({ campo, etiqueta, valor }) =>
     <div key={campo}><dt>{etiqueta}</dt><dd>{valor}</dd></div>)}</dl>
 }
 
-function RegistroResumen({ registro, editando, onEditar, onPublicar, ocupado }) {
-  return <article className={editando ? 'enf-record is-editing' : 'enf-record'}>
-    <header><div><strong>{registro.estado === 'publicado' ? 'Publicado' : editando ? 'Borrador · en edición' : 'Borrador'}</strong>
-      <span>{fechaHora(registro.publicado_en || registro.creado_en)}</span></div>
-      {registro.estado === 'publicado' && <span className="enf-published">Visible para el médico</span>}</header>
-    <ResumenValores lineas={resumenDelFormulario(formularioDesdeRegistro(registro))} />
-    {registro.estado === 'borrador' && <div className="enf-actions">
-      <button type="button" onClick={() => onEditar(registro)} disabled={ocupado || editando}>Editar borrador</button>
-      <button type="button" className="primary-button" onClick={() => onPublicar(registro)} disabled={ocupado}>Publicar para el médico…</button>
-    </div>}
+function RegistroResumen({ registro, editando, onAbrir, ocupado }) {
+  const lineas = resumenDelFormulario(formularioDesdeRegistro(registro))
+  const motivo = lineas.find(({ campo }) => campo === 'motivo_consulta')
+    || lineas.find(({ campo }) => campo === 'sintomas')
+    || lineas.find(({ campo }) => TEXTOS.some(([nombre]) => nombre === campo))
+  const estado = registro.estado === 'publicado' ? 'Publicado' : editando ? 'Borrador · en edición' : 'Borrador'
+  return <article className="enf-history-list-item">
+    <div className="enf-history-list-main">
+      <strong>Admisión de enfermería</strong>
+      <span>{fechaHora(registro.publicado_en || registro.creado_en)} · {estado}</span>
+    </div>
+    <p><span>{motivo?.etiqueta || 'Motivo referido'}</span>{motivo?.valor || 'Valoración registrada'}</p>
+    <button type="button" className="enf-history-open" onClick={() => onAbrir(registro)} disabled={ocupado}>
+      Ver informe <span aria-hidden="true">→</span>
+    </button>
   </article>
 }
 
 export default function EnfermeriaPage({ usuario, logout }) {
   const cache = useQueryClient()
   const { notificar } = useNotificacion()
+  const location = useLocation()
+  const navigate = useNavigate()
   const [entrada, setEntrada] = useState('')
   const [buscar, setBuscar] = useState('')
   const [pagina, setPagina] = useState(1)
-  const [paciente, setPaciente] = useState(null)
-  const [buscando, setBuscando] = useState(true)
-  const [form, setForm] = useState(FORMULARIO_VACIO)
-  const [edicion, setEdicion] = useState(null) // registro borrador que se está editando
+  const [nuevoPaciente, setNuevoPaciente] = useState(false)
+  const [datosPaciente, setDatosPaciente] = useState(PACIENTE_VACIO)
+  const [errorPaciente, setErrorPaciente] = useState('')
+  const [paciente, setPaciente] = useState(() => location.state?.paciente || null)
+  const [buscando, setBuscando] = useState(() => !location.state?.paciente)
+  const [form, setForm] = useState(() => location.state?.edicion
+    ? formularioDesdeRegistro(location.state.edicion)
+    : FORMULARIO_VACIO)
+  const [edicion, setEdicion] = useState(() => location.state?.edicion || null)
   const [ocupado, setOcupado] = useState(false)
   const [error, setError] = useState('')
-  const [pantalla, setPantalla] = useState('admision')
+  const [pantalla, setPantalla] = useState(() => location.state?.pantalla || 'admision')
   // { origen: 'formulario' } publica lo que está en pantalla; { origen: 'registro', registro } un borrador ya guardado.
   const [confirmacion, setConfirmacion] = useState(null)
   // Descarte de datos sin guardar: { tipo: 'paciente', paciente } | { tipo: 'salir' }.
@@ -111,11 +129,57 @@ export default function EnfermeriaPage({ usuario, logout }) {
     queryFn: () => obtenerRecetasRecibidasEnfermeria(paciente.id),
     enabled: Boolean(paciente?.id),
   })
+  const termino = entrada.trim()
+  const esperandoBusqueda = termino !== buscar
   const erroresForm = erroresDelFormulario(form)
   const edad = calcularEdad(paciente?.fecha_nacimiento)
 
   function cambiarCampo(campo, valor) {
     setForm((actual) => ({ ...actual, [campo]: valor }))
+  }
+
+  function cambiarDatosPaciente(campo, valor) {
+    setDatosPaciente((actual) => (campo === 'sin_documento' && valor
+      ? { ...actual, sin_documento: true, tipo_documento: '', numero_documento: '' }
+      : { ...actual, [campo]: valor, ...(campo === 'sin_documento' ? { tipo_documento: 'CI' } : {}) }))
+    setErrorPaciente('')
+  }
+
+  async function registrarPaciente() {
+    if (ocupado) return
+    if (datosPaciente.nombre_completo.trim().length < 2) {
+      setErrorPaciente('Escribe el nombre completo del paciente.')
+      return
+    }
+    if (!datosPaciente.fecha_nacimiento) {
+      setErrorPaciente('Selecciona la fecha de nacimiento del paciente.')
+      return
+    }
+    if (!datosPaciente.sin_documento && (!datosPaciente.tipo_documento.trim() || !datosPaciente.numero_documento.trim())) {
+      setErrorPaciente('Ingresa el documento o marca “Persona sin documento”.')
+      return
+    }
+    setOcupado(true)
+    setErrorPaciente('')
+    try {
+      const creado = await crearPacienteEnfermeria({
+        ...datosPaciente,
+        nombre_completo: datosPaciente.nombre_completo.trim(),
+        tipo_documento: datosPaciente.sin_documento ? null : datosPaciente.tipo_documento.trim(),
+        numero_documento: datosPaciente.sin_documento ? null : datosPaciente.numero_documento.trim(),
+        historia_clinica: datosPaciente.historia_clinica.trim() || null,
+        codigo_externo: datosPaciente.codigo_externo.trim() || null,
+        telefono: datosPaciente.telefono.trim() || null,
+      })
+      await cache.invalidateQueries({ queryKey: ['enfermeria', 'pacientes'] })
+      abrirPaciente(creado)
+      setEntrada('')
+      notificar('Paciente registrado. Ya puedes completar su admisión.', 'exito')
+    } catch (err) {
+      setErrorPaciente(mensajeErrorApi(err, 'No se pudo registrar el paciente. Revisa los datos e inténtalo de nuevo.'))
+    } finally {
+      setOcupado(false)
+    }
   }
 
   function limpiarFormulario() {
@@ -125,6 +189,9 @@ export default function EnfermeriaPage({ usuario, logout }) {
   function abrirPaciente(item) {
     setPaciente(item)
     setBuscando(false)
+    setNuevoPaciente(false)
+    setDatosPaciente(PACIENTE_VACIO)
+    setErrorPaciente('')
     limpiarFormulario()
     setPantalla('admision')
     setError('')
@@ -202,6 +269,7 @@ export default function EnfermeriaPage({ usuario, logout }) {
       }
     } finally {
       await cache.invalidateQueries({ queryKey: ['enfermeria', 'registros', paciente.id] })
+      if (guardado) setPantalla('registros')
       setOcupado(false); setConfirmacion(null)
     }
   }
@@ -237,48 +305,112 @@ export default function EnfermeriaPage({ usuario, logout }) {
             <span>{edadTexto(paciente.fecha_nacimiento)} · {paciente.sexo ? nombreSexo(paciente.sexo) : 'Sexo no registrado'} · HC {paciente.historia_clinica || 'No registrada'} · {paciente.codigo_paciente} · {paciente.numero_documento || 'Sin documento'}</span></div>
           <button type="button" className="enf-change-patient" onClick={() => setBuscando(true)}>Cambiar paciente</button>
         </section>
-        : <section className="enf-panel">
+        : <section className="enf-panel enf-search-workspace" aria-label="Búsqueda de pacientes">
           <div className="enf-panel-heading"><h2>Buscar paciente</h2>
-            {paciente && <button type="button" className="enf-change-patient" onClick={() => setBuscando(false)}>Volver a {paciente.nombre_completo}</button>}</div>
-          <label className="enf-search">Nombre, documento, historia clínica o código
-            <input type="search" autoFocus value={entrada} onChange={(event) => setEntrada(event.target.value)} placeholder="Escribe al menos dos caracteres" />
+            <div className="enf-search-heading-actions">
+              {paciente && <button type="button" className="enf-change-patient" onClick={() => setBuscando(false)}>Volver a {paciente.nombre_completo}</button>}
+              {!nuevoPaciente && <button type="button" className="primary-button" onClick={() => { setNuevoPaciente(true); setErrorPaciente('') }}>+ Registrar paciente nuevo</button>}
+            </div>
+          </div>
+          {nuevoPaciente
+            ? <div className="enf-new-patient">
+              <p>Registra la ficha para poder continuar con la admisión.</p>
+              {errorPaciente && <p className="lab-form-error" role="alert">{errorPaciente}</p>}
+              <FormularioPaciente datos={datosPaciente} pendiente={ocupado} onChange={cambiarDatosPaciente}
+                onCancelar={() => { setNuevoPaciente(false); setErrorPaciente('') }} onGuardar={registrarPaciente} />
+            </div>
+            : <>
+          <label className="enf-search-field">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8" /><path d="m16 16 4.5 4.5" /></svg>
+            <span className="sr-only">Buscar por nombre, documento, historia clínica o código</span>
+            <input type="search" autoFocus value={entrada} onChange={(event) => setEntrada(event.target.value)}
+              placeholder="Nombre, CI, historia clínica o código" aria-describedby="enf-search-hint" />
+            {entrada && <button type="button" onClick={() => setEntrada('')} aria-label="Limpiar búsqueda">Limpiar</button>}
           </label>
-          {buscar.length < 2 && <p className="enf-message">Escribe al menos dos caracteres para buscar.</p>}
-          {pacientes.isPending && buscar.length >= 2 && <p role="status" className="enf-message">Buscando…</p>}
-          {pacientes.isError && <p role="alert" className="enf-message">No se pudo buscar pacientes.</p>}
-          {pacientes.data?.items.map((item) => <button type="button" className={`enf-patient-option ${paciente?.id === item.id ? 'enf-selected' : ''}`} key={item.id} onClick={() => elegirPaciente(item)}>
-            <strong>{item.nombre_completo}</strong><span>HC {item.historia_clinica || 'No registrada'} · {item.codigo_paciente} · {edadTexto(item.fecha_nacimiento)}</span>
-          </button>)}
-          {pacientes.data?.total > pacientes.data?.limite && <div className="enf-pagination">
-            <button type="button" disabled={pagina === 1} onClick={() => setPagina((valor) => valor - 1)}>Anterior</button>
-            <span>Página {pagina} · {pacientes.data.total} resultados</span>
-            <button type="button" disabled={pagina * pacientes.data.limite >= pacientes.data.total} onClick={() => setPagina((valor) => valor + 1)}>Siguiente</button>
-          </div>}
-          {buscar.length >= 2 && pacientes.data?.items.length === 0 && <p className="enf-message">No se encontraron pacientes.</p>}
+          <p className="enf-search-hint" id="enf-search-hint">Escribe al menos dos caracteres para buscar.</p>
+
+          {termino.length < 2
+            ? <div className="enf-search-state">
+              <span className="enf-search-state-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8" /><path d="m16 16 4.5 4.5" /></svg>
+              </span>
+              <div><h3>Busca una ficha de paciente</h3><p>Los resultados aparecerán aquí mientras escribes.</p></div>
+            </div>
+            : esperandoBusqueda || pacientes.isPending
+              ? <div className="enf-search-state" role="status">
+                <span className="enf-search-spinner" aria-hidden="true" />
+                <div><h3>Buscando pacientes</h3><p>Estamos consultando las fichas que coinciden.</p></div>
+              </div>
+              : pacientes.isError
+                ? <div className="enf-search-state enf-search-state-error" role="alert">
+                  <div><h3>No se pudo completar la búsqueda</h3><p>Comprueba la conexión e inténtalo de nuevo.</p></div>
+                  <button type="button" className="enf-search-retry" onClick={() => pacientes.refetch()}>Reintentar</button>
+                </div>
+                : !pacientes.data?.items.length
+                  ? <div className="enf-search-state">
+                    <div><h3>No encontramos coincidencias</h3><p>Revisa los datos o registra una ficha nueva para continuar.</p></div>
+                  </div>
+                  : <>
+                    <div className="enf-search-results-heading">
+                      <div><h3>Resultados <span>{pacientes.data.total}</span></h3><p>Coincidencias para <strong>“{buscar}”</strong></p></div>
+                    </div>
+                    <ul className="enf-patient-results" aria-label="Pacientes encontrados">
+                      {pacientes.data.items.map((item) => {
+                        const iniciales = item.nombre_completo.trim().split(/\s+/).slice(0, 2).map((parte) => parte[0]).join('').toUpperCase()
+                        return <li className="enf-patient-result" key={item.id}>
+                          <div className="enf-result-person">
+                            <span className="enf-result-avatar" aria-hidden="true">{iniciales}</span>
+                            <div><h3>{item.nombre_completo}</h3><p>{item.numero_documento || 'Sin documento registrado'}</p></div>
+                          </div>
+                          <dl className="enf-result-data">
+                            <div><dt>Historia clínica</dt><dd>{item.historia_clinica || 'No registrada'}</dd></div>
+                            <div><dt>Código</dt><dd>{item.codigo_paciente}</dd></div>
+                            <div><dt>Edad · sexo</dt><dd>{edadTexto(item.fecha_nacimiento)} · {item.sexo ? nombreSexo(item.sexo) : 'No registrado'}</dd></div>
+                          </dl>
+                          <button type="button" className="enf-result-action" onClick={() => elegirPaciente(item)}>
+                            Seleccionar <span aria-hidden="true">→</span>
+                          </button>
+                        </li>
+                      })}
+                    </ul>
+                    {pacientes.data.total > pacientes.data.limite && <div className="enf-search-pagination">
+                      <span>Página {pagina} de {Math.max(1, Math.ceil(pacientes.data.total / pacientes.data.limite))}</span>
+                      <div>
+                        <button type="button" disabled={pagina === 1} onClick={() => setPagina((valor) => valor - 1)}>Anterior</button>
+                        <button type="button" disabled={pagina * pacientes.data.limite >= pacientes.data.total} onClick={() => setPagina((valor) => valor + 1)}>Siguiente</button>
+                      </div>
+                    </div>}
+                  </>}
+            </>}
         </section>}
 
       {paciente && !buscando && <>
         <nav className="enf-tabs" role="tablist" aria-label="Secciones del paciente">
-          <button type="button" role="tab" aria-selected={pantalla === 'admision'} className={pantalla === 'admision' ? 'active' : ''} onClick={() => setPantalla('admision')}>Admisión</button>
+          <button type="button" role="tab" aria-selected={pantalla === 'admision'} className={pantalla === 'admision' ? 'active' : ''} onClick={() => setPantalla('admision')}>Nueva admisión</button>
+          <button type="button" role="tab" aria-selected={pantalla === 'registros'} className={pantalla === 'registros' ? 'active' : ''} onClick={() => setPantalla('registros')}>Registros{registros.data?.length > 0 && <span className="enf-tab-count" aria-label={`${registros.data.length} registros`}>{registros.data.length}</span>}</button>
           <button type="button" role="tab" aria-selected={pantalla === 'recetas'} className={pantalla === 'recetas' ? 'active' : ''} onClick={() => setPantalla('recetas')}>
             Recetas recibidas{totalRecetas > 0 && <span className="enf-tab-count" aria-label={`${totalRecetas} recetas`}>{totalRecetas}</span>}
           </button>
         </nav>
-        {pantalla === 'recetas' ? <RecetasRecibidas pacienteId={paciente.id} /> : <>
+        {pantalla === 'recetas' ? <RecetasRecibidas pacienteId={paciente.id} paciente={paciente} /> : pantalla === 'registros'
+          ? <section className="enf-panel">
+              <div className="enf-panel-heading"><h2>Registros de enfermería</h2><span>Borradores y registros publicados de este paciente.</span></div>
+              {registros.isPending && <p role="status" className="enf-message">Cargando registros…</p>}
+              {registros.isError && <p role="alert" className="enf-message">No se pudieron cargar los registros.</p>}
+              {registros.data?.length === 0 && <p className="enf-message">Aún no hay registros de esta cuenta para el paciente.</p>}
+              {registros.data?.length > 0 && <div className="enf-history-list">
+                {registros.data.map((registro) => <RegistroResumen key={registro.id} registro={registro} ocupado={ocupado}
+                  editando={edicion?.id === registro.id} onAbrir={(item) => navigate(`/enfermeria/pacientes/${paciente.id}/registros/${item.id}/informe`,
+                    { state: { paciente, registro: item, pantalla: 'registros' } })} />)}
+              </div>}
+            </section>
+          : <>
           <section className="enf-panel" ref={panelFormulario}>
             <div className="enf-panel-heading"><h2>{edicion ? 'Editar borrador' : 'Nueva admisión'}</h2><span>Los campos no medidos pueden dejarse vacíos. Enter pasa al siguiente.</span></div>
             {edicion && <p className="enf-editing-banner">Editando el borrador del {fechaHora(edicion.creado_en)}. Al guardar se reemplazan sus datos.</p>}
             <FormularioAdmision form={form} edad={edad} editando={Boolean(edicion)} ocupado={ocupado} error={error}
               hayErrores={erroresForm.length > 0} onCambiar={cambiarCampo} onGuardar={guardar}
               onCancelarEdicion={() => { limpiarFormulario(); setError('') }} />
-          </section>
-          <section className="enf-panel"><div className="enf-panel-heading"><h2>Registros de enfermería</h2><span>Los borradores solo los ve su autora; publicados, también el médico.</span></div>
-            {registros.isPending && <p role="status" className="enf-message">Cargando registros…</p>}
-            {registros.isError && <p role="alert" className="enf-message">No se pudieron cargar los registros.</p>}
-            {registros.data?.length === 0 && <p className="enf-message">Aún no hay registros de esta cuenta para el paciente.</p>}
-            {registros.data?.map((registro) => <RegistroResumen key={registro.id} registro={registro} ocupado={ocupado}
-              editando={edicion?.id === registro.id} onEditar={editarBorrador}
-              onPublicar={(item) => setConfirmacion({ origen: 'registro', registro: item })} />)}
           </section>
         </>}
       </>}

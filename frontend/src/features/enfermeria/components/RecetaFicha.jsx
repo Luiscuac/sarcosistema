@@ -20,11 +20,13 @@ export default function RecetaFicha({ receta, paciente, estado = 'Emitida' }) {
     <div className="enf-prescription-diagnosis"><span>Diagnóstico</span><p>{receta.diagnostico_principal || 'No indicado'}</p></div>
     <div className="enf-prescription-meds">
       <h3>Medicamentos prescritos <span>{receta.medicamentos?.length || 0}</span></h3>
-      {receta.medicamentos?.map((medicamento, indice) => <section className="enf-prescription-med" key={`${receta.id}-${indice}`}>
-        <div><strong>{medicamento.nombre_generico}</strong><span>{medicamento.forma_concentracion}</span></div>
-        <p>{medicamento.indicaciones}</p>
-        <footer><span>Cantidad prescrita</span><strong>{medicamento.cantidad_recetada || 'No especificada'}</strong></footer>
-      </section>)}
+      {receta.medicamentos?.length
+        ? receta.medicamentos.map((medicamento, indice) => <section className="enf-prescription-med" key={`${receta.id}-${indice}`}>
+          <div><strong>{medicamento.nombre_generico}</strong><span>{medicamento.forma_concentracion}</span></div>
+          <p>{medicamento.indicaciones}</p>
+          <footer><span>Cantidad prescrita</span><strong>{medicamento.cantidad_recetada || 'No especificada'}</strong></footer>
+        </section>)
+        : <p className="enf-message">La receta no tiene medicamentos registrados.</p>}
     </div>
   </article>
 }

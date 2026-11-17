@@ -1,5 +1,6 @@
-"""Casos de uso del radiologo: bandeja, subida de imagenes/informe y publicacion."""
+"""Casos de uso del personal de imágenes: bandeja, subida de imagenes/informe y publicacion."""
 from app.imagenes.domain.entities import ArchivoImagen, InformeImagen
+from app.imagenes.domain.ecografia import validar_datos, texto_informe
 from app.imagenes.domain.errors import (
     ArchivoDemasiadoGrande,
     ArchivoVacio,
@@ -7,6 +8,7 @@ from app.imagenes.domain.errors import (
     FormatoNoAdmitido,
     InformeYaPublicado,
     InformeSinContenido,
+    SolicitudInvalida,
 )
 
 
@@ -40,7 +42,8 @@ class GuardarInforme:
         self.max_archivos = max_archivos
 
     async def ejecutar(self, estudio_id: int, descripcion: str | None,
-                       entradas: list[dict], usuario_id: int) -> tuple[InformeImagen, bool]:
+                       entradas: list[dict], usuario_id: int, datos_ecografia: dict | None = None,
+                       conservar_archivos: list[int] | None = None) -> tuple[InformeImagen, bool]:
         # entradas: [{'nombre': str, 'mime': str, 'contenido': bytes}]
         estudio = await self.repositorio.obtener_estudio(estudio_id)
         if estudio is None:
@@ -48,21 +51,43 @@ class GuardarInforme:
         if estudio.informe is not None and estudio.informe.estado == 'publicado':
             raise InformeYaPublicado('El informe ya esta publicado; usa rectificar')
 
-        if len(entradas) > self.max_archivos:
+        anteriores = estudio.informe.archivos if estudio.informe else ()
+        ids_validos = {a.id for a in anteriores}
+        if conservar_archivos is not None and (
+                any(type(i) is not int for i in conservar_archivos)
+                or len(set(conservar_archivos)) != len(conservar_archivos)
+                or not set(conservar_archivos) <= ids_validos):
+            raise SolicitudInvalida('Solo se pueden conservar adjuntos de la versión actual de este estudio.')
+        conservados = [a for a in anteriores if conservar_archivos is None or a.id in conservar_archivos]
+        if len(entradas) + len(conservados) > self.max_archivos:
             raise ArchivoVacio(f'Como maximo {self.max_archivos} archivos por estudio')
+
+        if datos_ecografia is not None:
+            datos_ecografia = validar_datos(datos_ecografia, estudio.tipo_estudio_codigo)
+            descripcion = texto_informe(datos_ecografia)
+        elif estudio.informe and estudio.informe.datos_ecografia:
+            raise SolicitudInvalida('Este informe requiere los campos de su plantilla de ecografía.')
 
         import hashlib
 
-        archivos: list[dict] = []
+        archivos: list[dict] = [{
+            'nombre_original': a.nombre_original, 'mime_type': a.mime_type,
+            'tamano_bytes': a.tamano_bytes, 'hash_sha256': a.hash_sha256, 'url_archivo': a.url_archivo,
+        } for a in conservados]
+        # Validar el lote completo antes de escribir el primer archivo.
         for entrada in entradas:
             mime = (entrada.get('mime') or '').lower()
             if mime not in self.tipos_permitidos:
                 raise FormatoNoAdmitido(f'Formato no admitido: {mime or entrada.get("nombre")}')
             contenido = entrada.get('contenido') or b''
             if not contenido:
-                raise ArchivoVacio('El archivo llego vacio')
-            if len(contenido) > self.max_bytes:
+                raise ArchivoVacio('El archivo llegó vacío')
+            limite = self.max_bytes(mime) if callable(self.max_bytes) else self.max_bytes
+            if len(contenido) > limite:
                 raise ArchivoDemasiadoGrande(mime)
+        for entrada in entradas:
+            mime = (entrada.get('mime') or '').lower()
+            contenido = entrada['contenido']
             hash_sha256 = hashlib.sha256(contenido).hexdigest()
             extension = self._extension(mime, entrada.get('nombre'))
             url = await self.almacen.guardar(contenido, estudio_id, hash_sha256, extension)
@@ -74,6 +99,8 @@ class GuardarInforme:
         texto = (descripcion or '').strip() or None
         if not texto and not archivos:
             raise InformeSinContenido('Escribe el informe o sube al menos una imagen')
+        if datos_ecografia is not None:
+            return await self.repositorio.guardar_informe(estudio_id, texto, archivos, usuario_id, datos_ecografia=datos_ecografia)
         return await self.repositorio.guardar_informe(estudio_id, texto, archivos, usuario_id)
 
     @staticmethod
@@ -100,5 +127,7 @@ class PublicarInforme:
             raise InformeSinContenido('No hay informe para publicar')
         if estudio.informe.estado == 'publicado':
             raise InformeYaPublicado('El informe ya estaba publicado')
+        if estudio.informe.datos_ecografia:
+            validar_datos(estudio.informe.datos_ecografia, estudio.tipo_estudio_codigo, publicar=True)
         informe: InformeImagen = await self.repositorio.publicar_informe(estudio_id, usuario_id)
         return informe
