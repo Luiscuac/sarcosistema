@@ -109,3 +109,26 @@
   .rxe-anexo-pagina img { print-color-adjust: exact; }
 }
 @media (prefers-reduced-motion: reduce) { .rxe-cabecera, .rxe-barra-acciones { scroll-behavior: auto; } }
+
+/* Resumen del estudio */
+.rxe-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.rxe-avance-bloque { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--rx-espacio-4); }
+.rxe-avance { display: flex; flex-wrap: wrap; gap: var(--rx-espacio-2) var(--rx-espacio-5); margin: 0; padding: 0; list-style: none; }
+.rxe-avance li { display: flex; align-items: center; gap: var(--rx-espacio-2); color: var(--rx-tenue); font-size: var(--rx-texto-s); }
+.rxe-avance li + li::before { content: ''; width: 28px; height: 1px; margin-right: var(--rx-espacio-3); background: var(--rx-linea-fuerte); }
+.rxe-avance-marca { display: grid; flex: none; place-items: center; width: 24px; height: 24px; border: 1px solid var(--rx-linea-fuerte); border-radius: 50%; font-size: var(--rx-texto-xs); font-weight: 700; }
+.rxe-avance li[data-estado="hecho"] { color: var(--rx-tinta); }
+.rxe-avance li[data-estado="hecho"] .rxe-avance-marca { border-color: var(--rx-marca); background: var(--rx-marca); color: #fff; }
+.rxe-avance li[data-estado="actual"] { color: var(--rx-marca); font-weight: 700; }
+.rxe-avance li[data-estado="actual"] .rxe-avance-marca { border-color: var(--rx-marca); background: var(--rx-marca-suave); color: var(--rx-marca); }
+.rxe-siguiente { display: flex; flex-wrap: wrap; gap: var(--rx-espacio-3); }
+.rxe-siguiente a.lab-secondary-button { display: inline-flex; align-items: center; text-decoration: none; }
+.rxe-datos-resumen { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--rx-espacio-4) var(--rx-espacio-5); margin: var(--rx-espacio-3) 0 0; }
+.rxe-datos-resumen dt { color: var(--rx-tenue); font-size: var(--rx-texto-xs); }
+.rxe-datos-resumen dd { margin: 2px 0 0; color: var(--rx-tinta); font-size: var(--rx-texto-s); }
+.rxe-datos-resumen a, .rxe-enlaces a { color: var(--rx-marca); font-weight: 600; text-decoration: none; }
+.rxe-datos-resumen a:hover, .rxe-enlaces a:hover { text-decoration: underline; }
+.rxe-enlaces { margin: var(--rx-espacio-4) 0 0; padding-top: var(--rx-espacio-3); border-top: 1px solid var(--rx-linea); font-size: var(--rx-texto-s); }
+.rxe-aviso-no-realizado { display: grid; gap: 2px; border-color: var(--rx-alta); background: var(--rx-alta-suave); color: var(--rx-alta); }
+.rxe-no-realizado { margin: 0; text-align: right; }
+.rxe-enlace-peligro { padding: 4px 0; border: 0; background: none; color: var(--rx-alta); font: inherit; font-size: var(--rx-texto-xs); text-decoration: underline; cursor: pointer; }
