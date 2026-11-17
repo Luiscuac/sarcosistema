@@ -26,7 +26,7 @@ async def estudio_fixture(monkeypatch):
             paciente = await db.scalar(text('SELECT id FROM public.paciente WHERE codigo_paciente=:codigo'), {'codigo':demo.PACIENTE_DEMO})
             servicio = await db.scalar(text("SELECT id FROM public.servicio WHERE codigo='IMG'"))
             codigo = 'TEST-RX-'+uuid.uuid4().hex
-            tipo = await db.scalar(text('INSERT INTO public.tipo_estudio(codigo,nombre,servicio_id,requiere_informe,requiere_archivos) VALUES (:c,\'Tórax ficticio\',:s,true,true) RETURNING id'), {'c':codigo,'s':servicio})
+            tipo = await db.scalar(text("SELECT id FROM public.tipo_estudio WHERE codigo='RX_TORAX'"))  # la IA solo lista tórax
             solicitud = await db.scalar(text('INSERT INTO public.solicitud(referencia,paciente_id,fecha_solicitud,medico_solicitante_id,prioridad) VALUES (:r,:p,now(),:m,\'sin_prioridad\') RETURNING id'), {'r':codigo,'p':paciente,'m':medico})
             estudio = await db.scalar(text('INSERT INTO public.estudio_solicitado(referencia,solicitud_id,paciente_id,servicio_id,tipo_estudio_id,estado) VALUES (:r,:s,:p,:v,:t,\'publicado\') RETURNING id'), {'r':codigo,'s':solicitud,'p':paciente,'v':servicio,'t':tipo})
             informe = await db.scalar(text("INSERT INTO public.informe_imagen(estudio_id,numero_version,descripcion_texto,estado,usuario_publicacion_id,fecha_hora_publicacion) VALUES (:e,1,'Simulación: no se observa derrame pleural.','publicado',:u,now()) RETURNING id"), {'e':estudio,'u':usuario})

@@ -33,9 +33,10 @@ async def preparar_estudio_demo(db, usuario_id, archivo):
         raise ValueError('El paciente demo ya existe; no se modificó.')
     paciente = await db.scalar(text("INSERT INTO public.paciente(codigo_paciente,nombre_completo,fecha_nacimiento,sexo,sin_documento,estado) VALUES (:c,'Paciente FICTICIO de radiología',DATE '1980-01-01','F',true,'activo') RETURNING id"), {'c':codigo})
     servicio = await db.scalar(text("SELECT id FROM public.servicio WHERE codigo='IMG'"))
-    tipo = await db.scalar(text("SELECT id FROM public.tipo_estudio WHERE codigo='RX-TORAX-DEMO-IA'"))
+    # La asistencia IA solo trabaja con radiografía de tórax (RX_TORAX, sembrado por la migración 20261116_0019).
+    tipo = await db.scalar(text("SELECT id FROM public.tipo_estudio WHERE codigo='RX_TORAX'"))
     if tipo is None:
-        tipo = await db.scalar(text("INSERT INTO public.tipo_estudio(codigo,nombre,servicio_id,requiere_informe,requiere_archivos) VALUES ('RX-TORAX-DEMO-IA','Tórax frontal — simulación IA',:s,true,true) RETURNING id"), {'s':servicio})
+        raise ValueError('No existe el estudio RX_TORAX; aplica las migraciones (alembic upgrade head).')
     solicitud = await db.scalar(text("INSERT INTO public.solicitud(referencia,paciente_id,fecha_solicitud,medico_solicitante_id,prioridad) VALUES (:r,:p,now(),:m,'sin_prioridad') RETURNING id"), {'r':REFERENCIA,'p':paciente,'m':medico})
     estudio = await db.scalar(text("INSERT INTO public.estudio_solicitado(referencia,solicitud_id,paciente_id,servicio_id,tipo_estudio_id,estado) VALUES (:r,:s,:p,:v,:t,'publicado') RETURNING id"), {'r':REFERENCIA,'s':solicitud,'p':paciente,'v':servicio,'t':tipo})
     informe = await db.scalar(text("INSERT INTO public.informe_imagen(estudio_id,numero_version,descripcion_texto,estado,usuario_publicacion_id,fecha_hora_publicacion) VALUES (:e,1,:texto,'publicado',:u,now()) RETURNING id"), {'e':estudio,'texto':INFORME,'u':usuario_id})

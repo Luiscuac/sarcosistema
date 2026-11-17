@@ -11,6 +11,9 @@ from app.imagenes.tests.test_estudios_imagenes import estudio_fixture  # noqa: F
 
 async def _tipo(db, nombre):
     servicio = await db.scalar(text("SELECT id FROM public.servicio WHERE codigo='IMG'"))
+    if nombre.casefold().startswith('radiograf'):
+        # La asistencia IA solo lista radiografía de tórax: se usa el tipo real del catálogo.
+        return await db.scalar(text("SELECT id FROM public.tipo_estudio WHERE codigo='RX_TORAX'"))
     return await db.scalar(text('INSERT INTO public.tipo_estudio(codigo,nombre,servicio_id,requiere_informe,requiere_archivos) '
                                 'VALUES (:c,:n,:s,true,true) RETURNING id'), {'c': 'TEST-' + uuid.uuid4().hex, 'n': nombre, 's': servicio})
 

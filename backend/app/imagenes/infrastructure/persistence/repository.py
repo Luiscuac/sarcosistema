@@ -411,7 +411,7 @@ PROPIETARIO = '''FROM public.estudio_solicitado e
     JOIN public.paciente p ON p.id=e.paciente_id
     WHERE u.estado='activo' AND (s.medico_solicitante_id=m.id
         OR (s.medico_solicitante_id IS NULL AND s.created_by=u.id))
-    AND t.nombre NOT ILIKE 'ecograf%' '''
+    AND t.codigo = 'RX_TORAX' '''  # la asistencia IA solo analiza radiografía de tórax
 
 
 class EstudiosRepository:
