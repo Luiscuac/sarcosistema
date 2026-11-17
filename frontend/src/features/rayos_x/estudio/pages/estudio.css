@@ -140,3 +140,12 @@
 .rxe-cierre p { margin: 0; color: var(--rx-tenue); font-size: var(--rx-texto-s); }
 .rxe-cierre .rxe-pendientes { grid-column: 1 / -1; }
 @media (max-width: 720px) { .rxe-cierre { grid-template-columns: 1fr; } }
+.rxe-desplegable > summary { display: flex; align-items: center; justify-content: space-between; gap: var(--rx-espacio-3); list-style: none; cursor: pointer; }
+.rxe-desplegable > summary::-webkit-details-marker { display: none; }
+.rxe-desplegable > summary h2 { margin: 0; }
+.rxe-desplegable > summary span { margin-left: auto; color: var(--rx-tenue); font-size: var(--rx-texto-xs); }
+.rxe-desplegable > summary::after { content: '▾'; color: var(--rx-tenue); font-size: var(--rx-texto-s); transition: transform var(--rx-transicion); }
+.rxe-desplegable:not([open]) > summary::after { transform: rotate(-90deg); }
+.rxe-desplegable > summary:focus-visible { outline: none; box-shadow: var(--rx-foco); border-radius: var(--rx-radio-s); }
+.rxe-desplegable[open] > summary { margin-bottom: var(--rx-espacio-4); }
+@media (prefers-reduced-motion: reduce) { .rxe-desplegable > summary::after { transition: none; } }

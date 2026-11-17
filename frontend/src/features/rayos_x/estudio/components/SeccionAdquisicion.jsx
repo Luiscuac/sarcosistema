@@ -38,6 +38,7 @@ function ZonaCarga({ proyecciones, disabled, onSubir }) {
 
 function InformesExternos({ estudioId, informes, editable, actualizar }) {
   const { notificar } = useNotificacion()
+  const [abierto, setAbierto] = useState(informes.length > 0)
   const [archivo, setArchivo] = useState(null)
   const [campos, setCampos] = useState({ establecimiento: '', profesional: '', fecha_informe: '', observaciones: '' })
   const [retirar, setRetirar] = useState(null); const [motivo, setMotivo] = useState('')
@@ -48,7 +49,8 @@ function InformesExternos({ estudioId, informes, editable, actualizar }) {
     if (pestana) pestana.opener = null
     try { const blob = await descargarInformeExterno(externo.id); const url = URL.createObjectURL(blob); if (pestana) pestana.location = url; else window.open(url, '_blank', 'noopener,noreferrer'); setTimeout(() => URL.revokeObjectURL(url), 60000) } catch (e) { pestana?.close(); notificar(mensajeErrorApi(e), 'error') }
   }
-  return <section className="rxe-bloque"><h2>Informes externos</h2>
+  return <details className="rxe-bloque rxe-desplegable" open={abierto} onToggle={e => setAbierto(e.currentTarget.open)}>
+    <summary><h2>Informes externos</h2><span>{informes.length ? `${informes.length} adjunto${informes.length === 1 ? '' : 's'}` : 'Opcional'}</span></summary>
     {editable && <form className="rxe-form-grid" onSubmit={e => { e.preventDefault(); adjuntar.mutate() }}>
       <label>PDF *<input type="file" accept="application/pdf,.pdf" required onChange={e => setArchivo(e.target.files[0] || null)} /></label>
       <label>Establecimiento *<input required value={campos.establecimiento} onChange={e => setCampos({ ...campos, establecimiento: e.target.value })} /></label>
@@ -62,7 +64,7 @@ function InformesExternos({ estudioId, informes, editable, actualizar }) {
     {retirar && <ConfirmarAccion titulo="Retirar informe externo" textoConfirmar="Retirar" peligro pendiente={quitar.isPending} onCancelar={() => setRetirar(null)} onConfirmar={() => motivo.trim() && quitar.mutate()}>
       <label className="lab-search-label">Motivo *<textarea value={motivo} onChange={e => setMotivo(e.target.value)} /></label>
     </ConfirmarAccion>}
-  </section>
+  </details>
 }
 
 const POSICIONES = { bipedestacion: 'Bipedestación', sedestacion: 'Sedestación', decubito_supino: 'Decúbito supino', decubito_prono: 'Decúbito prono', decubito_lateral: 'Decúbito lateral' }
