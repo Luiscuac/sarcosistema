@@ -53,7 +53,7 @@ export default function GaleriaImagenes({ imagenes, proyecciones, editable, ocup
       <div className="lab-dialog-body lab-confirm-body"><p>La imagen quedara retirada con trazabilidad; el archivo no se borrara.</p>
         <label className="lab-search-label">Motivo *<textarea required value={motivo} onChange={e => setMotivo(e.target.value)} /></label>
         {!motivo.trim() && <p className="lab-form-hint">Escribe el motivo para continuar.</p>}</div>
-      <footer className="lab-dialog-footer"><button type="button" disabled={ocupado} onClick={() => { setRetirar(null); setMotivo('') }}>Volver</button><button type="button" className="lab-incidence-submit" disabled={ocupado || !motivo.trim()} onClick={() => onRetirar(retirar.id, motivo, () => { setRetirar(null); setMotivo('') })}>{ocupado ? 'Procesando...' : 'Retirar imagen'}</button></footer>
+      <footer className="lab-dialog-footer"><button type="button" className="lab-secondary-button" disabled={ocupado} onClick={() => { setRetirar(null); setMotivo('') }}>Volver</button><button type="button" className="lab-incidence-submit" disabled={ocupado || !motivo.trim()} onClick={() => onRetirar(retirar.id, motivo, () => { setRetirar(null); setMotivo('') })}>{ocupado ? 'Procesando...' : 'Retirar imagen'}</button></footer>
     </Dialogo>}
   </>
 }
