@@ -175,3 +175,8 @@
 .rxg-estudio-campos[data-sin-lateralidad] { grid-template-columns: 1fr; }
 .rxg-estudio-config { scroll-margin: var(--rx-espacio-4); }
 .rxg-estudio-config:focus-within { border-color: var(--rx-marca); }
+
+/* Enlaces con aspecto de botón primario (p. ej. "Nueva solicitud") */
+a.primary-button { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0 18px; border-radius: var(--rx-radio-s); text-decoration: none; white-space: nowrap; }
+a.primary-button:hover, a.primary-button:focus-visible { color: #fff; text-decoration: none; }
+a.primary-button:focus-visible { outline: none; box-shadow: var(--rx-foco); }
