@@ -418,8 +418,7 @@ PROPIETARIO = '''FROM public.estudio_solicitado e
     JOIN public.servicio v ON v.id=e.servicio_id AND v.codigo='IMG'
     JOIN public.tipo_estudio t ON t.id=e.tipo_estudio_id
     JOIN public.paciente p ON p.id=e.paciente_id
-    WHERE u.estado='activo' AND (s.medico_solicitante_id=m.id
-        OR (s.medico_solicitante_id IS NULL AND s.created_by=u.id))
+    WHERE u.estado='activo' AND m.activo  -- cualquier médico activo, sin importar quién solicitó
     AND t.codigo = 'RX_TORAX' '''  # la asistencia IA solo analiza radiografía de tórax
 
 

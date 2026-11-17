@@ -70,7 +70,7 @@ export default function EstudioDetalle({ id, usuario, habilitada, onVolver }) {
   if (detalle.isPending) return <p role="status">Cargando estudio…</p>
   if (detalle.error) return <section className="rx-ia"><header className="rx-ia-cabecera">{onVolver && <button type="button" className="lab-secondary-button" onClick={onVolver}>← Volver a la lista</button>}</header>
     <div className="rx-ia-tarjeta" role="alert"><h3>No se puede abrir este estudio en el asistente</h3>
-      <p>{detalle.error?.response?.status === 404 ? 'El asistente de IA solo está disponible para radiografías de tórax que tú solicitaste. Este estudio lo solicitó otro médico o no es de tórax; su informe sigue disponible en la ficha del paciente.' : mensajeError(detalle.error)}</p></div></section>
+      <p>{detalle.error?.response?.status === 404 ? 'El asistente de IA solo analiza radiografías de tórax con informe publicado. Este estudio no cumple esa condición; su informe sigue disponible en la ficha del paciente.' : mensajeError(detalle.error)}</p></div></section>
   const d = detalle.data
   const advertencias = resultado ? [...new Set([...(resultado.fusion.advertencias || []), ...(resultado.rag.advertencias || []), ...(resultado.vision.warnings || [])])] : []
 
