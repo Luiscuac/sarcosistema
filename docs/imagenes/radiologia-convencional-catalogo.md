@@ -30,7 +30,7 @@ Solo la **conclusión** es obligatoria para validar. Los apartados de cada plant
 | `RX_COL_LUMBAR` | Radiografía de columna lumbar | Columna vertebral | No aplica | Anteroposterior (AP), Lateral, Lateral focalizada L5-S1, Oblicua derecha, Oblicua izquierda, Lateral en flexión, Lateral en extensión | AP y lateral; AP, lateral y L5-S1; Oblicuas (pars interarticularis); Laterales dinámicas | Columna vertebral | ACR-ASSR-SPR-SSR Practice Parameter for the Performance of Spine Radiography. |
 | `RX_COL_LUMBOSACRA` | Radiografía de columna lumbosacra | Columna vertebral | No aplica | Anteroposterior (AP), Lateral, Lateral focalizada L5-S1, Oblicua derecha, Oblicua izquierda | AP, lateral y L5-S1 | Columna vertebral | ACR-ASSR-SPR-SSR Practice Parameter for the Performance of Spine Radiography. |
 | `RX_SACRO_COCCIX` | Radiografía de sacro y cóccix | Columna vertebral | No aplica | AP axial (angulada), Lateral | AP axial y lateral | Columna vertebral | ACR-ASSR-SPR-SSR Practice Parameter for the Performance of Spine Radiography. |
-| `RX_COL_TOTAL` | Telerradiografía de columna (escoliosis) | Columna vertebral | No aplica | Posteroanterior (PA), Anteroposterior (AP), Lateral | PA (o AP) y lateral en bipedestación | Columna vertebral | ACR-SPR-SSR Practice Parameter for the Performance of Radiography for Scoliosis in Children. |
+| `RX_COL_TOTAL` | Radiografía de columna completa (escoliosis) | Columna vertebral | No aplica | Posteroanterior (PA), Anteroposterior (AP), Lateral | PA (o AP) y lateral en bipedestación | Columna vertebral | ACR-SPR-SSR Practice Parameter for the Performance of Radiography for Scoliosis in Children. |
 | `RX_PELVIS` | Radiografía de pelvis | Pelvis y cadera | No aplica | Anteroposterior (AP) | AP de pelvis | Pelvis y cadera | ACR-SPR-SSR Practice Parameter for the Performance of Radiography of the Extremities; posicionamiento estándar (Bontrager, Merrill). |
 | `RX_CADERA` | Radiografía de cadera | Pelvis y cadera | Derecha / izquierda / bilateral | Anteroposterior (AP), Lateral en rana (Lauenstein), Axial lateral de cadera (rayo horizontal) | AP y lateral en rana; AP y axial lateral (sospecha de fractura: no usar rana) | Pelvis y cadera | ACR-SPR-SSR Practice Parameter for the Performance of Radiography of the Extremities; posicionamiento estándar (Bontrager, Merrill). |
 | `RX_CLAVICULA` | Radiografía de clavícula | Extremidades superiores | Derecha / izquierda | Anteroposterior (AP), AP axial (angulada) | AP y AP axial | Articulación periférica | ACR-SPR-SSR Practice Parameter for the Performance of Radiography of the Extremities; posicionamiento estándar (Bontrager, Merrill). |
@@ -68,7 +68,7 @@ Solo la **conclusión** es obligatoria para validar. Los apartados de cada plant
 - **Radiografía de columna lumbar** (`RX_COL_LUMBAR`): Evaluación de vértebras L1-L5.
 - **Radiografía de columna lumbosacra** (`RX_COL_LUMBOSACRA`): Evaluación de columna lumbar y unión lumbosacra.
 - **Radiografía de sacro y cóccix** (`RX_SACRO_COCCIX`): Evaluación del sacro y cóccix, habitualmente por traumatismo.
-- **Telerradiografía de columna (escoliosis)** (`RX_COL_TOTAL`): Evaluación de escoliosis en bipedestación; permite medir ángulo de Cobb. Estudio ampliado: requiere chasis o detector largo; deshabilitar si el equipo no lo permite.
+- **Radiografía de columna completa (escoliosis)** (`RX_COL_TOTAL`): Evaluación de escoliosis en bipedestación; permite medir ángulo de Cobb. Estudio ampliado: requiere chasis o detector largo; deshabilitar si el equipo no lo permite.
 - **Radiografía de pelvis** (`RX_PELVIS`): Evaluación de pelvis ósea, sacroilíacas y ambas caderas.
 - **Radiografía de cadera** (`RX_CADERA`): Evaluación de la articulación coxofemoral. Ante sospecha de fractura de cadera no realizar la proyección en rana.
 - **Radiografía de hombro** (`RX_HOMBRO`):  En traumatismo no rotar el brazo.
@@ -128,7 +128,7 @@ Estudios: Radiografía de abdomen simple.
 
 ### Columna vertebral (`columna`)
 
-Estudios: Radiografía de columna cervical, Radiografía de columna dorsal, Radiografía de columna lumbar, Radiografía de columna lumbosacra, Radiografía de sacro y cóccix, Telerradiografía de columna (escoliosis).
+Estudios: Radiografía de columna cervical, Radiografía de columna dorsal, Radiografía de columna lumbar, Radiografía de columna lumbosacra, Radiografía de sacro y cóccix, Radiografía de columna completa (escoliosis).
 
 | Apartado | Tipo | Guía |
 |---|---|---|

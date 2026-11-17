@@ -352,7 +352,7 @@ ESTUDIOS: tuple[EstudioRadiologico, ...] = (
     EstudioRadiologico('RX_SACRO_COCCIX', 'Radiografía de sacro y cóccix', 'columna', 'Sacro y cóccix',
         'Evaluación del sacro y cóccix, habitualmente por traumatismo.', 'columna', ('AP_AXIAL', 'LAT'),
         (_p('AP_AXIAL_LAT', 'AP axial y lateral', 'AP_AXIAL', 'LAT'),), fuente=_ACR_COLUMNA),
-    EstudioRadiologico('RX_COL_TOTAL', 'Telerradiografía de columna (escoliosis)', 'columna', 'Columna completa',
+    EstudioRadiologico('RX_COL_TOTAL', 'Radiografía de columna completa (escoliosis)', 'columna', 'Columna completa',
         'Evaluación de escoliosis en bipedestación; permite medir ángulo de Cobb.', 'columna', ('PA', 'AP', 'LAT'),
         (_p('PA_LAT', 'PA (o AP) y lateral en bipedestación', 'PA', 'LAT'),),
         fuente='ACR-SPR-SSR Practice Parameter for the Performance of Radiography for Scoliosis in Children.',
