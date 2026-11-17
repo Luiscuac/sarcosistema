@@ -73,10 +73,10 @@ export function CatalogoEstudiosRx({ catalogo, valor, onChange, deshabilitado = 
         <div className="rxg-catalogo-opciones">{grupo.estudios.map((estudio) => {
           const disponible = sePuedeAnadir(estudio, valor)
           const cantidad = valor.filter((item) => Number(item.tipo_estudio_id) === Number(estudio.id)).length
-          return <button key={estudio.id} type="button" className="rxg-catalogo-estudio" disabled={deshabilitado || !disponible}
+          return <button key={estudio.id} type="button" className="rxg-catalogo-estudio" data-anadido={cantidad > 0 ? "" : undefined} disabled={deshabilitado || !disponible}
             onClick={() => onChange([...valor, nuevaConfiguracion(estudio)])}>
             <strong>{estudio.nombre}</strong>
-            <span>{cantidad > 0 ? `Añadido${cantidad > 1 ? ` (${cantidad})` : ''}${disponible ? ' · añadir otro lado' : ''}` : 'Añadir'}</span>
+            {cantidad > 0 && <span>{`✓ Añadido${cantidad > 1 ? ` (${cantidad})` : ''}${disponible ? ' · puedes añadir el otro lado' : ''}`}</span>}
           </button>
         })}</div>
       </section>)}

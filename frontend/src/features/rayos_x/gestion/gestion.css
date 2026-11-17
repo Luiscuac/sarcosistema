@@ -163,3 +163,5 @@
 .rxg-vacio strong { color: var(--rx-tinta); font-size: var(--rx-texto-s, 14px); }
 .rxg-paciente-seleccionado { border-left: 3px solid var(--rx-marca); }
 @media (max-width: 720px) { .rxg-pasos { grid-template-columns: 1fr; } }
+.rxg-nueva .rxg-catalogo-estudio { align-content: center; min-height: 44px; }
+.rxg-catalogo-estudio[data-anadido] { border-color: var(--rx-marca); background: var(--rx-marca-suave); }
