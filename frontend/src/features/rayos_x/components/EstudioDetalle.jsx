@@ -43,7 +43,8 @@ export default function EstudioDetalle({ id, usuario, habilitada, onVolver }) {
   const [mapa, setMapa] = useState(null)
   const [pestana, setPestana] = useState('hallazgos')
   const setProyeccion = valor => { setProyeccionBase(valor); setClave(crypto.randomUUID()) }
-  const detalle = useQuery({ queryKey: ['imagenes', usuario.id, 'estudio', id], queryFn: ({ signal }) => obtenerEstudio(id, signal) })
+  // Sin reintentos ante 404/403: no es un fallo pasajero y dejaría la pantalla "cargando" varios segundos.
+  const detalle = useQuery({ queryKey: ['imagenes', usuario.id, 'estudio', id], queryFn: ({ signal }) => obtenerEstudio(id, signal), retry: (intentos, error) => ![403, 404].includes(error?.response?.status) && intentos < 2 })
   const archivoId = detalle.data?.archivo?.id
   const imagen = useQuery({ queryKey: ['imagenes', usuario.id, 'archivo', id, archivoId], queryFn: ({ signal }) => cargarImagen(id, archivoId, signal), enabled: Boolean(archivoId), gcTime: 0, staleTime: 0 })
   useEffect(() => {
@@ -67,7 +68,9 @@ export default function EstudioDetalle({ id, usuario, habilitada, onVolver }) {
   const puedeAnalizar = habilitada && confirmado && archivoId && !solicitar.isPending && !procesando
 
   if (detalle.isPending) return <p role="status">Cargando estudio…</p>
-  if (detalle.error) return <p role="alert">{mensajeError(detalle.error)}</p>
+  if (detalle.error) return <section className="rx-ia"><header className="rx-ia-cabecera">{onVolver && <button type="button" className="lab-secondary-button" onClick={onVolver}>← Volver a la lista</button>}</header>
+    <div className="rx-ia-tarjeta" role="alert"><h3>No se puede abrir este estudio en el asistente</h3>
+      <p>{detalle.error?.response?.status === 404 ? 'El asistente de IA solo está disponible para radiografías de tórax que tú solicitaste. Este estudio lo solicitó otro médico o no es de tórax; su informe sigue disponible en la ficha del paciente.' : mensajeError(detalle.error)}</p></div></section>
   const d = detalle.data
   const advertencias = resultado ? [...new Set([...(resultado.fusion.advertencias || []), ...(resultado.rag.advertencias || []), ...(resultado.vision.warnings || [])])] : []
 
