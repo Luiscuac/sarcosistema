@@ -37,11 +37,17 @@ from app.imagenes.presentation.schemas import (
 router = APIRouter(tags=['imagenes'])
 
 ROL_POR_MODALIDAD = {'ecografia': 'imagenes', 'rayos_x': 'rayos_x'}
+# En Rayos X el médico radiólogo consulta el área y es el único que publica (valida) informes.
+ROLES_POR_MODALIDAD = {'ecografia': ('imagenes',), 'rayos_x': ('rayos_x', 'radiologo')}
+ROLES_PUBLICAN = {'ecografia': ('imagenes',), 'rayos_x': ('radiologo',)}
 
 
-def _validar_rol(usuario: Usuario, modalidad: str) -> None:
-    if usuario.rol != ROL_POR_MODALIDAD[modalidad]:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, 'Sin acceso a esta área de imágenes.')
+def _validar_rol(usuario: Usuario, modalidad: str, publicar: bool = False) -> None:
+    permitidos = (ROLES_PUBLICAN if publicar else ROLES_POR_MODALIDAD)[modalidad]
+    if usuario.rol not in permitidos:
+        mensaje = ('Solo el médico radiólogo valida informes de Rayos X.' if publicar and usuario.rol == 'rayos_x'
+                   else 'Sin acceso a esta área de imágenes.')
+        raise HTTPException(status.HTTP_403_FORBIDDEN, mensaje)
 
 
 def _estudio_de_modalidad(estudio, modalidad: str) -> bool:
@@ -180,7 +186,7 @@ async def publicar_informe(
     usuario: Usuario = Depends(usuario_actual),
     repositorio: RepositorioImagenSql = Depends(get_repositorio),
 ):
-    _validar_rol(usuario, modalidad)
+    _validar_rol(usuario, modalidad, publicar=True)
     await _comprobar_estudio(estudio_id, modalidad, repositorio)
     try:
         informe = await PublicarInforme(repositorio).ejecutar(estudio_id, usuario.id)

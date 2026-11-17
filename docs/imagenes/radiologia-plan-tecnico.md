@@ -30,7 +30,7 @@ No existe Caja ni Facturación en el proyecto: no se integra.
 | El rol `rayos_x` redactaba y publicaba | `rayos_x` recibe y adquiere; solo `radiologo` redacta y valida |
 | Sin correcciones posteriores | Adendas con autor, motivo y fecha |
 | PDF adjunto sin semántica | Informe externo como entidad aparte, siempre rotulado como externo |
-| Un médico podía descargar archivos de cualquier estudio publicado | Solo los de sus propias solicitudes |
+| El rol `rayos_x` podía publicar por la ruta anterior | La ruta anterior también exige `radiologo` para publicar Rayos X |
 
 Se conserva sin cambios: ecografía, la asistencia IA del médico (`/imagenes/analisis`), el triaje (ahora solo para tórax) y la consulta del médico desde la ficha del paciente.
 

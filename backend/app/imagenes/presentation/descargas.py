@@ -20,7 +20,7 @@ def get_repositorio(db: AsyncSession = Depends(get_db)) -> RepositorioImagenSql:
 
 async def _archivo_autorizado(archivo_id: int, usuario: Usuario, repositorio: RepositorioImagenSql):
     """Solo el medico (su paciente, publicado) o el personal de su modalidad acceden al archivo."""
-    if usuario.rol not in ('medico', 'imagenes', 'rayos_x'):
+    if usuario.rol not in ('medico', 'imagenes', 'rayos_x', 'radiologo'):
         raise HTTPException(status.HTTP_403_FORBIDDEN, 'Sin acceso a este archivo.')
     try:
         archivo = await repositorio.obtener_archivo(archivo_id)
@@ -32,7 +32,7 @@ async def _archivo_autorizado(archivo_id: int, usuario: Usuario, repositorio: Re
     # El personal solo baja archivos de su modalidad; el medico ve solo publicados.
     estudio = await repositorio.obtener_estudio_de_archivo(archivo_id)
     modalidad = 'ecografia' if usuario.rol == 'imagenes' else 'rayos_x'
-    if usuario.rol in ('imagenes', 'rayos_x') and (
+    if usuario.rol in ('imagenes', 'rayos_x', 'radiologo') and (
         not (estudio.tipo_estudio_nombre.casefold().startswith('ecograf') if modalidad == 'ecografia'
              else estudio.tipo_estudio_nombre.casefold().startswith('radiograf'))
         or estudio.estado not in (

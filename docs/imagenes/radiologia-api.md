@@ -119,7 +119,7 @@ Cuando faltan requisitos, 409 devuelve `{"detail": {"mensaje": "...", "pendiente
 | `GET /estudios?vista=activos\|finalizados` | T, R | `activos` = no validados; `finalizados` = validados, entregados, no realizados | `EstudioFila[]` |
 | `GET /solicitudes/{solicitud_id}` | T, R | | `{solicitud: {...}, paciente: {...}, estudios: EstudioFila[]}` |
 | `GET /pacientes/{paciente_id}/estudios` | T, R | | `{paciente: {...}, estudios: EstudioFila[]}` |
-| `GET /estudios/{estudio_id}` | T, R; M solo si es su solicitud y está validado | | `EstudioDetalle` |
+| `GET /estudios/{estudio_id}` | T, R; M solo si está validado (como en el historial del paciente) | | `EstudioDetalle` |
 | `PUT /estudios/{estudio_id}/adquisicion` | T | campos de `adquisicion` (sin `estado` ni `completada_en`) | `EstudioDetalle` |
 | `POST /estudios/{estudio_id}/adquisicion/completar` | T | — | `EstudioDetalle` (409 con `pendientes`) |
 | `POST /estudios/{estudio_id}/imagenes` | T | multipart: `archivos` (1..10; JPEG, PNG o DICOM) y `proyecciones` (un valor por archivo, `""` = sin asignar) | `EstudioDetalle` |
@@ -132,7 +132,7 @@ Cuando faltan requisitos, 409 devuelve `{"detail": {"mensaje": "...", "pendiente
 | `POST /estudios/{estudio_id}/adendas` | R | `{motivo, texto, autor_nombre, registro_profesional?}` (solo informe validado) | `EstudioDetalle` |
 | `POST /estudios/{estudio_id}/informes-externos` | T, R | multipart: `archivo` (PDF), `establecimiento`, `profesional?`, `fecha_informe?` (AAAA-MM-DD), `observaciones?` | `EstudioDetalle` |
 | `POST /estudios/{estudio_id}/informes-externos/{externo_id}/retirar` | T, R | `{motivo}` | `EstudioDetalle` |
-| `GET /informes-externos/{externo_id}/archivo` | T, R; M dueño | | PDF |
+| `GET /informes-externos/{externo_id}/archivo` | T, R; M si está validado | | PDF |
 | `POST /estudios/{estudio_id}/entregar` | T | `{entregado_a}` (solo validado) | `EstudioDetalle` |
 
 Binarios de imágenes (rutas existentes, con autorización reforzada): `GET /imagenes/archivos/{archivo_id}` (original) y `GET /imagenes/archivos/{archivo_id}/vista` (PNG de 8 bits; usar siempre para DICOM).
