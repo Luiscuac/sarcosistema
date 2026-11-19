@@ -4,6 +4,9 @@ Piloto académico con **datos ficticios**. Monolito modular: cada módulo mantie
 
 Guía de referencia para un despliegue en intranet hospitalaria (requiere configuración y aprobación de TI): [`docs/despliegue/servidor-hospital.md`](docs/despliegue/servidor-hospital.md).
 
+Pasos para levantar el despliegue con Docker Compose en Windows:
+[`deploy/readme.md`](deploy/readme.md).
+
 ## Stack
 
 - **Backend:** Python 3.12 + FastAPI + PostgreSQL (pgvector) — ver `backend/`
