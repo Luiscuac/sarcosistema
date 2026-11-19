@@ -115,6 +115,27 @@
 
 /* Admisión: mediciones primero, unidad dentro del campo y avisos que no bloquean.
    Rojo = sobre lo habitual, azul = bajo lo habitual, borde rojo continuo = dato inválido. */
+.enf-ai-panel { margin: 0 0 16px; padding: 14px; border: 1px solid #ccd9d8; border-radius: 8px; background: #f8fbfb; }
+.enf-ai-heading, .enf-ai-actions, .enf-ai-proposal-actions { display: flex; align-items: center; gap: 8px; }
+.enf-ai-heading { justify-content: space-between; }
+.enf-ai-heading div { display: grid; gap: 2px; }
+.enf-ai-heading span { color: var(--muted); font-size: 11px; }
+.enf-ai-cancel, .enf-ai-actions button, .enf-ai-analyze, .enf-ai-proposal-actions button, .enf-ai-undo { padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--brand); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.enf-ai-consent { display: flex; align-items: center; gap: 8px; margin: 12px 0 8px; font-size: 12px; }
+.enf-ai-text { display: grid; gap: 6px; margin: 10px 0 8px; font-size: 12px; font-weight: 600; }
+.enf-ai-text textarea { width: 100%; box-sizing: border-box; resize: vertical; border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font: inherit; }
+.enf-ai-status { color: var(--brand); font-size: 12px; }
+.enf-ai-error { color: #b42318; font-size: 12px; }
+.enf-ai-warnings { margin: 8px 0; padding-left: 18px; color: #7a5a14; font-size: 12px; }
+.enf-ai-proposals { display: grid; gap: 8px; margin-top: 10px; }
+.enf-ai-proposal { display: grid; gap: 6px; padding: 10px; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+.enf-ai-proposal.is-aceptada { border-color: #77a99a; background: #f3faf7; }
+.enf-ai-proposal.is-rechazada { opacity: .65; }
+.enf-ai-proposal > div:first-child { display: flex; justify-content: space-between; gap: 12px; }
+.enf-ai-proposal p { margin: 0; color: #53606b; font-size: 12px; }
+.enf-ai-proposal p span { font-weight: 700; }
+.enf-ai-proposal small { color: #7a5a14; }
+.enf-ai-rejected { color: var(--muted); font-size: 12px; }
 .enf-form .enf-group { margin: 0; padding: 4px 0 0; border: 0; border-top: 1px solid var(--line); }
 .enf-form .enf-group > legend { padding: 12px 0 10px; font-size: 14px; font-weight: 600; }
 .enf-group .enf-field + .enf-field { margin-top: 12px; }

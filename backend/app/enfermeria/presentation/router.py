@@ -6,9 +6,13 @@ from app.accesos.domain.entities import Usuario
 from app.accesos.presentation.dependencies.current_user import usuario_actual
 from app.accesos.presentation.dependencies.role_required import requiere_rol
 from app.config.database import get_db
+from app.config.settings import settings
+from app.consultas.application.ports.extractor_clinico import ErrorExtractor
+from app.consultas.infrastructure.ia.ollama import OllamaExtractor
+from app.enfermeria.application.use_cases.extraer_datos_admision import ExtraerDatosAdmision
 from app.enfermeria.application.use_cases.registrar_admision import RegistrarAdmision
 from app.enfermeria.infrastructure.persistence.repository import SqlAlchemyRegistroEnfermeriaRepository
-from app.enfermeria.presentation.schemas import AdmisionRequest
+from app.enfermeria.presentation.schemas import AdmisionRequest, ExtraerDatosAdmisionRequest
 from app.enfermeria.presentation.recetas import RecetaRequest
 from app.laboratorio.application.use_cases.service import LaboratorioService
 from app.laboratorio.domain.entities import PacienteNuevo
@@ -25,6 +29,34 @@ def get_repository(db: AsyncSession = Depends(get_db)):
 
 def get_paciente_service(db: AsyncSession = Depends(get_db)):
     return LaboratorioService(SqlAlchemyExamenRepository(db))
+
+
+def get_extractor_admision():
+    if not settings.clinical_extractor_enabled:
+        raise HTTPException(503, 'El autocompletado no está habilitado. Puedes continuar manualmente.')
+    try:
+        return OllamaExtractor(
+            settings.ollama_url,
+            settings.ollama_model,
+            settings.clinical_extractor_timeout_seconds,
+        )
+    except ValueError:
+        raise HTTPException(503, 'La configuración del extractor local no es válida.') from None
+
+
+@router.post('/extraer-datos-admision',
+             dependencies=[Depends(requiere_rol('enfermeria'))])
+async def extraer_datos_admision(
+    datos: ExtraerDatosAdmisionRequest,
+    repo: SqlAlchemyRegistroEnfermeriaRepository = Depends(get_repository),
+    extractor=Depends(get_extractor_admision),
+):
+    try:
+        return await ExtraerDatosAdmision(repo, extractor).ejecutar(datos.paciente_id, datos.transcripcion)
+    except LookupError:
+        raise HTTPException(404, 'Paciente no encontrado.') from None
+    except ErrorExtractor:
+        raise HTTPException(503, 'No se pudo analizar con el modelo local. Reintenta o continúa manualmente.') from None
 
 
 @router.get('/pacientes', dependencies=[Depends(requiere_rol('enfermeria'))])

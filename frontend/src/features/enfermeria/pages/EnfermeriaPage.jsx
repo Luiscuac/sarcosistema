@@ -87,6 +87,7 @@ export default function EnfermeriaPage({ usuario, logout }) {
     : FORMULARIO_VACIO)
   const [edicion, setEdicion] = useState(() => location.state?.edicion || null)
   const [ocupado, setOcupado] = useState(false)
+  const [iaBloqueada, setIaBloqueada] = useState(false)
   const [error, setError] = useState('')
   const [pantalla, setPantalla] = useState(() => location.state?.pantalla || 'admision')
   // { origen: 'formulario' } publica lo que está en pantalla; { origen: 'registro', registro } un borrador ya guardado.
@@ -234,7 +235,7 @@ export default function EnfermeriaPage({ usuario, logout }) {
 
   /** Guarda el formulario; con publicar=true pide confirmación con el resumen antes de enviar nada. */
   function guardar(publicar) {
-    if (ocupado || !paciente) return
+    if (ocupado || iaBloqueada || !paciente) return
     if (!hayCambios) {
       setError('Registra al menos un dato de admisión o una medición antes de guardar.')
       return
@@ -249,6 +250,7 @@ export default function EnfermeriaPage({ usuario, logout }) {
   }
 
   async function ejecutarGuardado(publicar) {
+    if (iaBloqueada) return
     setOcupado(true); setError('')
     let guardado = false
     try {
@@ -408,9 +410,10 @@ export default function EnfermeriaPage({ usuario, logout }) {
           <section className="enf-panel" ref={panelFormulario}>
             <div className="enf-panel-heading"><h2>{edicion ? 'Editar borrador' : 'Nueva admisión'}</h2><span>Los campos no medidos pueden dejarse vacíos. Enter pasa al siguiente.</span></div>
             {edicion && <p className="enf-editing-banner">Editando el borrador del {fechaHora(edicion.creado_en)}. Al guardar se reemplazan sus datos.</p>}
-            <FormularioAdmision form={form} edad={edad} editando={Boolean(edicion)} ocupado={ocupado} error={error}
+            <FormularioAdmision pacienteId={paciente.id} form={form} edad={edad} editando={Boolean(edicion)} ocupado={ocupado || iaBloqueada} error={error}
               hayErrores={erroresForm.length > 0} onCambiar={cambiarCampo} onGuardar={guardar}
-              onCancelarEdicion={() => { limpiarFormulario(); setError('') }} />
+              onCancelarEdicion={() => { limpiarFormulario(); setError('') }}
+              onEstadoIA={({ bloqueado }) => setIaBloqueada(bloqueado)} />
           </section>
         </>}
       </>}

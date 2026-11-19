@@ -12,6 +12,9 @@ export const actualizarBorradorEnfermeria = async (registroId, datos) =>
   (await api.put(`/enfermeria/registros/${registroId}`, datos)).data
 export const publicarRegistroEnfermeria = async (registroId) =>
   (await api.post(`/enfermeria/registros/${registroId}/publicar`)).data
+export const extraerDatosAdmision = async (pacienteId, transcripcion, signal) =>
+  (await api.post('/enfermeria/extraer-datos-admision',
+    { paciente_id: Number(pacienteId), transcripcion }, { signal, timeout: 200000 })).data
 export const obtenerRegistrosPublicados = async (pacienteId) =>
   (await api.get(`/enfermeria/pacientes/${pacienteId}/publicados`)).data
 export const obtenerRecetasPublicadas = async (pacienteId) =>

@@ -21,7 +21,7 @@ CampoClinico = Literal[
     'medicamentos', 'indicaciones', 'estudios_solicitados', 'referencias',
     'recomendaciones', 'plan_seguimiento', 'peso_kg', 'talla_cm',
     'temperatura_c', 'frecuencia_cardiaca', 'frecuencia_respiratoria',
-    'presion_sistolica', 'presion_diastolica', 'saturacion_oxigeno',
+    'presion_sistolica', 'presion_diastolica', 'saturacion_oxigeno', 'dolor_escala',
 ]
 
 NOMBRES_CAMPOS = {
@@ -35,6 +35,7 @@ NOMBRES_CAMPOS = {
     'talla_cm': 'Talla', 'temperatura_c': 'Temperatura', 'frecuencia_cardiaca': 'Frecuencia cardíaca',
     'frecuencia_respiratoria': 'Frecuencia respiratoria', 'presion_sistolica': 'Presión sistólica',
     'presion_diastolica': 'Presión diastólica', 'saturacion_oxigeno': 'Saturación de oxígeno',
+    'dolor_escala': 'Escala de dolor',
 }
 
 # Rangos fisiológicamente posibles; fuera de ellos el número es un error de lectura.
@@ -42,6 +43,7 @@ RANGOS = {
     'peso_kg': (0.3, 400), 'talla_cm': (25, 250), 'temperatura_c': (30, 45),
     'frecuencia_cardiaca': (20, 260), 'frecuencia_respiratoria': (4, 90),
     'presion_sistolica': (50, 300), 'presion_diastolica': (20, 200), 'saturacion_oxigeno': (40, 100),
+    'dolor_escala': (0, 10),
 }
 NUMERICOS = frozenset(RANGOS)
 DIAGNOSTICOS = frozenset({'diagnostico_principal', 'diagnosticos_secundarios', 'evaluacion_clinica'})
@@ -105,6 +107,7 @@ ETIQUETAS_VITALES = {
     'presion_diastolica': r'(?:presi[oó]n\s+)?diast[oó]lica',
     'peso_kg': r'peso|pesa',
     'talla_cm': r'talla|mide|estatura',
+    'dolor_escala': r'dolor(?:\s+escala)?',
 }
 TODAS_LAS_ETIQUETAS = '|'.join(ETIQUETAS_VITALES.values()) + r'|presi[oó]n'
 PATRON_PRESION = re.compile(

@@ -3,6 +3,20 @@ from math import isfinite
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
+class ExtraerDatosAdmisionRequest(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    paciente_id: int = Field(gt=0)
+    transcripcion: str = Field(min_length=2, max_length=12000)
+
+    @field_validator('transcripcion')
+    @classmethod
+    def no_vacia(cls, value):
+        limpio = value.strip()
+        if len(limpio) < 2:
+            raise ValueError('La transcripción está vacía.')
+        return limpio
+
+
 class AdmisionRequest(BaseModel):
     model_config = ConfigDict(extra='forbid')
     motivo_consulta: str | None = Field(default=None, max_length=5000)

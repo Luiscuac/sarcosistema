@@ -1,5 +1,6 @@
 import CampoMedicion, { pasarAlSiguiente } from './CampoMedicion.jsx'
 import { GRUPOS, TEXTOS, avisoDeCampo, calcularImc } from '../utils/signosVitales.js'
+import AsistenteAdmision from './AsistenteAdmision.jsx'
 
 function EscalaDolor({ valor, deshabilitado, onCambiar }) {
   const aviso = avisoDeCampo('dolor_escala', valor)
@@ -20,9 +21,10 @@ function EscalaDolor({ valor, deshabilitado, onCambiar }) {
  * Admisión de enfermería: primero lo que se mide, después lo referido.
  * Los valores fuera de lo habitual se resaltan pero no bloquean; los inválidos sí.
  */
-export default function FormularioAdmision({ form, edad, editando, ocupado, error, hayErrores, onCambiar, onGuardar, onCancelarEdicion }) {
+export default function FormularioAdmision({ pacienteId, form, edad, editando, ocupado, error, hayErrores, onCambiar, onGuardar, onCancelarEdicion, onEstadoIA }) {
   const imc = calcularImc(form.peso_kg, form.talla_cm)
   return <form className="enf-form" onKeyDown={pasarAlSiguiente} onSubmit={(evento) => { evento.preventDefault(); onGuardar(false) }} noValidate>
+    <AsistenteAdmision pacienteId={pacienteId} form={form} onCambiar={onCambiar} onEstado={onEstadoIA} />
     {GRUPOS.map(({ titulo, campos }) => <fieldset key={titulo} className="enf-group">
       <legend>{titulo}</legend>
       <div className="enf-measurements">

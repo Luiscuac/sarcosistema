@@ -28,6 +28,13 @@ def test_no_guarda_fahrenheit_como_celsius():
     assert all(item.campo != 'temperatura_c' or item.ambiguo for item in resultado.campos)
 
 
+def test_extrae_dolor_en_escala_de_cero_a_diez():
+    resultado = validar_propuesta(SalidaModelo(), 'El dolor está en escala 8 de 10.')
+    campos = {item.campo: item for item in resultado.campos}
+    assert campos['dolor_escala'].valor == 8
+    assert not campos['dolor_escala'].ambiguo
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize('respuesta', [{'message': {'content': None}}, {'message': {'content': []}}, []])
 async def test_respuesta_malformada_del_proveedor_no_produce_error_500(respuesta):

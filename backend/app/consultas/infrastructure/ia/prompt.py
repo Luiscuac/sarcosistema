@@ -33,6 +33,7 @@ peso_kg, talla_cm (en centímetros: "1.75" o "un metro setenta y cinco" -> 175),
 frecuencia_cardiaca (pulso), frecuencia_respiratoria, presion_sistolica, presion_diastolica,
 saturacion_oxigeno. "presión 120 sobre 80" -> sistólica 120 y diastólica 80. Si el médico se
 corrige ("39, perdón, 37") usa el valor corregido. No repitas los signos vitales en examen_fisico.
+dolor_escala (entero de 0 a 10): "dolor 8 de 10", "escala de dolor 6", "dolor nivel 3".
 
 QUÉ VA EN CADA CAMPO
 - motivo_consulta: razón de la consulta en una línea, con tiempo de evolución si se dijo.
