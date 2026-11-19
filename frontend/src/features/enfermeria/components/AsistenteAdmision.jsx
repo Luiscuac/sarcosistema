@@ -122,12 +122,46 @@ export default function AsistenteAdmision({ pacienteId, form, onCambiar, onEstad
       <input type="checkbox" checked={autorizado} disabled={ocupado} onChange={(evento) => setAutorizado(evento.target.checked)} />
       El paciente autorizó grabar esta atención.
     </label>
-    <div className="enf-ai-actions">
-      <button type="button" disabled={!autorizado || ocupado || pendientes} onClick={recorder.estado === 'recording' ? recorder.detenerGrabacion : recorder.iniciarGrabacion}>
-        {recorder.estado === 'recording' ? 'Detener grabación' : 'Iniciar grabación'}
+    <div className="enf-ai-voice">
+      <button type="button"
+        className={`enf-ai-record-button${recorder.estado === 'recording' ? ' is-recording' : ''}`}
+        disabled={recorder.estado !== 'recording' && (!autorizado || ocupado || pendientes)}
+        onClick={recorder.estado === 'recording' ? recorder.detenerGrabacion : recorder.iniciarGrabacion}
+        aria-label={recorder.estado === 'recording' ? 'Detener grabación' : 'Iniciar grabación'}>
+        <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          {recorder.estado === 'recording'
+            ? <rect x="9" y="9" width="14" height="14" rx="2" fill="currentColor" />
+            : <><rect x="12" y="4" width="8" height="17" rx="4" stroke="currentColor" strokeWidth="2" />
+                <path d="M8 15v2a8 8 0 0 0 16 0v-2M16 25v4m-5 0h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></>}
+        </svg>
+        <span>{recorder.estado === 'recording' ? 'Detener grabación' : recorder.estado === 'requesting' ? 'Activando micrófono…' : 'Iniciar grabación'}</span>
+        {recorder.estado === 'recording' && <time>{recorder.tiempo}</time>}
       </button>
-      {recorder.estado === 'recording' && <span role="status">{recorder.tiempo}</span>}
+      {recorder.estado === 'recording' && <div className="enf-ai-microphone-level" role="status"
+        aria-label={recorder.nivelMicrofono > 4 ? 'Señal de micrófono detectada' : 'No se detecta señal de micrófono'}>
+        <span className="enf-ai-live-dot" />
+        <span className="enf-ai-level-track"><span style={{ width: `${recorder.nivelMicrofono}%` }} /></span>
+        <span>{recorder.nivelMicrofono > 4 ? 'Se está escuchando' : 'Comprueba el micrófono'}</span>
+      </div>}
     </div>
+    <details className="enf-ai-microphone-settings">
+      <summary>Configurar micrófono</summary>
+      <div>
+        <label htmlFor="enf-microphone-select">Micrófono de entrada</label>
+        {recorder.microfonos.length > 0
+          ? <select id="enf-microphone-select" value={recorder.microfonoId} disabled={ocupado}
+              onChange={(evento) => recorder.setMicrofonoId(evento.target.value)}>
+              {recorder.microfonos.map((microfono, indice) =>
+                <option key={microfono.deviceId || indice} value={microfono.deviceId}>
+                  {microfono.label || `Micrófono ${indice + 1}`}
+                </option>)}
+            </select>
+          : <span>Se usará el micrófono predeterminado.</span>}
+        <button type="button" disabled={ocupado || recorder.buscandoMicrofonos} onClick={recorder.buscarMicrofonos}>
+          {recorder.buscandoMicrofonos ? 'Buscando…' : 'Buscar micrófonos'}
+        </button>
+      </div>
+    </details>
     <label className="enf-ai-text">
       Texto para analizar
       <textarea rows={3} maxLength={12000} value={texto} disabled={ocupado} onChange={(evento) => setTexto(evento.target.value)}
@@ -143,17 +177,29 @@ export default function AsistenteAdmision({ pacienteId, form, onCambiar, onEstad
     {propuesta?.advertencias?.length > 0 && <ul className="enf-ai-warnings">{propuesta.advertencias.map((aviso) => <li key={aviso}>{aviso}</li>)}</ul>}
     {items.length > 0 && <div className="enf-ai-proposals">
       {items.map((item, indice) => <article key={`${item.campo}-${indice}`} className={`enf-ai-proposal is-${item.estado}`}>
-        <div><strong>{ETIQUETAS_PROPUESA_ADMISION[item.campo] || item.campo}</strong><span>{textoPropuesta(item)}</span></div>
-        <p><span>Evidencia:</span> {item.evidencia}</p>
-        {item.alertas?.length > 0 && <small>{item.alertas.join(' ')}</small>}
+        <header className="enf-ai-proposal-header">
+          <strong>{ETIQUETAS_PROPUESA_ADMISION[item.campo] || item.campo}</strong>
+          <span className="enf-ai-proposal-status">
+            {item.estado === 'aceptada' ? 'Aplicada' : item.estado === 'rechazada' ? 'Rechazada' : 'Pendiente de revisión'}
+          </span>
+        </header>
+        <div className="enf-ai-proposal-value">
+          <span>Valor sugerido</span>
+          <strong>{textoPropuesta(item)}</strong>
+        </div>
+        <blockquote className="enf-ai-proposal-evidence">
+          <span>Lo que se dijo</span>
+          <q>{item.evidencia}</q>
+        </blockquote>
+        {item.alertas?.length > 0 && <ul className="enf-ai-proposal-alerts">{item.alertas.map((alerta) => <li key={alerta}>{alerta}</li>)}</ul>}
         {item.estado === 'pendiente'
           ? <div className="enf-ai-proposal-actions">
-              <button type="button" onClick={() => aceptar(indice)}>Aceptar</button>
-              <button type="button" onClick={() => rechazar(indice)}>Rechazar</button>
+              <button type="button" className="enf-ai-accept" onClick={() => aceptar(indice)}>Aceptar propuesta</button>
+              <button type="button" className="enf-ai-reject" onClick={() => rechazar(indice)}>Rechazar</button>
             </div>
           : item.estado === 'aceptada'
-            ? <button type="button" className="enf-ai-undo" onClick={() => deshacer(indice)}>Deshacer</button>
-            : <span className="enf-ai-rejected">Rechazada</span>}
+            ? <div className="enf-ai-proposal-actions"><button type="button" className="enf-ai-undo" onClick={() => deshacer(indice)}>Deshacer aplicación</button></div>
+            : null}
       </article>)}
     </div>}
   </section>

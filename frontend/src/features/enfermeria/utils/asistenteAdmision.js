@@ -41,8 +41,11 @@ export function parchesAdmision(item, formActual) {
     return { presion: sistolica && diastolica ? `${sistolica}/${diastolica}` : '' }
   }
   if (campo === 'observaciones') return { observaciones_enfermeria: String(item.valor) }
-  if (Object.prototype.hasOwnProperty.call(formActual, campo)) {
-    return { [campo]: String(item.valor) }
-  }
+  const camposAdmision = new Set([
+    'motivo_consulta', 'sintomas', 'observaciones_enfermeria',
+    'peso_kg', 'talla_cm', 'temperatura_c', 'frecuencia_cardiaca',
+    'frecuencia_respiratoria', 'saturacion_oxigeno', 'dolor_escala',
+  ])
+  if (camposAdmision.has(campo)) return { [campo]: String(item.valor) }
   return null
 }

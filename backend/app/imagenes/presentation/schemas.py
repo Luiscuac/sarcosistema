@@ -33,6 +33,17 @@ class SolicitudEcografiaRequest(BaseModel):
         )
 
 
+class ExtraerEcografiaRequest(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    transcripcion: str = Field(min_length=2, max_length=12000)
+
+    @model_validator(mode='after')
+    def validar_transcripcion(self):
+        if len(self.transcripcion.strip()) < 2:
+            raise ValueError('La transcripción está vacía.')
+        return self
+
+
 class ArchivoImagenResponse(BaseModel):
     id: int
     nombre_original: str

@@ -1,14 +1,17 @@
 import asyncio
 import json
 from urllib.parse import urlsplit
+from typing import TypeVar
 
 import httpx
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from app.consultas.application.ports.extractor_clinico import ErrorExtractor
 from app.consultas.domain.extraccion import validar_propuesta
 from app.consultas.infrastructure.ia.prompt import PROMPT_EXTRACCION
 from app.consultas.infrastructure.ia.schemas import CapturaModelo
+
+TRespuesta = TypeVar('TRespuesta', bound=BaseModel)
 
 
 class OllamaExtractor:
@@ -25,6 +28,15 @@ class OllamaExtractor:
         self._ocupado = asyncio.Semaphore(1)
 
     async def extraer(self, transcripcion: str):
+        captura = await self.extraer_estructurado(
+            transcripcion, PROMPT_EXTRACCION, CapturaModelo
+        )
+        return validar_propuesta(captura.propuestas(), transcripcion)
+
+    async def extraer_estructurado(
+        self, transcripcion: str, prompt: str, modelo_respuesta: type[TRespuesta],
+        esquema: dict | None = None,
+    ) -> TRespuesta:
         try:
             await asyncio.wait_for(self._ocupado.acquire(), timeout=0.1)
         except TimeoutError:
@@ -35,8 +47,8 @@ class OllamaExtractor:
                         follow_redirects=False, transport=self.transport) as client:
                     async with client.stream('POST', f'{self.url}/api/chat', json={
                         'model': self.modelo, 'stream': False,
-                        'format': CapturaModelo.model_json_schema(),
-                        'messages': [{'role': 'system', 'content': PROMPT_EXTRACCION},
+                        'format': esquema or modelo_respuesta.model_json_schema(),
+                        'messages': [{'role': 'system', 'content': prompt},
                                      {'role': 'user', 'content': transcripcion}],
                         'options': {'temperature': 0, 'num_ctx': 8192, 'num_predict': 2400},
                         'keep_alive': '2m',
@@ -55,8 +67,7 @@ class OllamaExtractor:
             # Recuperación controlada solo del envoltorio Markdown; no reparar contenido clínico.
             if contenido.startswith('```json\n') and contenido.endswith('```'):
                 contenido = contenido[8:-3].strip()
-            salida = CapturaModelo.model_validate_json(contenido).propuestas()
-            return validar_propuesta(salida, transcripcion)
+            return modelo_respuesta.model_validate_json(contenido)
         except (httpx.HTTPError, TimeoutError):
             raise ErrorExtractor('El modelo local no está disponible o agotó su tiempo. Puedes continuar manualmente.') from None
         except (ValidationError, ValueError, KeyError, TypeError):

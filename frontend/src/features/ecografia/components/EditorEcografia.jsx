@@ -7,6 +7,7 @@ import InformeImagenPage from '../../imagenes/components/InformeImagenPage.jsx'
 import * as api from '../api/ecografiaApi.js'
 import { agregarArchivos, iniciarDatos, pendientes } from '../informe.js'
 import InformeEcografiaDocumento from './InformeEcografiaDocumento.jsx'
+import AsistenteEcografia from './AsistenteEcografia.jsx'
 import { formatearTamano } from '../../consultas/utils/examenes.js'
 import '../../laboratorio/pages/laboratorio.css'
 import '../../laboratorio/pages/informe-solicitud.css'
@@ -21,6 +22,7 @@ function Editor({ estudio, usuario, logout }) {
   const [guardados, setGuardados] = useState(estudio.informe?.archivos || [])
   const [informe, setInforme] = useState(estudio.informe)
   const [cambio, setCambio] = useState(false)
+  const [iaBloqueada, setIaBloqueada] = useState(false)
   const [ocupado, setOcupado] = useState(false)
   const [mensaje, setMensaje] = useState('')
   const [confirmar, setConfirmar] = useState(false)
@@ -32,7 +34,9 @@ function Editor({ estudio, usuario, logout }) {
   const cambiar = (campo, valor) => { setDatos(d => ({ ...d, [campo]: valor })); setCambio(true) }
 
   async function guardar(e) {
-    e.preventDefault(); setOcupado(true); setMensaje('')
+    e.preventDefault()
+    if (iaBloqueada) { setMensaje('Resuelve o cancela las propuestas de IA antes de guardar.'); return }
+    setOcupado(true); setMensaje('')
     try {
       const nuevo = await api.subirInforme(estudio.estudio_id, '', archivos, { datos, conservar: guardados.map(a => a.id) })
       setInforme(nuevo); setGuardados(nuevo.archivos); setArchivos([]); setDatos(nuevo.datos_ecografia); setCambio(false)
@@ -44,6 +48,7 @@ function Editor({ estudio, usuario, logout }) {
   }
 
   async function publicar() {
+    if (iaBloqueada) { setMensaje('Resuelve o cancela las propuestas de IA antes de publicar.'); setConfirmar(false); return }
     setOcupado(true)
     try {
       await api.publicarInforme(estudio.estudio_id)
@@ -77,6 +82,9 @@ function Editor({ estudio, usuario, logout }) {
         <div className="eco-editor-progress"><div><strong>Hallazgos registrados</strong><span>{organos.filter(o => datos.evaluaciones[o]?.trim()).length} de {organos.length} estructuras</span></div><progress aria-label="Progreso de hallazgos" max={organos.length || 1} value={organos.filter(o => datos.evaluaciones[o]?.trim()).length} /></div>
         <nav className="eco-section-nav" aria-label="Secciones del registro"><a href="#eco-datos">1. Datos del estudio</a><a href="#eco-hallazgos">2. Hallazgos</a><a href="#eco-adjuntos">3. Imágenes</a><a href="#eco-cierre">4. Conclusión</a></nav>
         <p className="eco-ayuda">Registra lo observado y las mediciones con sus unidades. Si una estructura no se evaluó o no se visualiza, indícalo expresamente.</p>
+        <AsistenteEcografia estudioId={estudio.estudio_id} datos={datos}
+          onAplicar={nuevos => { setDatos(nuevos); setCambio(true) }}
+          onEstado={({ bloqueado }) => setIaBloqueada(bloqueado)} />
         <fieldset id="eco-datos" disabled={ocupado}><legend>Datos del estudio</legend><div className="eco-datos">
           <label>Fecha del estudio<input type="date" required value={datos.fecha_estudio} onChange={e => cambiar('fecha_estudio', e.target.value)} /></label>
           <label>Establecimiento solicitante<input maxLength={200} value={datos.establecimiento} onChange={e => cambiar('establecimiento', e.target.value)} /></label>
@@ -94,7 +102,7 @@ function Editor({ estudio, usuario, logout }) {
         </fieldset>
         <fieldset id="eco-cierre" disabled={ocupado}><legend>Cierre del informe</legend><label>Observaciones adicionales<textarea rows={3} maxLength={4000} value={datos.observaciones} onChange={e => cambiar('observaciones', e.target.value)} /></label><label>Conclusión del profesional<textarea rows={3} maxLength={4000} value={datos.conclusion} onChange={e => cambiar('conclusion', e.target.value)} placeholder="Escribe la conclusión que deseas incluir en el informe" /></label></fieldset>
         {faltantes.length > 0 && <p className="eco-ayuda">Para publicar falta completar: {faltantes.join(', ')}.</p>}
-        <div className="eco-acciones"><button type="button" className="lab-secondary-button" onClick={() => setVista('informe')}>Vista previa</button><button className="lab-secondary-button" disabled={ocupado} type="submit">{ocupado ? 'Procesando…' : 'Guardar borrador'}</button><button className="primary-button" type="button" disabled={ocupado || cambio || !informe?.datos_ecografia || faltantes.length > 0} onClick={() => setConfirmar(true)}>Revisar y publicar</button></div>
+        <div className="eco-acciones"><button type="button" className="lab-secondary-button" onClick={() => setVista('informe')}>Vista previa</button><button className="lab-secondary-button" disabled={ocupado || iaBloqueada} type="submit">{ocupado ? 'Procesando…' : 'Guardar borrador'}</button><button className="primary-button" type="button" disabled={ocupado || iaBloqueada || cambio || !informe?.datos_ecografia || faltantes.length > 0} onClick={() => setConfirmar(true)}>Revisar y publicar</button></div>
         {cambio && <p className="eco-ayuda">Guarda los cambios para poder publicar o imprimir.</p>}
       </form>}
       {mensaje && <p className="eco-mensaje" role="status">{mensaje}</p>}

@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { agregarArchivos, iniciarDatos, pendientes, edadEnEstudio } from './informe.js'
+import { aplicarPropuestaEcografia, deshacerPropuestaEcografia } from './asistente.js'
 
 const archivo = name => ({ name, size: 15, lastModified: 1 })
 test('la edad del informe corresponde a la fecha del estudio', () => {
@@ -26,4 +27,18 @@ test('no se permite publicar sin observaciones, conclusión y zona de Doppler', 
   const d = { tipo: 'ECO_DOPPLER', fecha_estudio: '2026-11-14', conclusion: '', zona: '', evaluaciones: { Arterias: '' } }
   assert.deepEqual(pendientes(d, ['Arterias']), ['Arterias', 'Conclusión', 'Zona estudiada'])
   assert.deepEqual(pendientes({ ...d, zona: 'Zona FICTICIA', conclusion: 'Conclusión ficticia.', evaluaciones: { Arterias: 'No evaluadas en esta simulación.' } }, ['Arterias']), [])
+})
+test('aplica la propuesta de un órgano sin perder texto manual y permite deshacerla', () => {
+  const original = { tipo: 'ECO_RENAL', evaluaciones: { 'Riñón derecho': 'Texto manual ficticio.' } }
+  const resultado = aplicarPropuestaEcografia(original, {
+    campo: 'evaluaciones', organo: 'Riñón derecho', valor: 'Cita dictada ficticia.',
+  })
+  assert.equal(resultado.datos.evaluaciones['Riñón derecho'], 'Texto manual ficticio.\nCita dictada ficticia.')
+  assert.deepEqual(deshacerPropuestaEcografia(resultado.datos,
+    { organo: 'Riñón derecho' }, resultado.anterior), original)
+})
+test('no deshace una propuesta si el profesional editó el campo después de aceptarla', () => {
+  const item = { organo: 'Riñón derecho', valor: 'Cita dictada ficticia.' }
+  const datos = { evaluaciones: { 'Riñón derecho': 'Texto manual.\nCita editada después.' } }
+  assert.equal(deshacerPropuestaEcografia(datos, item, 'Texto manual.'), null)
 })

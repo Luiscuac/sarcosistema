@@ -1,5 +1,6 @@
 """Endpoints del personal de imágenes: bandeja, subida de imagenes/informe y publicacion."""
 import json
+from functools import lru_cache
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,6 +15,7 @@ from app.imagenes.application.use_cases.trabajar_estudio import (
     ObtenerEstudioImagen,
     PublicarInforme,
 )
+from app.imagenes.application.use_cases.extraer_hallazgos_ecografia import ExtraerHallazgosEcografia
 from app.imagenes.domain.errors import (
     ArchivoDemasiadoGrande,
     ArchivoNoEncontrado,
@@ -34,8 +36,11 @@ from app.imagenes.presentation.schemas import (
     EstudioPendienteResponse,
     InformeImagenResponse,
     ResultadoAccionResponse,
+    ExtraerEcografiaRequest,
     SolicitudEcografiaRequest,
 )
+from app.consultas.application.ports.extractor_clinico import ErrorExtractor
+from app.imagenes.infrastructure.ia.ecografia import OllamaEcografiaExtractor
 
 # El prefijo /imagenes lo aplica app.imagenes.router (composición única del módulo).
 router = APIRouter(tags=['imagenes'])
@@ -61,6 +66,22 @@ def _estudio_de_modalidad(estudio, modalidad: str) -> bool:
 
 def get_repositorio(db: AsyncSession = Depends(get_db)) -> RepositorioImagenSql:
     return RepositorioImagenSql(db)
+
+
+@lru_cache
+def _crear_extractor_ecografia():
+    if not settings.clinical_extractor_enabled:
+        raise HTTPException(503, 'El autocompletado no está habilitado. Puedes continuar manualmente.')
+    try:
+        return OllamaEcografiaExtractor(settings.ollama_url, settings.ollama_model,
+                                        settings.clinical_extractor_timeout_seconds)
+    except ValueError:
+        raise HTTPException(503, 'La configuración del extractor local no es válida.') from None
+
+
+def get_extractor_ecografia(usuario: Usuario = Depends(usuario_actual)):
+    _validar_rol(usuario, 'ecografia')
+    return _crear_extractor_ecografia()
 
 
 def _mime_declarado(content_type: str | None, nombre: str | None) -> str:
@@ -118,6 +139,32 @@ async def solicitud_ecografia(datos: SolicitudEcografiaRequest,
     except (SolicitudInvalida, ValueError) as error:
         raise HTTPException(422, str(error)) from None
     return {'solicitud_id': sid}
+
+
+@router.post('/estudios/{estudio_id}/extraer-ecografia')
+async def extraer_hallazgos_ecografia(
+    estudio_id: int,
+    datos: ExtraerEcografiaRequest,
+    usuario: Usuario = Depends(usuario_actual),
+    repositorio: RepositorioImagenSql = Depends(get_repositorio),
+    extractor=Depends(get_extractor_ecografia),
+):
+    _validar_rol(usuario, 'ecografia')
+    try:
+        return await ExtraerHallazgosEcografia(repositorio, extractor).ejecutar(
+            estudio_id, datos.transcripcion
+        )
+    except EstudioNoEncontrado:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, 'El estudio no existe.') from None
+    except InformeYaPublicado:
+        raise HTTPException(status.HTTP_409_CONFLICT, 'El informe ya está publicado.') from None
+    except SolicitudInvalida as error:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(error)) from None
+    except ErrorExtractor:
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            'No se pudo analizar con el modelo local. Reintenta o continúa manualmente.',
+        ) from None
 
 
 @router.get('/bandeja', response_model=list[EstudioPendienteResponse])

@@ -4,6 +4,7 @@ from app.main import app
 from app.accesos.domain.entities import Usuario
 from app.accesos.presentation.dependencies.current_user import usuario_actual
 from app.imagenes.presentation.router_analisis import get_repository
+from app.imagenes.presentation import router_clinico
 
 
 @pytest.mark.asyncio
@@ -16,6 +17,53 @@ async def test_imagenes_deniega_rol_no_medico(client):
     app.dependency_overrides[usuario_actual] = lambda: Usuario(9,'ficticio','laboratorio',True)
     try:
         assert (await client.get('/imagenes/analisis/estudios')).status_code == 403
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_extraccion_ecografia_solo_permite_rol_imagenes(client):
+    app.dependency_overrides[usuario_actual] = lambda: Usuario(9, 'ficticio', 'rayos_x', True)
+    app.dependency_overrides[router_clinico.get_repositorio] = object
+    app.dependency_overrides[router_clinico.get_extractor_ecografia] = object
+    try:
+        respuesta = await client.post(
+            '/imagenes/estudios/12/extraer-ecografia',
+            json={'transcripcion': 'Descripción de prueba ficticia.'},
+        )
+        assert respuesta.status_code == 403
+    finally:
+        app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_extraccion_ecografia_autorizada_usa_plantilla_y_devuelve_propuestas(client):
+    from types import SimpleNamespace
+
+    class Repo:
+        async def obtener_estudio(self, estudio_id):
+            assert estudio_id == 12
+            return SimpleNamespace(tipo_estudio_codigo='ECO_RENAL', informe=None)
+
+    class Extractor:
+        modelo = 'qwen2.5:3b'
+
+        async def extraer(self, transcripcion, organos):
+            assert transcripcion == 'Descripción ficticia.'
+            assert organos[0] == 'Riñón derecho'
+            return {'campos_extraidos': [], 'advertencias': [], 'bloqueada': False}
+
+    app.dependency_overrides[usuario_actual] = lambda: Usuario(9, 'ficticio', 'imagenes', True)
+    app.dependency_overrides[router_clinico.get_repositorio] = lambda: Repo()
+    app.dependency_overrides[router_clinico.get_extractor_ecografia] = lambda: Extractor()
+    try:
+        respuesta = await client.post(
+            '/imagenes/estudios/12/extraer-ecografia',
+            json={'transcripcion': 'Descripción ficticia.'},
+        )
+        assert respuesta.status_code == 200
+        assert respuesta.json()['modelo'] == 'qwen2.5:3b'
+        assert respuesta.json()['campos_extraidos'] == []
     finally:
         app.dependency_overrides.clear()
 
