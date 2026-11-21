@@ -4,18 +4,25 @@ Logística L2 sobre las 18 salidas XRV (mismo formato que indice_pulmonar_v1.jso
 Entrena SOLO con TBX11K train: TB vs TODO lo demás (sanos + enfermos no TB).
 Descartado (2026-11-20): entrenar solo TB vs enfermos-no-TB; ante placas sanas marcaba TB en 52-84 %.
 Corte 'compatible' fijado en TBX11K val = especificidad 90 % frente a todo lo no TB. Externos solo se informan.
-Uso (desde backend/, con .venv-gpu, tras tb_loso): python -m scripts.evaluacion_radiologia.tb_patron
+--ensamble (v2): mismas reglas sobre el promedio del modelo base y 6 especialistas XRV (salidas de tb_ensamble).
+Uso (desde backend/, con .venv-gpu, tras tb_loso / tb_ensamble):
+  python -m scripts.evaluacion_radiologia.tb_patron [--ensamble]
 """
+import argparse
 import json
 from datetime import date
 
 from scripts.evaluacion_radiologia.tb_entrenar import BASE_DIR, auc_ic, operar
 
 C = 0.1
-SALIDA = BASE_DIR / 'app/imagenes/infrastructure/vision/patron_tb_v1.json'
+VISION = BASE_DIR / 'app/imagenes/infrastructure/vision'
+ESPECIALISTAS = ('nih', 'pc', 'chex', 'rsna', 'mimic_nb', 'mimic_ch')
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--ensamble', action='store_true')
+    args = parser.parse_args()
     import numpy as np
     from sklearn.linear_model import LogisticRegression
     base = BASE_DIR / '.datasets/tb-entrenamiento'
@@ -24,6 +31,12 @@ def main():
     indice = json.loads((BASE_DIR / 'app/imagenes/infrastructure/vision/indice_pulmonar_v1.json').read_text(encoding='utf-8'))
     etiquetas = indice['etiquetas']
     S = d['S'][:, [list(d['targets']).index(e) for e in etiquetas]].astype(np.float64)
+    if args.ensamble:
+        import torchxrayvision as xrv
+        orden = [list(xrv.datasets.default_pathologies).index(e) for e in etiquetas]
+        e = np.load(base / 'salidas_ensamble.npz')
+        pila = np.stack([S] + [e[f'S_{n}'][:, orden] for n in ESPECIALISTAS])
+        S = np.nanmean(pila, 0)  # igual que ensamble.promediar en producción
     y, sitio, clase = d['tb'].astype(int), d['sitio'], d['clase']
     tr = np.where((sitio == 'tbx11k') & (part == 'train'))[0]
     va = np.where((sitio == 'tbx11k') & (part == 'val'))[0]
@@ -46,14 +59,20 @@ def main():
     for s in ('shenzhen', 'montgomery', 'dadb'):
         idx = np.where(sitio == s)[0]
         metricas[s] = {'auc_ic95': auc_ic(y[idx], v[idx]), **operar(y[idx], v[idx], compatible)}
-    artefacto = {'version': 'patron-tb-v1', 'fecha': date.today().isoformat(),
+    sens = [metricas[s]['sensibilidad'] for s in ('shenzhen', 'montgomery', 'dadb')]
+    esp = [metricas[s]['especificidad'] for s in ('shenzhen', 'montgomery', 'dadb')]
+    artefacto = {'version': 'patron-tb-v2' if args.ensamble else 'patron-tb-v1', 'fecha': date.today().isoformat(),
+                 'requiere_ensamble': bool(args.ensamble),
                  'modelo_base': indice['modelo_base'], 'etiquetas': etiquetas,
                  'coeficientes': coef.tolist(), 'media': media.tolist(), 'desviacion': desv.tolist(),
                  'intercepto': intercepto, 'umbrales': {'compatible': compatible},
-                 'entrenamiento': 'TBX11K train (Liu et al., CVPR 2020; CC BY 4.0): TB vs sanos + enfermos no TB; logística L2 C=0.1',
+                 'entrenamiento': 'TBX11K train (Liu et al., CVPR 2020; CC BY 4.0): TB vs sanos + enfermos no TB; logística L2 C=0.1'
+                                 + ('; entradas = promedio del modelo base y 6 especialistas XRV' if args.ensamble else ''),
                  'metricas': metricas,
-                 'limites': 'El corte no se transfiere entre hospitales: en externos detecta 29-91 % de TB y marca 6-24 % de '
-                            'sanos. Solo avisa, nunca descarta. Calibrar con casos locales; confirmar con VinDr-CXR.'}
+                 'limites': f'El corte no se transfiere entre hospitales: en externos detecta {min(sens):.0%}-{max(sens):.0%} de TB y '
+                            f'marca {1 - max(esp):.0%}-{1 - min(esp):.0%} de sanos. Solo avisa, nunca descarta. '
+                            'Calibrar con casos locales; confirmar con VinDr-CXR.'}
+    SALIDA = VISION / f"patron_tb_{'v2' if args.ensamble else 'v1'}.json"
     SALIDA.write_text(json.dumps(artefacto, indent=1, ensure_ascii=False), encoding='utf-8')
     print(json.dumps({'umbrales': artefacto['umbrales'], 'metricas': metricas}, indent=1))
 

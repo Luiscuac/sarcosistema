@@ -18,14 +18,19 @@ ADVERTENCIAS = [
 MAPAS_CATEGORIAS = 3
 
 
-def resultado_enriquecido(por_nombre: dict, targets: list) -> dict:
-    """18 categorías ordenadas + índice pulmonar + patrón de TB. Puro: sin torch."""
+def resultado_enriquecido(por_nombre: dict, targets: list, scores_ensamble: dict | None = None) -> dict:
+    """18 categorías ordenadas + índice pulmonar + patrón de TB. Puro: sin torch.
+
+    El índice y las categorías usan solo el modelo base; el patrón TB usa el promedio del ensamble si existe.
+    """
     from app.imagenes.infrastructure.vision.indice import calcular_indice
-    from app.imagenes.infrastructure.vision.patron_tb import calcular_patron_tb
+    from app.imagenes.infrastructure.vision.patron_tb import ARTEFACTO_ENSAMBLE, calcular_patron_tb, cargar_patron
+    patron = (calcular_patron_tb(scores_ensamble, cargar_patron(str(ARTEFACTO_ENSAMBLE))) if scores_ensamble
+              else calcular_patron_tb(por_nombre))
     todas = sorted(({'name': n, 'score': por_nombre[n], 'above_operating_point': por_nombre[n] >= 0.5} for n in targets),
                    key=lambda h: h['score'], reverse=True)
     return {'all_findings': todas, 'indice_pulmonar': calcular_indice(por_nombre),
-            'patron_tb': calcular_patron_tb(por_nombre)}
+            'patron_tb': patron}
 
 
 def _objetivos_mapas(targets: list, todas: list):
@@ -77,7 +82,14 @@ def inferir(contenido: bytes, config, proyeccion: str, repeticiones: int, explic
     if any(v < 0 or v > 1 for v in valores):
         raise ErrorVision('Puntuaciones fuera del contrato de salida del modelo.')
     por_nombre = dict(zip(metadata['targets'], valores))
-    enriquecido = resultado_enriquecido(por_nombre, metadata['targets'])
+    ensamble_s, scores_ensamble = 0.0, None
+    if getattr(config, 'ensamble_tb', False):
+        from app.imagenes.infrastructure.vision.ensamble import ensamble_preparado, promediar, puntuaciones_especialistas
+        if ensamble_preparado():
+            t = time.perf_counter()
+            scores_ensamble = promediar(por_nombre, puntuaciones_especialistas(tensor))
+            ensamble_s = time.perf_counter() - t
+    enriquecido = resultado_enriquecido(por_nombre, metadata['targets'], scores_ensamble)
     plano = tensor.numpy()
     calidad = evaluar_calidad(info, float(plano.std()), float(((plano <= -1020) | (plano >= 1020)).mean()), proyeccion)
     explicar_s, mapas, mascara = 0.0, {}, None
@@ -104,7 +116,7 @@ def inferir(contenido: bytes, config, proyeccion: str, repeticiones: int, explic
         'projection_declared': proyeccion, 'preprocessing': info,
         'warnings': list(ADVERTENCIAS),
         'metrics': {'model_load_seconds': carga_s, 'preprocessing_seconds': pre_s,
-            'inference_seconds': duraciones, 'explanation_seconds': explicar_s,
+            'inference_seconds': duraciones, 'explanation_seconds': explicar_s, 'ensemble_seconds': ensamble_s,
             'worker_total_seconds': time.perf_counter() - inicio,
             'available_bytes_before_model': libre, 'worker_rss_at_end_bytes': psutil.Process().memory_info().rss},
     }

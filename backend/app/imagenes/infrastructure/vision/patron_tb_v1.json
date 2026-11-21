@@ -1,6 +1,7 @@
 {
  "version": "patron-tb-v1",
  "fecha": "2026-11-20",
+ "requiere_ensamble": false,
  "modelo_base": "densenet121-res224-all (XRV 1.5.7)",
  "etiquetas": [
   "Atelectasis",
@@ -132,5 +133,5 @@
    "especificidad": 0.76
   }
  },
- "limites": "El corte no se transfiere entre hospitales: en externos detecta 29-91 % de TB y marca 6-24 % de sanos. Solo avisa, nunca descarta. Calibrar con casos locales; confirmar con VinDr-CXR."
+ "limites": "El corte no se transfiere entre hospitales: en externos detecta 29%-91% de TB y marca 6%-24% de sanos. Solo avisa, nunca descarta. Calibrar con casos locales; confirmar con VinDr-CXR."
 }

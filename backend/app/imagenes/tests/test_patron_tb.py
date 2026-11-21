@@ -45,3 +45,37 @@ def test_triaje_conserva_el_patron_mas_fuerte_del_estudio():
     r = resumir_triaje(filas)
     assert r[1]['patron_tb'] == 'compatible'
     assert r[2]['patron_tb'] is None
+
+
+def test_ensamble_promedia_solo_categorias_entrenadas():
+    from app.imagenes.infrastructure.vision.ensamble import promediar
+    base = {'A': 0.2, 'B': 0.8}
+    r = promediar(base, [{'A': 0.4}, {'A': float('nan'), 'B': 0.6}, {}])
+    assert r == pytest.approx({'A': 0.3, 'B': 0.7})
+
+
+def test_ensamble_no_preparado_si_falta_manifiesto_o_pesos(tmp_path):
+    import json
+    from app.imagenes.infrastructure.vision.ensamble import MODELOS, ensamble_preparado
+    assert not ensamble_preparado(tmp_path)
+    (tmp_path / 'manifest.json').write_text(json.dumps({'modelos': {n: {'weights_file': f'{n}.st'} for n in MODELOS}}))
+    assert not ensamble_preparado(tmp_path)
+    for n in MODELOS:
+        (tmp_path / f'{n}.st').write_bytes(b'x')
+    assert ensamble_preparado(tmp_path)
+    (tmp_path / 'manifest.json').write_text('{roto')
+    assert not ensamble_preparado(tmp_path)
+
+
+def test_patron_usa_v2_con_ensamble_y_v1_sin_el():
+    from app.imagenes.infrastructure.vision.patron_tb import ARTEFACTO_ENSAMBLE
+    from app.imagenes.infrastructure.vision.worker import resultado_enriquecido
+    scores = {n: 0.3 for n in TARGETS}
+    v2 = cargar_patron(str(ARTEFACTO_ENSAMBLE))
+    assert v2['version'] == 'patron-tb-v2' and v2['requiere_ensamble'] and v2['etiquetas'] == cargar_indice()['etiquetas']
+    con = resultado_enriquecido(scores, list(TARGETS), {n: 0.6 for n in TARGETS})
+    sin = resultado_enriquecido(scores, list(TARGETS))
+    assert con['patron_tb']['version'] == 'patron-tb-v2' and con['patron_tb']['ensamble'] is True
+    assert sin['patron_tb']['version'] == 'patron-tb-v1' and sin['patron_tb']['ensamble'] is False
+    # El índice siempre usa solo el modelo base.
+    assert con['indice_pulmonar'] == sin['indice_pulmonar']

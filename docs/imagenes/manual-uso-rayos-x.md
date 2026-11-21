@@ -34,7 +34,7 @@ El selector **Ordenar** alterna entre *Prioridad* (urgentes primero, luego índi
   - Brillo, contraste e invertir.
 - **Mapa de calor** (apagado por defecto): muestra **dónde se apoyó el modelo**, no dónde está una lesión. El recuadro amarillo marca la zona más activa.
 - **Índice de prioridad pulmonar (0–100)** con *Qué lo eleva*, las categorías que más pesan. Sirve para ordenar; no es una probabilidad ni un diagnóstico de tuberculosis.
-- **Patrón compatible con tuberculosis** (recuadro morado, solo con prioridad media o alta): señal experimental entrenada con TBX11K. En hospitales externos detectó entre 29 % y 91 % de las TB y apareció en 6–24 % de radiografías sanas. Si aparece, considerar baciloscopía o GeneXpert; si no aparece, **no descarta TB**. Detalle en `2026-11-20-deteccion-tb.md`.
+- **Patrón compatible con tuberculosis** (recuadro morado, solo con prioridad media o alta): señal experimental entrenada con TBX11K. Con el ensamble de 7 modelos (v2), en hospitales externos detectó entre 48 % y 82 % de las TB y apareció en 5–26 % de radiografías sanas. Si aparece, considerar baciloscopía o GeneXpert; si no aparece, **no descarta TB**. Detalle en `2026-11-20-deteccion-tb.md`.
 - **Calidad de la imagen:** avisos que conviene revisar antes de confiar en el análisis.
 - **Hallazgos del modelo:** las 3 categorías principales y el desplegable con las **18**. Los *scores* son normalizados: 0,5 es el punto técnico del modelo, no un porcentaje de certeza.
 - **Comparación con el informe:**

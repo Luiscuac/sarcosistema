@@ -8,8 +8,8 @@ Todo se ejecuta en el equipo. Las descargas ocurren **solo** al preparar, con sc
 |---|---|
 | CPU | Medido en i7-10750H (6 núcleos); usa hasta 4 hilos |
 | RAM libre al analizar | ≥ 2 GiB (`RADIOLOGY_VISION_MIN_FREE_MIB`); pico del trabajador ~535 MiB sin segmentación y ~930 MiB con ella |
-| Disco | DenseNet 27 MB · RAG ~450 MiB · segmentación pulmonar 273 MB |
-| Tiempo por estudio | ~10 s de extremo a extremo con el trabajador efímero; ~13 s con segmentación pulmonar |
+| Disco | DenseNet 27 MB · RAG ~450 MiB · segmentación pulmonar 273 MB · ensamble TB 6 × 27 MB (~165 MB) |
+| Tiempo por estudio | ~10 s de extremo a extremo con el trabajador efímero; ~13 s con segmentación pulmonar; +~2,5 s con el ensamble TB (pico de RAM casi igual: carga un modelo a la vez) |
 
 ## 2. Instalación (desde `backend/`, Python 3.12)
 
@@ -22,6 +22,7 @@ Todo se ejecuta en el equipo. Las descargas ocurren **solo** al preparar, con sc
 .\.venv\Scripts\python.exe -m scripts.preparar_rag_torax --descargar                 # corpus abierto + MiniLM (opcional)
 .\.venv\Scripts\python.exe -m scripts.consultar_rag_torax --indexar
 .\.venv\Scripts\python.exe -m scripts.preparar_segmentacion_pulmonar --descargar     # mapas solo en pulmones (opcional)
+.\.venv\Scripts\python.exe -m scripts.preparar_ensamble_radiologia --descargar      # patrón TB v2 con 6 especialistas XRV (opcional)
 
 .\.venv\Scripts\python.exe -m alembic upgrade head    # incluye 20261115_0017 (triaje) y 20261116_0018 (lectura médica)
 ```
@@ -34,6 +35,7 @@ En una instalación existente, ensayar antes la migración en una copia aislada 
 RADIOLOGY_AI_ENABLED=true            # activa el análisis y el triaje automático al subir
 RADIOLOGY_VISION_MIN_FREE_MIB=2048   # RAM libre mínima para cargar el modelo
 RADIOLOGY_LUNG_MASK_ENABLED=true     # mapas solo en pulmones si se preparó la segmentación (false para ahorrar ~400 MiB y ~3 s)
+RADIOLOGY_TB_ENSEMBLE_ENABLED=true   # patrón TB v2 con el ensamble si se preparó (false: patrón v1, solo modelo base)
 # RADIOLOGY_TRIAGE_UMBRAL_ALTA=...   # solo después de calibrar con casos locales
 # RADIOLOGY_TRIAGE_UMBRAL_MEDIA=...
 ```

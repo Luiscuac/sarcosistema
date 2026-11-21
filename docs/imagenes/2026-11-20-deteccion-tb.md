@@ -68,14 +68,33 @@ Frecuencia del aviso (aviso + prioridad media/alta, con el módulo del sistema):
 Lectura honesta: el corte **no se transfiere entre hospitales** (en Shenzhen se le escapan 7 de cada 10 TB; en
 Montgomery e India marca 1 de cada 4-5 sanas). Por eso solo avisa, nunca descarta, y debe calibrarse con casos locales.
 
-## 5. Pendiente
+## 5. Ensamble para el patrón TB (v2)
+
+Se probó promediar las 18 salidas del modelo base con las de los 6 especialistas oficiales de TorchXRayVision
+(nih, pc, chex, rsna, mimic_nb, mimic_ch; `tb_ensamble.py`). Candidatos fijados antes de mirar: modelo base solo o
+los 7 juntos (también se informa cada modelo por separado y "solo especialistas").
+
+| | Base solo | 7 juntos |
+|---|---|---|
+| Índice (anormalidad), Montgomery / India | **0,918 / 0,954** | 0,811 / 0,873 |
+| Patrón TB, Shenzhen / Montgomery / India | 0,701 / 0,828 / **0,941** | **0,813 / 0,869** / 0,893 |
+| Aviso TB (TB detectadas / sanas con aviso), Shenzhen | 29 % / 6 % | **48 % / 5 %** |
+| Aviso TB, Montgomery | 71 % / 21 % | 60 % / **8 %** |
+| Aviso TB, India | 91 % / 24 % | 82 % / 26 % |
+
+Decisión: **el índice y las 18 categorías siguen con el modelo base**; **el patrón TB usa el ensamble** (`patron_tb_v2.json`)
+si está preparado (`scripts.preparar_ensamble_radiologia --descargar`: safetensors verificados, pickle borrado). Sin
+ensamble, el sistema usa `patron_tb_v1.json`. Coste medido en CPU (trabajador real, con mapas): +2,4-2,6 s por estudio,
++6 MiB de RSS. El valor de producción coincide con la evaluación (p. ej. MCUCXR_0104_1: 0,919 en ambos).
+
+## 6. Pendiente
 
 1. **VinDr-CXR** (Vietnam, PhysioNet acreditado): confirmar el aviso con radiólogos de otro país, incluido TB frente
    a otras enfermedades. Regla: VinDr solo para medir, no para entrenar lo que se despliega.
 2. Calibración local del corte con casos confirmados del hospital (como el índice, panel "Desempeño del asistente").
 3. Reintentar el ajuste del modelo de imagen cuando haya más hospitales distintos.
 
-## 6. Reproducir (desde `backend/`)
+## 7. Reproducir (desde `backend/`)
 
 ```
 .venv/Scripts/python -m scripts.evaluacion_radiologia.tb_cache          # caché con preprocesamiento de producción
@@ -83,12 +102,14 @@ Montgomery e India marca 1 de cada 4-5 sanas). Por eso solo avisa, nunca descart
 .venv-gpu/Scripts/python -m scripts.evaluacion_radiologia.tb_entrenar --modo parcial --epocas 12 [--con-shenzhen]
 .venv-gpu/Scripts/python -m scripts.evaluacion_radiologia.tb_loso
 .venv-gpu/Scripts/python -m scripts.evaluacion_radiologia.tb_patron     # exporta patron_tb_v1.json
+PYTHONIOENCODING=utf-8 .venv-gpu/Scripts/python -m scripts.evaluacion_radiologia.tb_ensamble
+.venv-gpu/Scripts/python -m scripts.evaluacion_radiologia.tb_patron --ensamble   # exporta patron_tb_v2.json
 ```
 
 `.venv-gpu`: Python 3.12, torch 2.6.0+cu124, torchvision 0.21.0+cu124, torchxrayvision 1.5.7, scikit-learn
 (solo para experimentos; producción sigue en CPU sin cambios).
 
-## 7. Citas
+## 8. Citas
 
 - Liu Y, Wu YH, Ban Y, Wang H, Cheng MM. Rethinking computer-aided tuberculosis diagnosis. CVPR 2020. (TBX11K, CC BY 4.0)
 - Jaeger S, Candemir S, Antani S, et al. Two public chest X-ray datasets for computer-aided screening of pulmonary

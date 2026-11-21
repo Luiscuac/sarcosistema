@@ -60,6 +60,8 @@ class VisionConfig:
     timeout_seconds: float = 120
     # Limitar mapas de calor a los pulmones si la segmentación local está preparada (mejora medida en TB).
     mascara_pulmonar: bool = True
+    # Patrón TB con el ensamble de 6 especialistas XRV si está preparado (mejora medida en hospitales externos).
+    ensamble_tb: bool = True
 
     def __post_init__(self):
         if not 1 <= self.threads <= 4 or not 1 <= self.timeout_seconds <= 600 or self.min_free_bytes < 512 * 1024**2:
