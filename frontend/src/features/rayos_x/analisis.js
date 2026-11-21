@@ -129,6 +129,21 @@ export const VEREDICTOS = {
   baja: { titulo: 'Sin señales importantes', texto: 'El modelo no encuentra señales relevantes. Esto no descarta enfermedad.' },
 }
 
+/** Patrón de TB (experimental): solo avisa; nunca descarta TB. */
+export const PATRON_TB = {
+  compatible: {
+    titulo: 'Patrón compatible con tuberculosis',
+    texto: 'Las señales se parecen a patrones de TB. Confirmar con baciloscopía o GeneXpert según la clínica.',
+    corto: 'Patrón TB',
+  },
+}
+
+/** Solo junto a prioridad alta o media: con prioridad baja no se muestra para no sumar falsas alarmas. */
+export function avisoPatronTb(nivelPatron, nivelPrioridad) {
+  if (!PATRON_TB[nivelPatron] || !['alta', 'media'].includes(nivelPrioridad)) return null
+  return { clave: nivelPatron, ...PATRON_TB[nivelPatron] }
+}
+
 export const DECISIONES = {
   aceptada_como_propuesta: 'Aceptada como propuesta',
   corregida: 'Corregida',

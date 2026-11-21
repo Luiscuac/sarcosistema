@@ -106,3 +106,13 @@ test('sugerencias: tres principales por score y el resto como débiles', () => {
   assert.deepEqual(debiles.map(x => x.name), ['C'])
   assert.deepEqual(sinSenal.map(x => x.name), ['E'])
 })
+
+test('patrón de TB solo avisa en imágenes anormales y nunca descarta', async () => {
+  const { avisoPatronTb } = await import('./analisis.js')
+  assert.equal(avisoPatronTb('compatible', 'alta').titulo, 'Patrón compatible con tuberculosis')
+  assert.equal(avisoPatronTb('compatible', 'media').clave, 'compatible')
+  assert.equal(avisoPatronTb('posible', 'alta'), null)
+  assert.equal(avisoPatronTb('compatible', 'baja'), null)
+  assert.equal(avisoPatronTb(null, 'alta'), null)
+  assert.equal(avisoPatronTb(undefined, undefined), null)
+})

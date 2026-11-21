@@ -140,6 +140,10 @@
 .rx-ia-veredicto.es-media h3 { color: var(--ia-media); }
 .rx-ia-veredicto.es-baja h3 { color: var(--ia-baja); }
 .rx-ia-veredicto > p { margin: 0; }
+.rx-ia-tb { display: grid; gap: 2px; margin-top: 12px; padding: 10px 12px; border: 1px solid #c7c3ef; border-left: 4px solid #4c3fb0; border-radius: 6px; background: #f3f1fc; color: #2b2366; }
+.rx-ia-tb strong { font-size: 15px; }
+.rx-ia-tb span { font-size: 14px; }
+.rx-ia-tb small { color: #5b5585; font-size: 12px; }
 .rx-ia-datos { display: flex; flex-wrap: wrap; gap: 8px 28px; margin: 12px 0 0; }
 .rx-ia-datos dt { color: var(--ia-tenue); font-size: 12px; }
 .rx-ia-datos dd { margin: 0; font-weight: 600; }

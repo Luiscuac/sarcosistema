@@ -4,7 +4,7 @@ import LaboratorioTopbar from '../../laboratorio/components/LaboratorioTopbar.js
 import '../../laboratorio/pages/laboratorio.css'
 import { estadoEstudioImagen } from '../../consultas/utils/examenes.js'
 import '../pages/imagenes.css'
-import { NIVELES_TRIAJE, nombreHallazgo, ordenarBandeja } from '../../rayos_x/analisis.js'
+import { avisoPatronTb, NIVELES_TRIAJE, nombreHallazgo, ordenarBandeja } from '../../rayos_x/analisis.js'
 
 function InsigniaTriaje({ triaje }) {
   if (!triaje) return <span className="img-triaje es-sin">Sin análisis IA</span>
@@ -12,9 +12,13 @@ function InsigniaTriaje({ triaje }) {
   if (triaje.estado === 'error' || triaje.indice == null) return <span className="img-triaje es-sin">IA no disponible</span>
   const nivel = NIVELES_TRIAJE[triaje.nivel] || NIVELES_TRIAJE.baja
   const motivos = (triaje.contribuciones || []).map(c => nombreHallazgo(c.name)).join(', ')
-  return <span className={`img-triaje es-${nivel.clase}`} title={motivos ? `Pesan más: ${motivos}` : undefined}>
-    {nivel.texto} · {Math.round(triaje.indice * 100)}{triaje.calidad === 'revisar' ? ' · revisar calidad' : ''}
-  </span>
+  const tb = avisoPatronTb(triaje.patron_tb, triaje.nivel)
+  return <>
+    <span className={`img-triaje es-${nivel.clase}`} title={motivos ? `Pesan más: ${motivos}` : undefined}>
+      {nivel.texto} · {Math.round(triaje.indice * 100)}{triaje.calidad === 'revisar' ? ' · revisar calidad' : ''}
+    </span>
+    {tb && <span className={`img-triaje-tb es-${tb.clave}`} title={`${tb.titulo}. ${tb.texto} Señal experimental.`}>{tb.corto}</span>}
+  </>
 }
 
 export default function BandejaEstudios({ usuario, logout, modalidad = 'ecografia', bandeja, accion }) {

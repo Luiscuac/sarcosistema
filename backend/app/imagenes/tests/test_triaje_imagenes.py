@@ -24,7 +24,7 @@ def test_resumen_toma_el_indice_maximo_y_estado_en_proceso():
     ]
     r = resumir_triaje(filas)
     assert r[1] == {'estado': 'completado', 'indice': 0.7, 'calidad': 'revisar',
-                    'contribuciones': [{'name': 'B', 'aporte': 2}], 'radiografias': 2}
+                    'contribuciones': [{'name': 'B', 'aporte': 2}], 'radiografias': 2, 'patron_tb': None}
     assert r[2]['estado'] == 'en_proceso' and r[3]['estado'] == 'error'
 
 

@@ -11,12 +11,14 @@ ACTIVOS = ('en_cola', 'procesando')
 
 
 def resumir_triaje(filas: list[dict]) -> dict[int, dict]:
-    """filas: estudio_id, estado, indice, calidad, contribuciones (una por radiografía)."""
+    """filas: estudio_id, estado, indice, calidad, contribuciones, patron_tb (una por radiografía)."""
     resumen: dict[int, dict] = {}
     for f in filas:
         r = resumen.setdefault(f['estudio_id'], {'estado': None, 'indice': None, 'calidad': None,
-                                                 'contribuciones': [], 'radiografias': 0})
+                                                 'contribuciones': [], 'radiografias': 0, 'patron_tb': None})
         r['radiografias'] += 1
+        if f.get('patron_tb') == 'compatible':
+            r['patron_tb'] = 'compatible'
         if f['indice'] is not None and (r['indice'] is None or f['indice'] > r['indice']):
             r['indice'] = f['indice']
             r['contribuciones'] = list(f.get('contribuciones') or [])[:3]

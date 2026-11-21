@@ -19,11 +19,13 @@ MAPAS_CATEGORIAS = 3
 
 
 def resultado_enriquecido(por_nombre: dict, targets: list) -> dict:
-    """18 categorías ordenadas + índice pulmonar. Puro: sin torch."""
+    """18 categorías ordenadas + índice pulmonar + patrón de TB. Puro: sin torch."""
     from app.imagenes.infrastructure.vision.indice import calcular_indice
+    from app.imagenes.infrastructure.vision.patron_tb import calcular_patron_tb
     todas = sorted(({'name': n, 'score': por_nombre[n], 'above_operating_point': por_nombre[n] >= 0.5} for n in targets),
                    key=lambda h: h['score'], reverse=True)
-    return {'all_findings': todas, 'indice_pulmonar': calcular_indice(por_nombre)}
+    return {'all_findings': todas, 'indice_pulmonar': calcular_indice(por_nombre),
+            'patron_tb': calcular_patron_tb(por_nombre)}
 
 
 def _objetivos_mapas(targets: list, todas: list):

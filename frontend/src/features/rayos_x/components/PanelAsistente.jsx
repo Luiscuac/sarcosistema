@@ -1,4 +1,4 @@
-import { nivelSenal, nombreHallazgo, sugerenciasDeVision, VEREDICTOS } from '../analisis.js'
+import { avisoPatronTb, nivelSenal, nombreHallazgo, sugerenciasDeVision, VEREDICTOS } from '../analisis.js'
 
 /** Indicador de nivel con texto: nunca depende solo del color. */
 function Nivel({ score }) {
@@ -20,11 +20,17 @@ export function VeredictoAsistente({ vision, prioridad }) {
   const veredicto = VEREDICTOS[clave]
   const calidad = vision?.calidad
   const indice = vision?.indice_pulmonar?.valor
+  const tb = avisoPatronTb(vision?.patron_tb?.nivel, clave)
   return <section className={`rx-ia-veredicto es-${clave}`} aria-label="Resultado del asistente">
     <h3>{veredicto.titulo}</h3>
     <p>{clave !== 'baja' && principales.length
       ? <>Se parece a: <strong>{principales.map(h => nombreHallazgo(h.name)).join(', ')}</strong></>
       : 'No se encontraron señales relevantes.'}</p>
+    {tb && <div className={`rx-ia-tb es-${tb.clave}`} role="note">
+      <strong>{tb.titulo}</strong>
+      <span>{tb.texto}</span>
+      <small>Señal experimental; si no aparece, no descarta TB.</small>
+    </div>}
     <dl className="rx-ia-datos">
       {typeof indice === 'number' && <div><dt>Índice de prioridad</dt><dd>{Math.round(indice * 100)} de 100</dd></div>}
       {calidad && <div><dt>Calidad de la imagen</dt><dd className={calidad.estado === 'ok' ? undefined : 'es-aviso'}>{calidad.estado === 'ok' ? 'Adecuada' : 'Revisar'}</dd></div>}

@@ -72,6 +72,7 @@
 .img-triaje.es-proceso { background: #eef1f8; color: #3c4a74; }
 .img-triaje.es-sin { background: #f2f2f2; color: #666; font-weight: 500; }
 .img-triaje.es-urgente { background: #9e2f1a; color: #fff; }
+.img-triaje-tb { display: inline-flex; align-items: center; margin-left: 6px; padding: 2px 8px; border-radius: 99px; font-size: 12px; font-weight: 600; background: #f3f1fc; color: #3a2f8f; border: 1px solid #c7c3ef; }
 .img-tarjeta.es-prioritaria { border-left: 4px solid #c0562f; }
 .img-aviso-ia { margin: 0 0 12px; font-size: 12px; color: var(--muted); }
 /* Enlaces con aspecto de botón secundario (p. ej. "Abrir con asistente IA") */

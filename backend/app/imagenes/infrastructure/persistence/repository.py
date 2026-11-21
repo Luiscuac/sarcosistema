@@ -305,7 +305,8 @@ class RepositorioImagenSql:
         filas = (await self.db.execute(text('''SELECT estudio_id, estado,
             (resultado->'indice_pulmonar'->>'valor')::float AS indice,
             resultado->'calidad'->>'estado' AS calidad,
-            resultado->'indice_pulmonar'->'contribuciones' AS contribuciones
+            resultado->'indice_pulmonar'->'contribuciones' AS contribuciones,
+            resultado->'patron_tb'->>'nivel' AS patron_tb
             FROM public.imagen_triaje_ia WHERE estudio_id = ANY(:ids)'''), {'ids': list(estudio_ids)})).mappings().all()
         return resumir_triaje([dict(f) for f in filas])
 

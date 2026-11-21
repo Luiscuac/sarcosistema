@@ -70,6 +70,7 @@ class TriajeResumen(BaseModel):
     calidad: str | None = None
     contribuciones: list[ContribucionTriaje] = []
     radiografias: int = 0
+    patron_tb: str | None = None  # 'compatible' | None (solo avisa; nunca descarta TB)
 
 
 class EstudioPendienteResponse(BaseModel):
