@@ -6,6 +6,7 @@ import RayosXLayout from '../../components/RayosXLayout.jsx'
 import { agruparPorSolicitud, contarIndicadores, filtrarYOrdenarEstudios, INDICADORES_RX } from '../utils/bandejaRx.js'
 import '../../../laboratorio/components/solicitudes/solicitudes-panel.css'
 import '../gestion.css'
+import { avisoPatronTb } from '../../analisis.js'
 
 const ACTUALIZACION_MS = 45_000
 const ETAPAS = [
@@ -53,7 +54,7 @@ function FilaEstudio({ solicitud, estudio }) {
       {urgente && <em className="rxg-urgente">Urgente</em>}
     </td>
     <td className="rxg-celda-medico"><span>{solicitud.medico_solicitante || 'No registrado'}</span><small>{fechaVisible(solicitud.fecha_solicitud)}</small></td>
-    <td><div className="rxg-insignias"><span className={`rxg-etapa rxg-etapa--${estudio.etapa}`}>{estudio.etapa_texto}</span>{estudio.triaje && <span className={`rxg-triaje rxg-triaje--${estudio.triaje.nivel ?? 'neutro'}`}>IA: {estudio.triaje.nivel ?? 'sin nivel'}</span>}</div></td>
+    <td><div className="rxg-insignias"><span className={`rxg-etapa rxg-etapa--${estudio.etapa}`}>{estudio.etapa_texto}</span>{estudio.triaje && <span className={`rxg-triaje rxg-triaje--${estudio.triaje.nivel ?? 'neutro'}`}>IA: {estudio.triaje.nivel ?? 'sin nivel'}</span>}{(() => { const tb = avisoPatronTb(estudio.triaje?.patron_tb, estudio.triaje?.nivel); return tb && <span className="rxg-triaje rxg-triaje--tb" title={`${tb.titulo}. ${tb.texto} Señal experimental; si no aparece, no descarta TB.`}>{tb.corto}</span> })()}</div></td>
     <td className="lab-row-action"><Link className="lab-next-action" to={`/rayos-x/gestion/estudios/${estudio.estudio_id}`}>{SIGUIENTE_PASO[estudio.etapa] ?? 'Abrir estudio'}</Link></td>
   </tr>
 }

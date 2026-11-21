@@ -36,6 +36,7 @@
 .rxg-triaje--alta { color: var(--rx-alta); background: var(--rx-alta-suave); }
 .rxg-triaje--media { color: var(--rx-media); background: var(--rx-media-suave); }
 .rxg-triaje--baja { color: var(--rx-baja); background: var(--rx-baja-suave); }
+.rxg-triaje--tb { color: #3a2f8f; background: #f3f1fc; border-color: #c7c3ef; }
 .rxg-abrir { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; text-decoration: none; white-space: nowrap; }
 .rxg-estado { display: grid; justify-items: center; gap: var(--rx-espacio-2); padding: var(--rx-espacio-6); color: var(--rx-tinta); text-align: center; }
 .rxg-estado span { max-width: 60ch; color: var(--rx-tenue); font-size: var(--rx-texto-s); }
