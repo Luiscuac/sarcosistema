@@ -128,8 +128,12 @@ async def concordancia(repo=Depends(get_repository)):
     """Desempeño del asistente en este hospital: solo agregados, sin pacientes ni identificadores."""
     from app.imagenes.application.calibracion import resumir_concordancia
     from app.imagenes.presentation.router_clinico import _umbrales_triaje
+    from app.imagenes.infrastructure.vision.patron_tb import patron_en_uso
     alta, media = _umbrales_triaje()
-    return resumir_concordancia(await repo.filas_concordancia()) | {
+    patron = patron_en_uso(settings.radiology_tb_ensemble_enabled, settings.radiology_tb_umbral_compatible)
+    return resumir_concordancia(await repo.filas_concordancia(), patron) | {
+        'patron_tb_actual': patron | {'origen': 'configuración local' if settings.radiology_tb_umbral_compatible is not None
+                                      else 'fijado con TBX11K (China)'},
         'umbrales_actuales': {'alta': alta, 'media': media,
                               'origen': 'configuración local' if settings.radiology_triage_umbral_alta is not None else 'provisional, fijado con datos de Shenzhen'}}
 
@@ -158,7 +162,7 @@ async def revisar(analisis_id: UUID, datos: RevisionNueva, usuario: Usuario = De
     try:
         return analisis_publico(await repo.registrar_revision(
             analisis_id, usuario.id, datos.version, datos.decision, datos.motivo, datos.correccion,
-            datos.anormal_confirmado))
+            datos.anormal_confirmado, datos.tb_confirmada))
     except LookupError:
         raise HTTPException(404, 'Análisis no encontrado.') from None
     except ValueError:

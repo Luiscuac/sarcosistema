@@ -65,6 +65,22 @@ RADIOLOGY_TRIAGE_UMBRAL_MEDIA=0.xxx
 
 y reinicia el backend. Hasta entonces se usan umbrales provisionales fijados con datos de otro hospital (Shenzhen). Esos umbrales **no se transfieren** entre hospitales.
 
+### Aviso de tuberculosis
+
+Al revisar un análisis, el médico puede indicar **Tuberculosis: confirmada / descartada** (opcional). Solo debe
+marcarlo cuando haya **baciloscopía, GeneXpert o cultivo**; si aún no hay resultado, deja "Sin resultado todavía" y
+puede registrar una revisión nueva cuando llegue.
+
+Con al menos **20 casos con TB confirmada y 20 con TB descartada** de la misma versión del aviso, el panel calcula el
+AUC local y sugiere un corte (especificidad 90 %). Tampoco se aplica solo:
+
+```
+RADIOLOGY_TB_UMBRAL_COMPATIBLE=0.xxx
+```
+
+Se aplica a los **análisis nuevos** tras reiniciar el backend. Si cambia la versión del aviso (v1 sin ensamble, v2 con
+ensamble), los casos de la otra versión no se mezclan en la calibración.
+
 ## 5. Lo que el asistente NO hace
 
 - No diagnostica, no publica, no corrige el informe y no envía datos fuera del equipo.

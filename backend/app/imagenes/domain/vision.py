@@ -62,7 +62,10 @@ class VisionConfig:
     mascara_pulmonar: bool = True
     # Patrón TB con el ensamble de 6 especialistas XRV si está preparado (mejora medida en hospitales externos).
     ensamble_tb: bool = True
+    # Corte local del aviso de patrón TB (calibrado con casos del hospital); None = corte del artefacto.
+    umbral_tb: float | None = None
 
     def __post_init__(self):
-        if not 1 <= self.threads <= 4 or not 1 <= self.timeout_seconds <= 600 or self.min_free_bytes < 512 * 1024**2:
+        if (not 1 <= self.threads <= 4 or not 1 <= self.timeout_seconds <= 600 or self.min_free_bytes < 512 * 1024**2
+                or (self.umbral_tb is not None and not 0 < self.umbral_tb < 1)):
             raise ValueError('Configuración de recursos de visión no válida.')

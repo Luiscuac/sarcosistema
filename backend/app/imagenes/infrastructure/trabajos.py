@@ -172,7 +172,8 @@ def construir_gestor():
     vision = AnalizadorTorax(VisionConfig(base/'.models/radiologia',
         min_free_bytes=settings.radiology_vision_min_free_mib*1024**2,
         mascara_pulmonar=settings.radiology_lung_mask_enabled,
-        ensamble_tb=settings.radiology_tb_ensemble_enabled))
+        ensamble_tb=settings.radiology_tb_ensemble_enabled,
+        umbral_tb=settings.radiology_tb_umbral_compatible))
     rag = ServicioRag(base/'.models/rag-torax',base/'.datasets/rag-torax',SessionLocal)
     leer = lambda archivo: leer_archivo_local(raices,archivo)[0]  # noqa: E731
     analizador = AnalizarEstudio(vision,rag,leer,settings.radiology_score_threshold)

@@ -36,6 +36,7 @@ RADIOLOGY_AI_ENABLED=true            # activa el análisis y el triaje automáti
 RADIOLOGY_VISION_MIN_FREE_MIB=2048   # RAM libre mínima para cargar el modelo
 RADIOLOGY_LUNG_MASK_ENABLED=true     # mapas solo en pulmones si se preparó la segmentación (false para ahorrar ~400 MiB y ~3 s)
 RADIOLOGY_TB_ENSEMBLE_ENABLED=true   # patrón TB v2 con el ensamble si se preparó (false: patrón v1, solo modelo base)
+# RADIOLOGY_TB_UMBRAL_COMPATIBLE=0.xxx  # corte local del aviso TB sugerido por el panel (análisis nuevos)
 # RADIOLOGY_TRIAGE_UMBRAL_ALTA=...   # solo después de calibrar con casos locales
 # RADIOLOGY_TRIAGE_UMBRAL_MEDIA=...
 ```

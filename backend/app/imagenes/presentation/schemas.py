@@ -145,6 +145,8 @@ class RevisionNueva(BaseModel):
     correccion: str | None = Field(default=None,max_length=4000)
     # Lectura del médico (opcional): ¿la radiografía es anormal? Alimenta la calibración local.
     anormal_confirmado: bool | None = None
+    # TB con confirmación bacteriológica según el médico (opcional): calibra el aviso de patrón TB.
+    tb_confirmada: bool | None = None
 
     @model_validator(mode='after')
     def datos_obligatorios(self):

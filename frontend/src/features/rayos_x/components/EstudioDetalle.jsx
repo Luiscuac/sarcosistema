@@ -41,6 +41,7 @@ export default function EstudioDetalle({ id, usuario, habilitada, onVolver }) {
   const [motivo, setMotivo] = useState('')
   const [correccion, setCorreccion] = useState('')
   const [anormal, setAnormal] = useState('')
+  const [tb, setTb] = useState('')
   const [versionBorrador, setVersionBorrador] = useState(null)
   const [url, setUrl] = useState('')
   const [mapa, setMapa] = useState(null)
@@ -60,9 +61,9 @@ export default function EstudioDetalle({ id, usuario, habilitada, onVolver }) {
     if (!analisisId && detalle.data?.analisis_reciente) setAnalisisId(detalle.data.analisis_reciente)
   }, [analisisId, detalle.data?.analisis_reciente])
   const analisis = useQuery({ queryKey: ['imagenes', usuario.id, 'analisis', analisisId], queryFn: ({ signal }) => obtenerAnalisis(analisisId, signal), enabled: Boolean(analisisId), refetchInterval: q => enProceso(q.state.data?.estado) ? 2000 : false })
-  const limpiarRevision = () => { setDecision(''); setMotivo(''); setCorreccion(''); setAnormal(''); setVersionBorrador(null) }
+  const limpiarRevision = () => { setDecision(''); setMotivo(''); setCorreccion(''); setAnormal(''); setTb(''); setVersionBorrador(null) }
   const solicitar = useMutation({ mutationFn: () => solicitarAnalisis(id, { confirmar_torax_frontal: confirmado, proyeccion, clave }), onSuccess: a => { setAnalisisId(a.id); setClave(crypto.randomUUID()); limpiarRevision(); setMapa(null); setPestana('hallazgos') } })
-  const revision = useMutation({ mutationFn: () => guardarRevision(analisisId, { version: versionBorrador, decision, motivo, correccion, anormal_confirmado: lecturaAnormal(anormal) }), onSuccess: a => { cache.setQueryData(['imagenes', usuario.id, 'analisis', analisisId], a); limpiarRevision() } })
+  const revision = useMutation({ mutationFn: () => guardarRevision(analisisId, { version: versionBorrador, decision, motivo, correccion, anormal_confirmado: lecturaAnormal(anormal), tb_confirmada: lecturaAnormal(tb) }), onSuccess: a => { cache.setQueryData(['imagenes', usuario.id, 'analisis', analisisId], a); limpiarRevision() } })
   const compatible = snapshotCompatible(analisis.data, detalle.data)
   const resultado = compatible ? analisis.data?.resultado : null
   const procesando = enProceso(analisis.data?.estado)
@@ -165,6 +166,9 @@ export default function EstudioDetalle({ id, usuario, habilitada, onVolver }) {
                 <fieldset className="rx-ia-lectura"><legend>La radiografía es… <small>(opcional)</small></legend>
                   {[['si', 'Anormal'], ['no', 'Normal'], ['', 'Prefiero no indicarlo']].map(([valor, texto]) => <label key={texto}><input type="radio" name="rx-anormal" value={valor} checked={anormal === valor} onChange={() => { iniciarBorrador(); setAnormal(valor) }} />{texto}</label>)}
                 </fieldset>
+                <fieldset className="rx-ia-lectura"><legend>Tuberculosis <small>(opcional · solo con baciloscopía, GeneXpert o cultivo)</small></legend>
+                  {[['si', 'Confirmada'], ['no', 'Descartada'], ['', 'Sin resultado todavía']].map(([valor, texto]) => <label key={texto}><input type="radio" name="rx-tb" value={valor} checked={tb === valor} onChange={() => { iniciarBorrador(); setTb(valor) }} />{texto}</label>)}
+                </fieldset>
                 {conflicto && <p role="alert" className="rx-ia-error">Otra persona guardó una revisión más reciente. Tu borrador no se guardará encima.</p>}
                 <div className="rx-ia-acciones">
                   <button className="primary-button" disabled={revision.isPending || conflicto || !revisionVigente(versionBorrador, analisis.data.version_revision) || !validarRevision(decision, motivo, correccion)}>Guardar revisión</button>
@@ -175,7 +179,7 @@ export default function EstudioDetalle({ id, usuario, habilitada, onVolver }) {
               </form>
               {(analisis.data.revisiones || []).length > 0 && <details className="rx-ia-plegable"><summary>Revisiones anteriores ({analisis.data.revisiones.length})</summary>
                 <ul className="rx-ia-historial">{analisis.data.revisiones.map(r => <li key={r.version}><strong>{DECISIONES[r.decision] || 'Revisión'}</strong> · {new Date(r.fecha).toLocaleString('es-BO')}
-                  {r.motivo && <p>{r.motivo}</p>}{r.correccion && <p>Corrección: {r.correccion}</p>}{r.anormal_confirmado != null && <p>Lectura: {r.anormal_confirmado ? 'anormal' : 'normal'}</p>}</li>)}</ul>
+                  {r.motivo && <p>{r.motivo}</p>}{r.correccion && <p>Corrección: {r.correccion}</p>}{r.anormal_confirmado != null && <p>Lectura: {r.anormal_confirmado ? 'anormal' : 'normal'}</p>}{r.tb_confirmada != null && <p>Tuberculosis: {r.tb_confirmada ? 'confirmada' : 'descartada'}</p>}</li>)}</ul>
               </details>}
             </>}
           </div>

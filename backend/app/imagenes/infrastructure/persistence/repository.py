@@ -524,10 +524,12 @@ class EstudiosRepository:
     async def filas_concordancia(self) -> list[dict]:
         """Un registro por análisis con su última revisión. Solo agregables: sin pacientes ni texto."""
         filas = await self.db.execute(text('''WITH ultima AS (
-                SELECT DISTINCT ON (analisis_id) analisis_id, decision, anormal_confirmado
+                SELECT DISTINCT ON (analisis_id) analisis_id, decision, anormal_confirmado, tb_confirmada
                 FROM public.imagen_revision_ia ORDER BY analisis_id, version DESC)
-            SELECT a.estado, u.decision, u.anormal_confirmado,
+            SELECT a.estado, u.decision, u.anormal_confirmado, u.tb_confirmada,
                 (a.resultado->'vision'->'indice_pulmonar'->>'valor')::float AS indice,
+                (a.resultado->'vision'->'patron_tb'->>'valor')::float AS patron_tb,
+                a.resultado->'vision'->'patron_tb'->>'version' AS patron_tb_version,
                 jsonb_array_length(COALESCE(a.resultado->'fusion'->'discrepancias','[]'::jsonb)) AS discrepancias,
                 jsonb_array_length(COALESCE(a.resultado->'fusion'->'posibles_omisiones','[]'::jsonb)) AS omisiones,
                 jsonb_array_length(COALESCE(a.resultado->'fusion'->'coincidencias','[]'::jsonb)) AS coincidencias
@@ -538,7 +540,7 @@ class EstudiosRepository:
         row = (await self.db.execute(text('SELECT * FROM public.imagen_analisis_ia WHERE id=CAST(:id AS uuid)'), {'id':str(analisis_id)})).mappings().first()
         if row is None or await self.obtener(row['estudio_id'], usuario_id) is None:
             return None
-        revisiones = (await self.db.execute(text('''SELECT version,decision,motivo,correccion,anormal_confirmado,fecha,usuario_id
+        revisiones = (await self.db.execute(text('''SELECT version,decision,motivo,correccion,anormal_confirmado,tb_confirmada,fecha,usuario_id
             FROM public.imagen_revision_ia WHERE analisis_id=CAST(:id AS uuid) ORDER BY version'''), {'id':str(analisis_id)})).mappings()
         return dict(row) | {'revisiones':[dict(r) for r in revisiones]}
 
@@ -554,7 +556,8 @@ class EstudiosRepository:
              'lider_pid':liderazgo['pid'] if liderazgo else None,
              'lider_inicio':liderazgo['inicio'] if liderazgo else None})
 
-    async def registrar_revision(self, analisis_id, usuario_id, version, decision, motivo, correccion, anormal_confirmado=None):
+    async def registrar_revision(self, analisis_id, usuario_id, version, decision, motivo, correccion, anormal_confirmado=None,
+                                 tb_confirmada=None):
         analisis = await self.obtener_analisis(analisis_id, usuario_id)
         if analisis is None:
             raise LookupError('Análisis no encontrado.')
@@ -568,8 +571,8 @@ class EstudiosRepository:
         if version_nueva is None:
             raise ValueError('La revisión cambió; recarga antes de guardar.')
         await self.db.execute(text('''INSERT INTO public.imagen_revision_ia
-            (analisis_id,usuario_id,version,decision,motivo,correccion,anormal_confirmado)
-            VALUES (CAST(:id AS uuid),:u,:v,:d,:m,:c,:anormal)'''),
+            (analisis_id,usuario_id,version,decision,motivo,correccion,anormal_confirmado,tb_confirmada)
+            VALUES (CAST(:id AS uuid),:u,:v,:d,:m,:c,:anormal,:tb)'''),
             {'id':str(analisis_id),'u':usuario_id,'v':version_nueva,'d':decision,'m':motivo,'c':correccion,
-             'anormal':anormal_confirmado})
+             'anormal':anormal_confirmado,'tb':tb_confirmada})
         return await self.obtener_analisis(analisis_id, usuario_id)

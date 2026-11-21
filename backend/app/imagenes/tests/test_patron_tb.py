@@ -79,3 +79,24 @@ def test_patron_usa_v2_con_ensamble_y_v1_sin_el():
     assert sin['patron_tb']['version'] == 'patron-tb-v1' and sin['patron_tb']['ensamble'] is False
     # El índice siempre usa solo el modelo base.
     assert con['indice_pulmonar'] == sin['indice_pulmonar']
+
+
+def test_corte_local_reemplaza_al_del_artefacto():
+    a = _artefacto(1.0)
+    assert calcular_patron_tb({'A': 0.55}, a)['nivel'] == 'compatible'
+    local = calcular_patron_tb({'A': 0.55}, a, umbral=0.9)
+    assert local['nivel'] is None and local['umbral'] == 0.9 and local['umbral_origen'] == 'local'
+
+
+def test_config_rechaza_corte_tb_fuera_de_rango(tmp_path):
+    from app.imagenes.domain.vision import VisionConfig
+    assert VisionConfig(tmp_path, umbral_tb=0.7).umbral_tb == 0.7
+    for malo in (0, 1, 1.5):
+        with pytest.raises(ValueError):
+            VisionConfig(tmp_path, umbral_tb=malo)
+
+
+def test_patron_en_uso_informa_version_y_corte():
+    from app.imagenes.infrastructure.vision.patron_tb import patron_en_uso
+    assert patron_en_uso(False, None)['version'] == 'patron-tb-v1'
+    assert patron_en_uso(False, 0.42)['umbral_actual'] == 0.42

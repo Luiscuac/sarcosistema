@@ -28,12 +28,25 @@ def cargar_patron(ruta: str = str(ARTEFACTO)) -> dict:
     return datos
 
 
-def calcular_patron_tb(scores: dict, artefacto: dict | None = None) -> dict:
-    """scores: 18 salidas del modelo base (v1) o su promedio con el ensamble (v2, `artefacto` del ensamble)."""
+def patron_en_uso(ensamble_habilitado: bool, umbral_local: float | None) -> dict:
+    """Versión del patrón que usan los análisis nuevos y su corte (local si está configurado)."""
+    from app.imagenes.infrastructure.vision.ensamble import ensamble_preparado
+    ruta = ARTEFACTO_ENSAMBLE if ensamble_habilitado and ensamble_preparado() else ARTEFACTO
+    a = cargar_patron(str(ruta))
+    return {'version': a['version'],
+            'umbral_actual': a['umbrales']['compatible'] if umbral_local is None else umbral_local}
+
+
+def calcular_patron_tb(scores: dict, artefacto: dict | None = None, umbral: float | None = None) -> dict:
+    """scores: 18 salidas del modelo base (v1) o su promedio con el ensamble (v2, `artefacto` del ensamble).
+
+    `umbral`: corte calibrado localmente (RADIOLOGY_TB_UMBRAL_COMPATIBLE); si es None se usa el del artefacto.
+    """
     a = artefacto or cargar_patron()
+    corte = a['umbrales']['compatible'] if umbral is None else umbral
     logit = a['intercepto'] + sum(w * (scores[n] - m) / d for n, w, m, d in
                                   zip(a['etiquetas'], a['coeficientes'], a['media'], a['desviacion']))
     valor = 1 / (1 + math.exp(-logit))
-    nivel = 'compatible' if valor >= a['umbrales']['compatible'] else None
+    nivel = 'compatible' if valor >= corte else None
     return {'valor': valor, 'nivel': nivel, 'version': a['version'], 'ensamble': bool(a.get('requiere_ensamble')),
-            'advertencia': ADVERTENCIA}
+            'umbral': corte, 'umbral_origen': 'artefacto' if umbral is None else 'local', 'advertencia': ADVERTENCIA}

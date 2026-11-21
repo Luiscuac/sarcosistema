@@ -18,15 +18,16 @@ ADVERTENCIAS = [
 MAPAS_CATEGORIAS = 3
 
 
-def resultado_enriquecido(por_nombre: dict, targets: list, scores_ensamble: dict | None = None) -> dict:
+def resultado_enriquecido(por_nombre: dict, targets: list, scores_ensamble: dict | None = None,
+                          umbral_tb: float | None = None) -> dict:
     """18 categorías ordenadas + índice pulmonar + patrón de TB. Puro: sin torch.
 
     El índice y las categorías usan solo el modelo base; el patrón TB usa el promedio del ensamble si existe.
     """
     from app.imagenes.infrastructure.vision.indice import calcular_indice
     from app.imagenes.infrastructure.vision.patron_tb import ARTEFACTO_ENSAMBLE, calcular_patron_tb, cargar_patron
-    patron = (calcular_patron_tb(scores_ensamble, cargar_patron(str(ARTEFACTO_ENSAMBLE))) if scores_ensamble
-              else calcular_patron_tb(por_nombre))
+    patron = (calcular_patron_tb(scores_ensamble, cargar_patron(str(ARTEFACTO_ENSAMBLE)), umbral_tb) if scores_ensamble
+              else calcular_patron_tb(por_nombre, umbral=umbral_tb))
     todas = sorted(({'name': n, 'score': por_nombre[n], 'above_operating_point': por_nombre[n] >= 0.5} for n in targets),
                    key=lambda h: h['score'], reverse=True)
     return {'all_findings': todas, 'indice_pulmonar': calcular_indice(por_nombre),
@@ -89,7 +90,7 @@ def inferir(contenido: bytes, config, proyeccion: str, repeticiones: int, explic
             t = time.perf_counter()
             scores_ensamble = promediar(por_nombre, puntuaciones_especialistas(tensor))
             ensamble_s = time.perf_counter() - t
-    enriquecido = resultado_enriquecido(por_nombre, metadata['targets'], scores_ensamble)
+    enriquecido = resultado_enriquecido(por_nombre, metadata['targets'], scores_ensamble, getattr(config, 'umbral_tb', None))
     plano = tensor.numpy()
     calidad = evaluar_calidad(info, float(plano.std()), float(((plano <= -1020) | (plano >= 1020)).mean()), proyeccion)
     explicar_s, mapas, mascara = 0.0, {}, None

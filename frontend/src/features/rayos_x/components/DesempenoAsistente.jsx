@@ -11,6 +11,8 @@ export default function DesempenoAsistente({ usuario }) {
   if (consulta.error) return <p role="alert">{mensajeError(consulta.error)}</p>
   const d = consulta.data
   const c = d.calibracion
+  const t = d.calibracion_tb
+  const p = d.patron_tb_actual
   return <section className="rx-desempeno" aria-label="Desempeño del asistente">
     <h2>Desempeño del asistente en este hospital</h2>
     <p className="rx-nota">{d.nota} Solo cifras agregadas: no se muestran pacientes.</p>
@@ -35,5 +37,20 @@ export default function DesempenoAsistente({ usuario }) {
         </tbody></table>
         <p className="rx-nota">{c.mensaje} Valores para el archivo .env: RADIOLOGY_TRIAGE_UMBRAL_ALTA={c.umbral_sugerido_alta.toFixed(3)} y RADIOLOGY_TRIAGE_UMBRAL_MEDIA={c.umbral_sugerido_media.toFixed(3)}.</p>
       </div>}
+    {t && p && <>
+      <h3>Calibración local del aviso de tuberculosis</h3>
+      <p>Aviso en uso: {p.version}, corte {Math.round(p.umbral_actual * 100)} de 100 ({p.origen}).</p>
+      <p>Casos con resultado bacteriológico: {d.lecturas_tb.confirmada} con TB confirmada y {d.lecturas_tb.descartada} con TB descartada{t.otras_versiones > 0 ? ` (${t.otras_versiones} de otra versión del aviso no se usan)` : ''}.</p>
+      {t.estado === 'insuficiente'
+        ? <p className="rx-advertencia">{t.mensaje} Faltan {t.faltan_con_tb} con TB y {t.faltan_sin_tb} sin TB. Al revisar, indica “Tuberculosis: confirmada / descartada” solo cuando haya baciloscopía, GeneXpert o cultivo.</p>
+        : <div className="rx-calibracion">
+          <p><strong>AUC local del aviso de TB: {t.auroc_local.toFixed(2)}</strong> con {t.casos} casos.</p>
+          <table className="lab-table"><thead><tr><th>Corte</th><th>Valor</th><th>TB detectadas</th><th>Sin TB sin aviso</th></tr></thead><tbody>
+            <tr><td>En uso</td><td>{Math.round(t.operacion_actual.umbral * 100)}</td><td>{porcentaje(t.operacion_actual.sensibilidad)}</td><td>{porcentaje(t.operacion_actual.especificidad)}</td></tr>
+            <tr><td>Sugerido</td><td>{Math.round(t.umbral_sugerido * 100)}</td><td>{porcentaje(t.operacion_sugerida.sensibilidad)}</td><td>{porcentaje(t.operacion_sugerida.especificidad)}</td></tr>
+          </tbody></table>
+          <p className="rx-nota">{t.mensaje} Valor para el archivo .env: RADIOLOGY_TB_UMBRAL_COMPATIBLE={t.umbral_sugerido.toFixed(3)}.</p>
+        </div>}
+    </>}
   </section>
 }
