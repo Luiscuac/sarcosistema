@@ -4,6 +4,7 @@ import { obtenerEstudio, obtenerArchivo, obtenerVista, solicitarAnalisis, obtene
 import VisorRadiografia from './VisorRadiografia.jsx'
 import PanelAsistente, { VeredictoAsistente } from './PanelAsistente.jsx'
 import PanelInforme from './PanelInforme.jsx'
+import EvolucionPaciente from './EvolucionPaciente.jsx'
 import { DECISIONES, enProceso, validarRevision, mensajeError, erroresAnalisis, snapshotCompatible, revisionVigente, lecturaAnormal } from '../analisis.js'
 
 // Vista PNG generada en el servidor (DICOM, 16 bits, paleta); si no está disponible, el archivo original.
@@ -112,6 +113,7 @@ export default function EstudioDetalle({ id, usuario, habilitada, onVolver }) {
 
         {resultado && <>
           <VeredictoAsistente vision={resultado.vision} prioridad={analisis.data.prioridad} />
+          <EvolucionPaciente estudioId={id} usuarioId={usuario.id} />
           <nav className="rx-ia-pestanas" role="tablist" aria-label="Detalle del análisis">
             {PESTANAS.map(([clavePestana, nombre]) => <button key={clavePestana} type="button" role="tab" aria-selected={pestana === clavePestana} onClick={() => setPestana(clavePestana)}>{nombre}</button>)}
           </nav>
@@ -188,6 +190,7 @@ export default function EstudioDetalle({ id, usuario, habilitada, onVolver }) {
           </details>
         </>}
 
+        {!resultado && <EvolucionPaciente estudioId={id} usuarioId={usuario.id} />}
         {!resultado && <section className="rx-ia-tarjeta rx-ia-informe"><h3>Informe publicado</h3><p className="rx-texto">{d.informe_texto || 'No hay informe publicado disponible.'}</p></section>}
       </div>
     </div>

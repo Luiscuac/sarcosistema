@@ -149,3 +149,26 @@ export const DECISIONES = {
   corregida: 'Corregida',
   rechazada: 'Rechazada',
 }
+
+/** Comparación con la radiografía anterior del paciente: frases simples a partir de /evolucion. */
+const TENDENCIA_INDICE = {
+  aumenta: { clave: 'aumenta', texto: 'Más señales que en la anterior' },
+  disminuye: { clave: 'disminuye', texto: 'Menos señales que en la anterior' },
+  sin_cambio_claro: { clave: 'estable', texto: 'Sin cambio claro respecto a la anterior' },
+}
+const ESTADO_TB = {
+  aparece: 'El aviso de patrón TB aparece ahora (no estaba en la anterior).',
+  desaparece: 'El aviso de patrón TB estaba en la anterior y ahora no aparece. Esto no descarta TB.',
+  sigue: 'El aviso de patrón TB sigue presente.',
+}
+const VERBO = { aumenta: 'sube', disminuye: 'baja' }
+
+export function lecturaEvolucion(evolucion) {
+  const c = evolucion?.comparacion
+  if (!c) return null
+  const indice = c.indice ? TENDENCIA_INDICE[c.indice.tendencia] : null
+  const tb = c.patron_tb?.comparable ? ESTADO_TB[c.patron_tb.estado] || null : null
+  const categorias = (c.categorias || []).map(x => `${nombreHallazgo(x.name)}: ${VERBO[x.tendencia]} (${Math.round(x.antes * 100)} → ${Math.round(x.ahora * 100)})`)
+  const hace = typeof c.dias === 'number' ? (c.dias <= 0 ? 'del mismo día' : c.dias === 1 ? 'de hace 1 día' : `de hace ${c.dias} días`) : ''
+  return { indice, tb, categorias, hace, avisos: c.avisos || [], referencia: c.con_referencia }
+}

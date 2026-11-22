@@ -35,6 +35,14 @@ El selector **Ordenar** alterna entre *Prioridad* (urgentes primero, luego índi
 - **Mapa de calor** (apagado por defecto): muestra **dónde se apoyó el modelo**, no dónde está una lesión. El recuadro amarillo marca la zona más activa.
 - **Índice de prioridad pulmonar (0–100)** con *Qué lo eleva*, las categorías que más pesan. Sirve para ordenar; no es una probabilidad ni un diagnóstico de tuberculosis.
 - **Patrón compatible con tuberculosis** (recuadro morado, solo con prioridad media o alta): señal experimental entrenada con TBX11K. Con el ensamble de 7 modelos (v2), en hospitales externos detectó entre 48 % y 82 % de las TB y apareció en 5–26 % de radiografías sanas. Si aparece, considerar baciloscopía o GeneXpert; si no aparece, **no descarta TB**. Detalle en `2026-11-20-deteccion-tb.md`.
+- **Comparado con la radiografía anterior** (recuadro azul, solo si el paciente tiene otra radiografía de tórax con informe publicado):
+  - dice si hay **más señales**, **menos señales** o **sin cambio claro** que en la placa anterior;
+  - avisa si el patrón de TB **aparece**, **sigue** o **desaparece** (que desaparezca no descarta TB);
+  - lista hasta 3 categorías que cambiaron (por ejemplo, "Consolidación: sube (40 → 85)");
+  - "Ver radiografías anteriores" muestra hasta 5 placas previas con su prioridad.
+  Un cambio solo se señala si supera lo que se mueven los números **por repetir la toma** (paciente algo girado,
+  otra distancia u otro brillo), medido en `2026-11-21-evolucion-paciente.md`. Usa el triaje automático ya
+  guardado: no vuelve a ejecutar modelos. Compara las señales del asistente, no la enfermedad: el médico compara las imágenes.
 - **Calidad de la imagen:** avisos que conviene revisar antes de confiar en el análisis.
 - **Hallazgos del modelo:** las 3 categorías principales y el desplegable con las **18**. Los *scores* son normalizados: 0,5 es el punto técnico del modelo, no un porcentaje de certeza.
 - **Comparación con el informe:**

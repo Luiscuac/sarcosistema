@@ -91,7 +91,8 @@ ensamble, el sistema usa `patron_tb_v1.json`. Coste medido en CPU (trabajador re
 
 1. **VinDr-CXR** (Vietnam, PhysioNet acreditado): confirmar el aviso con radiólogos de otro país, incluido TB frente
    a otras enfermedades. Regla: VinDr solo para medir, no para entrenar lo que se despliega.
-2. Calibración local del corte con casos confirmados del hospital (como el índice, panel "Desempeño del asistente").
+2. ~~Calibración local del corte~~: hecho (2026-11-21). El médico marca TB confirmada/descartada en la revisión; con
+   20 + 20 casos de la misma versión, "Desempeño del asistente" sugiere un corte (`RADIOLOGY_TB_UMBRAL_COMPATIBLE`).
 3. Reintentar el ajuste del modelo de imagen cuando haya más hospitales distintos.
 
 ## 7. Reproducir (desde `backend/`)

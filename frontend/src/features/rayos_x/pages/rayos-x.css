@@ -259,3 +259,16 @@
 .rx-ia-lectura-acciones a { color: var(--ia-marca); font-size: 13px; font-weight: 600; text-decoration: none; }
 .rx-ia-lectura-acciones a:hover { text-decoration: underline; }
 .rx-ia-lectura-acciones blockquote { margin: 6px 0 0; padding: 6px 10px; border-left: 3px solid #88afb1; color: var(--ia-tinta); font-size: 13px; }
+
+/* Comparación con la radiografía anterior del paciente */
+.rx-ia-evolucion { display: grid; gap: 6px; padding: 14px 16px; border: 1px solid var(--ia-linea); border-left: 4px solid #3d6f9e; border-radius: 8px; background: #f5f9fc; }
+.rx-ia-evolucion h4 { margin: 0; font-size: 15px; }
+.rx-ia-evolucion h4 small { color: var(--ia-tenue); font-weight: 400; }
+.rx-ia-evolucion p { margin: 0; }
+.rx-ia-evolucion-tendencia.es-aumenta strong { color: var(--ia-alta); }
+.rx-ia-evolucion-tendencia.es-disminuye strong { color: var(--ia-baja); }
+.rx-ia-evolucion-tb { color: #2b2366; font-size: 14px; }
+.rx-ia-evolucion-cambios { margin: 0; padding-left: 18px; font-size: 14px; }
+.rx-ia-evolucion-tabla { width: 100%; margin-top: 6px; border-collapse: collapse; font-size: 13px; }
+.rx-ia-evolucion-tabla th, .rx-ia-evolucion-tabla td { padding: 4px 6px; border-bottom: 1px solid var(--ia-linea); text-align: left; }
+.rx-ia-evolucion-tabla tr.es-actual td { font-weight: 600; }

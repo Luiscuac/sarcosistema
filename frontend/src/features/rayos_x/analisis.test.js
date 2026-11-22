@@ -116,3 +116,30 @@ test('patrón de TB solo avisa en imágenes anormales y nunca descarta', async (
   assert.equal(avisoPatronTb(null, 'alta'), null)
   assert.equal(avisoPatronTb(undefined, undefined), null)
 })
+
+test('evolución: sin anteriores no muestra comparación', async () => {
+  const { lecturaEvolucion } = await import('./analisis.js')
+  assert.equal(lecturaEvolucion({ comparacion: null, motivo: 'sin_anteriores' }), null)
+})
+
+test('evolución: tendencias, aviso TB y categorías en frases simples', async () => {
+  const { lecturaEvolucion } = await import('./analisis.js')
+  const r = lecturaEvolucion({ comparacion: {
+    dias: 30, con_referencia: 'RX-1', avisos: [],
+    indice: { tendencia: 'aumenta' },
+    patron_tb: { comparable: true, estado: 'desaparece' },
+    categorias: [{ name: 'Consolidation', antes: 0.4, ahora: 0.85, tendencia: 'aumenta' }],
+  } })
+  assert.equal(r.indice.clave, 'aumenta')
+  assert.match(r.tb, /no descarta TB/)
+  assert.deepEqual(r.categorias, ['Consolidación: sube (40 → 85)'])
+  assert.equal(r.hace, 'de hace 30 días')
+})
+
+test('evolución: no compara patrones TB de versiones distintas', async () => {
+  const { lecturaEvolucion } = await import('./analisis.js')
+  const r = lecturaEvolucion({ comparacion: { dias: 0, indice: null, patron_tb: { comparable: false }, categorias: [] } })
+  assert.equal(r.tb, null)
+  assert.equal(r.indice, null)
+  assert.equal(r.hace, 'del mismo día')
+})

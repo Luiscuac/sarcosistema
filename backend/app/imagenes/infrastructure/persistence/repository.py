@@ -521,6 +521,38 @@ class EstudiosRepository:
              'u':usuario_id,'c':clave,'p':proyeccion,'texto':snapshot['informe_texto'],'sha':sha,'ah':snapshot['archivo']['hash_sha256']})).mappings().one()
         return dict(row)
 
+    async def serie_triaje_paciente(self, estudio_id: int) -> list[dict]:
+        """Triaje de las radiografías de tórax del mismo paciente hasta este estudio (incluido), más reciente primero.
+
+        Una fila por estudio (la radiografía activa con mayor índice, como la bandeja). Los anteriores deben estar
+        publicados; no se devuelven nombres ni textos del paciente. La autorización del estudio la hace el router.
+        """
+        filas = await self.db.execute(text('''WITH actual AS (
+                SELECT e.id, e.paciente_id, s.fecha_solicitud FROM public.estudio_solicitado e
+                JOIN public.solicitud s ON s.id=e.solicitud_id WHERE e.id=:id),
+            candidatos AS (
+                SELECT DISTINCT ON (e.id) e.id AS estudio_id, e.referencia, a.fecha_carga AS fecha,
+                    s.fecha_solicitud,
+                    (tr.resultado->'indice_pulmonar'->>'valor')::float AS indice,
+                    tr.resultado->'indice_pulmonar'->>'version' AS indice_version,
+                    (tr.resultado->'patron_tb'->>'valor')::float AS patron_tb_valor,
+                    tr.resultado->'patron_tb'->>'nivel' AS patron_tb_nivel,
+                    tr.resultado->'patron_tb'->>'version' AS patron_tb_version,
+                    tr.resultado->'calidad'->>'estado' AS calidad,
+                    tr.resultado->'all_findings' AS hallazgos
+                FROM actual x
+                JOIN public.estudio_solicitado e ON e.paciente_id=x.paciente_id
+                JOIN public.solicitud s ON s.id=e.solicitud_id
+                JOIN public.tipo_estudio t ON t.id=e.tipo_estudio_id AND t.codigo='RX_TORAX'
+                JOIN public.imagen_triaje_ia tr ON tr.estudio_id=e.id AND tr.estado='completado'
+                JOIN public.archivo_imagen a ON a.id=tr.archivo_id AND a.activo
+                WHERE (e.id=x.id OR (e.estado='publicado'
+                       AND (s.fecha_solicitud, e.id) < (x.fecha_solicitud, x.id)))
+                ORDER BY e.id, (tr.resultado->'indice_pulmonar'->>'valor')::float DESC NULLS LAST)
+            SELECT * FROM candidatos ORDER BY (estudio_id=:id) DESC, fecha_solicitud DESC, estudio_id DESC
+            LIMIT 7'''), {'id': estudio_id})
+        return [dict(f) for f in filas.mappings()]
+
     async def filas_concordancia(self) -> list[dict]:
         """Un registro por análisis con su última revisión. Solo agregables: sin pacientes ni texto."""
         filas = await self.db.execute(text('''WITH ultima AS (
