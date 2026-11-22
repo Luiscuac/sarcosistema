@@ -223,6 +223,8 @@ def main():
             'indice_v1': {'auc_ic95': auc_ic(y[idx], base[idx]), **operar(y[idx], base[idx], u_base)}}
     args.salida.mkdir(parents=True, exist_ok=True)
     nombre = f"{args.modo}{'_multi' if args.con_shenzhen else ''}_s{args.semilla}"
+    if args.cache.name != 'cache.npz':  # variantes (p. ej. solo pulmones) no pisan los resultados originales
+        nombre = f"{args.cache.stem.replace('cache_', '')}_{nombre}"
     (args.salida / f'resultados_{nombre}.json').write_text(json.dumps(resultados, indent=1), encoding='utf-8')
     np.save(args.salida / f'pred_{nombre}.npy', pred)
     from safetensors.torch import save_file

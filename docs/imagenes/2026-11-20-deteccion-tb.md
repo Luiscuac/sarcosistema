@@ -87,6 +87,32 @@ si está preparado (`scripts.preparar_ensamble_radiologia --descargar`: safetens
 ensamble, el sistema usa `patron_tb_v1.json`. Coste medido en CPU (trabajador real, con mapas): +2,4-2,6 s por estudio,
 +6 MiB de RSS. El valor de producción coincide con la evaluación (p. ej. MCUCXR_0104_1: 0,919 en ambos).
 
+## 5b. Intentos del 2026-11-21: solo pulmones y mayor resolución (descartados)
+
+Hipótesis: el ajuste fallaba en hospitales externos porque el modelo reconoce el hospital por bordes, letras y
+colimación. Se recortaron las 9.272 imágenes a los pulmones con la segmentación local (0 fallos;
+`tb_cache_pulmones.py`): **recorte** (rectángulo pulmonar) y **máscara** (además, fuera de los pulmones en negro).
+También se probó un modelo de mayor resolución, ResNet50 XRV a 512 px (`tb_cache512.py`, `tb_variantes.py`).
+Mismo protocolo que arriba. AUC en hospitales externos:
+
+| Método | Shenzhen | Montgomery | India | Decisión |
+|---|---|---|---|---|
+| **Producción: patrón TB v2 (ensamble)** | **0,813** | **0,869** | **0,893** | Se mantiene |
+| Patrón 18 salidas, placas recortadas | 0,760 | 0,814 | 0,802 | Descartado |
+| Patrón 18 salidas, placas con máscara | 0,781 | 0,839 | 0,832 | Descartado |
+| Ajuste parcial (GPU), placa completa (intento 2) | 0,775 | 0,759 | 0,876 | Ya descartado |
+| Ajuste parcial, placas recortadas | 0,801 | 0,747 | 0,819 | Descartado |
+| Ajuste parcial, placas con máscara | 0,788 | 0,723 | 0,865 | Descartado |
+| Patrón 18 salidas, ResNet50 512 px | 0,867 | 0,758 | **0,545** | Descartado: inestable entre hospitales |
+| Patrón 18 salidas, DenseNet base + ResNet 512 | 0,683 | 0,849 | 0,925 | Descartado: no mejora |
+
+Índice (anormalidad) con placas recortadas o a 512 px: peor en Montgomery e India que el actual.
+
+Lectura: quitar bordes y letras **no** resuelve la caída entre hospitales, así que la causa no es solo el "atajo
+visual" del hospital; pesan las diferencias de población, equipos y criterio de etiqueta entre sitios. La mayor
+resolución tampoco ayuda con estos datos. El ResNet 512 además se entrenó con VinDr, lo que impediría usar VinDr
+como prueba externa. Con los datos disponibles, el siguiente salto real requiere **más hospitales distintos con TB**.
+
 ## 6. Pendiente
 
 1. **VinDr-CXR** (Vietnam, PhysioNet acreditado): confirmar el aviso con radiólogos de otro país, incluido TB frente
