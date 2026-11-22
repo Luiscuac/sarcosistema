@@ -19,6 +19,7 @@ export default function EvolucionPaciente({ estudioId, usuarioId }) {
     <h4>Comparado con la radiografía anterior <small>{l.hace}{l.referencia ? ` · ${l.referencia}` : ''}</small></h4>
     {l.indice && <p className={`rx-ia-evolucion-tendencia es-${l.indice.clave}`}><strong>{l.indice.texto}</strong></p>}
     {l.tb && <p className="rx-ia-evolucion-tb">{l.tb}</p>}
+    {l.categorias.length > 0 && <p className="rx-ia-evolucion-subtitulo">Señales que cambiaron más que el margen de una re-toma:</p>}
     {l.categorias.length > 0 && <ul className="rx-ia-evolucion-cambios">{l.categorias.map(c => <li key={c}>{c}</li>)}</ul>}
     {l.avisos.map(a => <p key={a} className="rx-nota">{a}</p>)}
     <details className="rx-ia-plegable">

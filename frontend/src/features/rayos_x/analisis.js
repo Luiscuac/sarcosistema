@@ -152,16 +152,16 @@ export const DECISIONES = {
 
 /** Comparación con la radiografía anterior del paciente: frases simples a partir de /evolucion. */
 const TENDENCIA_INDICE = {
-  aumenta: { clave: 'aumenta', texto: 'Más señales que en la anterior' },
-  disminuye: { clave: 'disminuye', texto: 'Menos señales que en la anterior' },
-  sin_cambio_claro: { clave: 'estable', texto: 'Sin cambio claro respecto a la anterior' },
+  aumenta: { clave: 'aumenta', texto: 'Índice general: más señales que en la anterior' },
+  disminuye: { clave: 'disminuye', texto: 'Índice general: menos señales que en la anterior' },
+  sin_cambio_claro: { clave: 'estable', texto: 'Índice general: sin cambio claro respecto a la anterior' },
 }
 const ESTADO_TB = {
   aparece: 'El aviso de patrón TB aparece ahora (no estaba en la anterior).',
   desaparece: 'El aviso de patrón TB estaba en la anterior y ahora no aparece. Esto no descarta TB.',
   sigue: 'El aviso de patrón TB sigue presente.',
 }
-const VERBO = { aumenta: 'sube', disminuye: 'baja' }
+const VERBO = { aumenta: 'subió', disminuye: 'bajó' }
 
 export function lecturaEvolucion(evolucion) {
   const c = evolucion?.comparacion

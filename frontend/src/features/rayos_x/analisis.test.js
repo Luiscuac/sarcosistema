@@ -132,7 +132,7 @@ test('evolución: tendencias, aviso TB y categorías en frases simples', async (
   } })
   assert.equal(r.indice.clave, 'aumenta')
   assert.match(r.tb, /no descarta TB/)
-  assert.deepEqual(r.categorias, ['Consolidación: sube (40 → 85)'])
+  assert.deepEqual(r.categorias, ['Consolidación: subió (40 → 85)'])
   assert.equal(r.hace, 'de hace 30 días')
 })
 
