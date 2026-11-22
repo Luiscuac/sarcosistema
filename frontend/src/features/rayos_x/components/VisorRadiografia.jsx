@@ -66,10 +66,10 @@ export default function VisorRadiografia({ url, alt, vision, mapa, onMapa }) {
           <label>Contraste<input type="range" min="40" max="300" value={contraste} onChange={e => setContraste(Number(e.target.value))} /></label>
         </div>
       </details>
-      <button type="button" className="rx-visor-btn es-texto" aria-pressed={invertir} onClick={() => setInvertir(v => !v)} title="Invertir grises">{ICONOS.invertir}<span>Invertir</span></button>
+      <button type="button" className="rx-visor-btn" aria-pressed={invertir} onClick={() => setInvertir(v => !v)} aria-label="Invertir grises" title="Invertir grises">{ICONOS.invertir}</button>
       <button type="button" className="rx-visor-btn" onClick={reiniciar} aria-label="Restablecer vista" title="Restablecer vista">{ICONOS.reiniciar}</button>
       {mapas.length > 0 && <div className="rx-visor-grupo rx-visor-mapa-ctl">
-        <label><span>Mapa de calor</span><select value={mapa || ''} onChange={e => onMapa(e.target.value || null)}>
+        <label title="Mapa de calor: dónde se apoyó el modelo"><span>Mapa</span><select aria-label="Mapa de calor" value={mapa || ''} onChange={e => onMapa(e.target.value || null)}>
           <option value="">Ninguno</option>
           {mapas.map(m => <option key={m.clave} value={m.clave}>{m.etiqueta}</option>)}
         </select></label>

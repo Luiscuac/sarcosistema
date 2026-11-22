@@ -268,8 +268,27 @@
 .rx-ia-evolucion-tendencia.es-aumenta strong { color: var(--ia-alta); }
 .rx-ia-evolucion-tendencia.es-disminuye strong { color: var(--ia-baja); }
 .rx-ia-evolucion-tb { color: #2b2366; font-size: 14px; }
-.rx-ia-evolucion-subtitulo { margin: 4px 0 2px; font-size: 13px; color: var(--texto-secundario, #4b5563); }
-.rx-ia-evolucion-cambios { margin: 0; padding-left: 18px; font-size: 14px; }
+.rx-ia-evolucion-cambios { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 0; padding: 0; list-style: none; font-size: 13px; }
+.rx-ia-evolucion-cambios li { display: inline-flex; align-items: baseline; gap: 4px; padding: 3px 10px; border: 1px solid var(--ia-linea); border-radius: 999px; background: #fff; }
+.rx-ia-evolucion-cambios li.es-aumenta span { color: var(--ia-alta); font-weight: 700; }
+.rx-ia-evolucion-cambios li.es-disminuye span { color: var(--ia-baja); font-weight: 700; }
+.rx-ia-evolucion-cambios small { color: var(--ia-tenue); font-variant-numeric: tabular-nums; }
+.rx-ia-evolucion > .rx-ia-plegable { margin-top: 4px; }
+.rx-ia-evolucion > .rx-ia-plegable > .rx-nota { margin: 8px 12px 10px; }
+.rx-ia-evolucion > .rx-ia-plegable > .rx-ia-evolucion-tabla { width: calc(100% - 24px); }
 .rx-ia-evolucion-tabla { width: 100%; margin-top: 6px; border-collapse: collapse; font-size: 13px; }
 .rx-ia-evolucion-tabla th, .rx-ia-evolucion-tabla td { padding: 4px 6px; border-bottom: 1px solid var(--ia-linea); text-align: left; }
+.rx-ia-evolucion-tabla td, .rx-ia-evolucion-tabla th { white-space: normal; }
+.rx-ia-evolucion-tabla td:nth-child(2) { font-size: 12px; }
+.rx-ia-evolucion-tabla td:last-child, .rx-ia-evolucion-tabla th:last-child { text-align: center; }
 .rx-ia-evolucion-tabla tr.es-actual td { font-weight: 600; }
+
+/* Visor siempre a la vista: se ajusta al alto de la ventana para quedar fijo al lado del análisis */
+.rx-ia-visor { --rx-alto-visor: clamp(340px, calc(100vh - 150px), 720px); top: 12px; display: grid; gap: 8px; }
+.rx-ia-visor .rx-visor-lienzo { height: var(--rx-alto-visor); }
+.rx-ia-visor .rx-visor-capa > img:first-child { max-height: var(--rx-alto-visor); }
+.rx-ia-visor .rx-visor-barra { flex-wrap: nowrap; }
+.rx-ia-visor .rx-visor-mapa-ctl select { max-width: 160px; }
+.rx-ia-visor .rx-visor-mapa-ctl input[type="range"] { width: 64px; }
+.rx-ia-visor .rx-visor-ayuda { font-size: 11px; line-height: 1.4; }
+@media (max-width: 1200px) { .rx-ia-visor .rx-visor-barra { flex-wrap: wrap; } }

@@ -19,22 +19,23 @@ export default function EvolucionPaciente({ estudioId, usuarioId }) {
     <h4>Comparado con la radiografía anterior <small>{l.hace}{l.referencia ? ` · ${l.referencia}` : ''}</small></h4>
     {l.indice && <p className={`rx-ia-evolucion-tendencia es-${l.indice.clave}`}><strong>{l.indice.texto}</strong></p>}
     {l.tb && <p className="rx-ia-evolucion-tb">{l.tb}</p>}
-    {l.categorias.length > 0 && <p className="rx-ia-evolucion-subtitulo">Señales que cambiaron más que el margen de una re-toma:</p>}
-    {l.categorias.length > 0 && <ul className="rx-ia-evolucion-cambios">{l.categorias.map(c => <li key={c}>{c}</li>)}</ul>}
+    {l.categorias.length > 0 && <ul className="rx-ia-evolucion-cambios" aria-label="Señales que cambiaron más que el margen de una re-toma">
+      {l.cambios.map(c => <li key={c.nombre} className={`es-${c.tendencia}`}><span aria-hidden="true">{c.tendencia === 'aumenta' ? '↑' : '↓'}</span> {c.nombre} <small>{c.antes} → {c.ahora}</small></li>)}
+    </ul>}
     {l.avisos.map(a => <p key={a} className="rx-nota">{a}</p>)}
     <details className="rx-ia-plegable">
-      <summary>Ver radiografías anteriores ({datos.anteriores.length})</summary>
+      <summary>Radiografías anteriores ({datos.anteriores.length}) y cómo leer esto</summary>
       <table className="rx-ia-evolucion-tabla">
-        <thead><tr><th>Fecha</th><th>Estudio</th><th>Prioridad</th><th>Índice</th><th>Patrón TB</th></tr></thead>
+        <thead><tr><th>Fecha</th><th>Estudio</th><th>Prioridad</th><th>Índice</th><th>TB</th></tr></thead>
         <tbody>{[datos.actual, ...datos.anteriores].map((p, i) => <tr key={p.estudio_id} className={i === 0 ? 'es-actual' : undefined}>
           <td>{fecha(p.fecha)}{i === 0 ? ' (esta)' : ''}</td>
           <td>{p.referencia}</td>
           <td>{NIVELES_TRIAJE[p.nivel]?.texto || '—'}</td>
-          <td>{typeof p.indice === 'number' ? `${Math.round(p.indice * 100)} de 100` : '—'}</td>
+          <td>{typeof p.indice === 'number' ? `${Math.round(p.indice * 100)}/100` : '—'}</td>
           <td>{p.patron_tb_nivel === 'compatible' ? 'Aviso' : '—'}</td>
         </tr>)}</tbody>
       </table>
+      <p className="rx-nota">Solo se listan cambios mayores que el margen de una re-toma. {datos.advertencia}</p>
     </details>
-    <p className="rx-nota">{datos.advertencia}</p>
   </section>
 }

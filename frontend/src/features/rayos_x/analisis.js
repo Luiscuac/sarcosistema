@@ -170,5 +170,6 @@ export function lecturaEvolucion(evolucion) {
   const tb = c.patron_tb?.comparable ? ESTADO_TB[c.patron_tb.estado] || null : null
   const categorias = (c.categorias || []).map(x => `${nombreHallazgo(x.name)}: ${VERBO[x.tendencia]} (${Math.round(x.antes * 100)} → ${Math.round(x.ahora * 100)})`)
   const hace = typeof c.dias === 'number' ? (c.dias <= 0 ? 'del mismo día' : c.dias === 1 ? 'de hace 1 día' : `de hace ${c.dias} días`) : ''
-  return { indice, tb, categorias, hace, avisos: c.avisos || [], referencia: c.con_referencia }
+  const cambios = (c.categorias || []).map(x => ({ nombre: nombreHallazgo(x.name), tendencia: x.tendencia, antes: Math.round(x.antes * 100), ahora: Math.round(x.ahora * 100) }))
+  return { indice, tb, categorias, cambios, hace, avisos: c.avisos || [], referencia: c.con_referencia }
 }
