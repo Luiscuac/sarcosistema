@@ -7,7 +7,7 @@ from app.accesos.domain.entities import Usuario
 from app.accesos.presentation.dependencies.current_user import usuario_actual
 from app.config.database import get_db
 from app.imagenes.domain.errors import ArchivoNoEncontrado, EstudioNoEncontrado
-from app.imagenes.infrastructure.persistence.repository import RepositorioImagenSql
+from app.imagenes.infrastructure.persistence.repositorio_ecografia import RepositorioImagenSql
 from app.imagenes.infrastructure.storage.almacen_local import AlmacenLocal
 
 # El prefijo /imagenes lo aplica app.imagenes.router (composición única del módulo).

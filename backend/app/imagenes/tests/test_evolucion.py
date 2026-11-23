@@ -9,7 +9,7 @@ from sqlalchemy import text
 from app.accesos.domain.entities import Usuario
 from app.accesos.presentation.dependencies.current_user import usuario_actual
 from app.imagenes.application.evolucion import cargar_tolerancias, comparar_evolucion, fila_a_punto
-from app.imagenes.infrastructure.persistence.repository import EstudiosRepository
+from app.imagenes.infrastructure.persistence.repositorio_asistente import EstudiosRepository
 from app.imagenes.presentation.router_analisis import get_repository
 from app.imagenes.tests.test_estudios_imagenes import estudio_fixture  # noqa: F401
 from app.main import app

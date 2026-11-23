@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.imagenes.application.analizar_estudio import AnalizarEstudio, validar_snapshot
 from app.imagenes.domain.vision import ErrorVision, VisionConfig
 from app.imagenes.infrastructure.archivos import leer_archivo_local
-from app.imagenes.infrastructure.persistence.repository import EstudiosRepository
+from app.imagenes.infrastructure.persistence.repositorio_asistente import EstudiosRepository
 
 
 async def ejecutar_triaje(trabajo, sesiones, triador, repositorio=EstudiosRepository, vigente=None, liderazgo=None):
