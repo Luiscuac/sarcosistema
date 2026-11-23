@@ -1,6 +1,6 @@
 # API de radiología convencional (contrato)
 
-Prefijo: `/imagenes/radiologia`. Todas las rutas exigen JWT Bearer. Cliente frontend: `frontend/src/features/rayos_x/api/radiologiaApi.js`.
+Prefijo: `/imagenes/radiologia`. Todas las rutas exigen JWT Bearer. Cliente frontend: `frontend/src/features/rayos_x/compartido/api/radiologiaApi.js`.
 
 Roles: **T** = `rayos_x` (a cargo de todo el flujo: recepción, adquisición, informe y validación), **M** = `medico` (solicitante). El rol `radiologo` fue eliminado (migración `20261117_0020`).
 Solo **R** redacta y valida informes. **T** nunca valida.

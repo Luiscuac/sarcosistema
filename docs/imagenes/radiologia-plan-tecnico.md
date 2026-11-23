@@ -77,3 +77,11 @@ No se crean tablas por tipo de radiografía ni se cambian los estados de `estudi
 | Panel, nueva solicitud, detalle de solicitud e historial del paciente | Codex | `frontend/src/features/rayos_x/gestion/` |
 | Espacio de trabajo del estudio: adquisición, imágenes, informe y vista imprimible | Codex | `frontend/src/features/rayos_x/estudio/` |
 | Rutas, solicitud desde la ficha del médico, integración y pruebas de principio a fin | Claude | `frontend/src/app/router.jsx` y puntos de unión |
+
+## Estructura del frontend (2026-11-23)
+
+- `frontend/src/features/rayos_x/gestion/`: panel del técnico, solicitudes e historial del paciente.
+- `frontend/src/features/rayos_x/estudio/`: espacio de trabajo del estudio (adquisición, imágenes, informe, impresión).
+- `frontend/src/features/rayos_x/asistente/`: asistente IA del médico (lista, visor, veredicto, comparación, revisión, desempeño).
+- `frontend/src/features/rayos_x/compartido/`: cliente `/radiologia`, marco de pantallas, solicitud desde la ficha del médico y tokens de estilo.
+- Ecografía vive entera en `frontend/src/features/ecografia/` (bandeja, editor con plantilla, informe de texto libre, solicitud desde la ficha). La antigua carpeta genérica `features/imagenes/` y el flujo de Rayos X por `?modalidad=rayos_x` se eliminaron.
