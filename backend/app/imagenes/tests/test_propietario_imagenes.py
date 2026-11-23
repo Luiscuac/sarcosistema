@@ -5,7 +5,8 @@ import pytest
 from sqlalchemy import text
 
 from app.imagenes.domain.entities import SolicitudEcografia
-from app.imagenes.infrastructure.persistence.repository import EstudiosRepository, RepositorioImagenSql
+from app.imagenes.infrastructure.persistence.repositorio_asistente import EstudiosRepository
+from app.imagenes.infrastructure.persistence.repositorio_ecografia import RepositorioImagenSql
 from app.imagenes.tests.test_estudios_imagenes import estudio_fixture  # noqa: F401
 
 

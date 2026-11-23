@@ -14,7 +14,7 @@ from app.accesos.presentation.dependencies.role_required import requiere_rol
 from app.config.database import get_db
 from app.config.settings import settings
 from app.imagenes.infrastructure.archivos import leer_archivo_local
-from app.imagenes.infrastructure.persistence.repository import EstudiosRepository
+from app.imagenes.infrastructure.persistence.repositorio_asistente import EstudiosRepository
 from app.imagenes.presentation.schemas import AnalisisNuevo, RevisionNueva
 
 BASE = Path(__file__).resolve().parents[3]

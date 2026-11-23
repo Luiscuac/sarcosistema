@@ -57,22 +57,6 @@ class InformeImagenResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class ContribucionTriaje(BaseModel):
-    name: str
-    aporte: float
-
-
-class TriajeResumen(BaseModel):
-    """Prioridad visual experimental para ordenar la bandeja; no es diagnóstico."""
-    estado: str
-    indice: float | None = None
-    nivel: str | None = None
-    calidad: str | None = None
-    contribuciones: list[ContribucionTriaje] = []
-    radiografias: int = 0
-    patron_tb: str | None = None  # 'compatible' | None (solo avisa; nunca descarta TB)
-
-
 class EstudioPendienteResponse(BaseModel):
     estudio_id: int
     referencia_estudio: str
@@ -83,7 +67,6 @@ class EstudioPendienteResponse(BaseModel):
     prioridad: str
     estado: str
     fecha_solicitud: datetime
-    triaje: TriajeResumen | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

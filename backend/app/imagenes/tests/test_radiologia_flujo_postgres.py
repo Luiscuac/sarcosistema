@@ -234,8 +234,8 @@ async def test_caso_5_borrador_retomado_validacion_y_permisos(rx):
         assert r.status_code == 403
         r = await c.post(f'{url}/informe/validar', headers=h[rol], json={'version_edicion': 1, 'responsable_nombre': 'Alguien', 'confirmo': True})
         assert r.status_code == 403
-    heredado = await c.post(f'/imagenes/estudios/{estudio_id}/informes/publicar?modalidad=rayos_x', headers=h['medico'])
-    assert heredado.status_code == 403  # tampoco por la ruta anterior
+    retirado = await c.post(f'/imagenes/estudios/{estudio_id}/informes/publicar?modalidad=rayos_x', headers=h['rayos_x'])
+    assert retirado.status_code == 422  # el modo heredado ya no forma parte de la ruta de Ecografía
 
     incompleto = await informar(rx, estudio_id, {'generales': {}, 'apartados': {'campos_pulmonares': 'Opacidad basal derecha.'}}, validar=False)
     assert incompleto['estudio']['etapa'] == 'borrador' and incompleto['informe']['version_edicion'] == 1
