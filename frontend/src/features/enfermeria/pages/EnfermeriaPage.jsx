@@ -21,8 +21,9 @@ import {
   FORMULARIO_VACIO, MEDICIONES, TEXTOS, cuerpoDesdeFormulario, erroresDelFormulario,
   formularioDesdeRegistro, formularioVacio, resumenDelFormulario,
 } from '../utils/signosVitales.js'
+import { formatearFechaHora } from '../../../shared/utils/formatearFecha.js'
 
-const fechaHora = (value) => value ? new Date(value).toLocaleString('es-BO') : 'Sin fecha'
+const fechaHora = (value) => value ? formatearFechaHora(value) : 'Sin fecha'
 const etiquetasCampos = {
   ...Object.fromEntries(TEXTOS),
   ...Object.fromEntries(Object.entries(MEDICIONES).map(([campo, { etiqueta }]) => [campo, etiqueta])),

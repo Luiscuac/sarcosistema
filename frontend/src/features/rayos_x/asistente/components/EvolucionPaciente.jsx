@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { obtenerEvolucion } from '../api/rayosXAiApi.js'
 import { lecturaEvolucion, NIVELES_TRIAJE } from '../analisis.js'
+import { formatearFecha } from '../../../../shared/utils/formatearFecha.js'
 
-const fecha = valor => (valor ? new Date(valor).toLocaleDateString('es-BO') : '—')
+const fecha = valor => (valor ? formatearFecha(valor) : '—')
 
 /** Comparación con radiografías de tórax anteriores del mismo paciente (triaje ya calculado; no ejecuta modelos). */
 export default function EvolucionPaciente({ estudioId, usuarioId }) {

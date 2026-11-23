@@ -11,6 +11,7 @@ import '../../asistente/pages/rayos-x.css'
 import './estudio.css'
 import Boton, { BotonEnlace } from '../../../../shared/ui/Boton.jsx'
 import { mensajeError } from '../../../../shared/utils/mensajeError.js'
+import { formatearFechaHora } from '../../../../shared/utils/formatearFecha.js'
 
 const SECCIONES = ['resumen', 'adquisicion', 'informe', 'historial']
 const NOMBRES_SECCION = { resumen: 'Resumen', adquisicion: 'Adquisición e imágenes', informe: 'Informe', historial: 'Historial' }
@@ -54,7 +55,7 @@ function Resumen({ estudioId, detalle, irA }) {
     <section className="rxe-bloque"><h2>Datos del estudio</h2><dl className="rxe-datos rxe-datos-resumen">{datos.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
       <p className="rxe-enlaces"><Link to={`/rayos-x/gestion/pacientes/${detalle.paciente.id}`}>Ver historial radiológico del paciente</Link></p></section>
     {detalle.informes_externos?.length > 0 && <section className="rxe-bloque"><h2>Informes externos</h2><ul className="rxe-lista">{detalle.informes_externos.map(x => <li key={x.id}><div><strong>Informe externo — {x.establecimiento}</strong><span>{x.profesional || 'Profesional no informado'} · {x.fecha_informe || x.fecha_carga}</span></div></li>)}</ul></section>}
-    {detalle.adendas?.length > 0 && <section className="rxe-bloque"><h2>Adendas</h2><ul className="rxe-lista">{detalle.adendas.map(x => <li key={x.id}><div><strong>{x.motivo}</strong><span>{x.autor_nombre} · {new Date(x.fecha_hora).toLocaleString('es-BO')}</span><p>{x.texto}</p></div></li>)}</ul></section>}
+    {detalle.adendas?.length > 0 && <section className="rxe-bloque"><h2>Adendas</h2><ul className="rxe-lista">{detalle.adendas.map(x => <li key={x.id}><div><strong>{x.motivo}</strong><span>{x.autor_nombre} · {formatearFechaHora(x.fecha_hora)}</span><p>{x.texto}</p></div></li>)}</ul></section>}
     {permisos.marcar_no_realizado && <p className="rxe-no-realizado"><button type="button" className="rxe-enlace-peligro" onClick={() => setAccion('no-realizado')}>Marcar este estudio como no realizado</button></p>}
     {accion && <ConfirmarAccion titulo={accion === 'entregar' ? 'Registrar entrega' : 'Marcar como no realizado'} textoConfirmar={accion === 'entregar' ? 'Registrar entrega' : 'Marcar como no realizado'} peligro={accion !== 'entregar'} pendiente={noRealizado.isPending || entregar.isPending} onCancelar={() => { setAccion(null); setValor('') }} onConfirmar={() => valor.trim() && (accion === 'entregar' ? entregar.mutate() : noRealizado.mutate())}>
       <label className="lab-search-label">{accion === 'entregar' ? 'Entregado a' : 'Motivo'} *<textarea required value={valor} onChange={e => setValor(e.target.value)} /></label>{!valor.trim() && <p className="lab-form-hint">Este dato es obligatorio.</p>}
@@ -62,7 +63,7 @@ function Resumen({ estudioId, detalle, irA }) {
 }
 
 function Historial({ historial }) {
-  return <section className="rxe-bloque"><h2>Historial</h2><ol className="rxe-linea-tiempo">{historial?.length ? historial.map((item, i) => <li key={`${item.fecha_hora}-${i}`}><time>{new Date(item.fecha_hora).toLocaleString('es-BO')}</time><strong>{item.descripcion}</strong><span>{item.usuario || 'Sistema'}</span></li>) : <li>No hay eventos registrados.</li>}</ol></section>
+  return <section className="rxe-bloque"><h2>Historial</h2><ol className="rxe-linea-tiempo">{historial?.length ? historial.map((item, i) => <li key={`${item.fecha_hora}-${i}`}><time>{formatearFechaHora(item.fecha_hora)}</time><strong>{item.descripcion}</strong><span>{item.usuario || 'Sistema'}</span></li>) : <li>No hay eventos registrados.</li>}</ol></section>
 }
 
 export default function EstudioRayosXPage({ usuario, logout }) {

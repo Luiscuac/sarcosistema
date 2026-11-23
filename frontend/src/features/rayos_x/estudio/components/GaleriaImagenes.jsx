@@ -4,6 +4,7 @@ import VisorRadiografia from '../../asistente/components/VisorRadiografia.jsx'
 import { obtenerVistaImagen } from '../../compartido/api/radiologiaApi.js'
 import { tamanoLegible } from '../utils/informe.js'
 import Boton from '../../../../shared/ui/Boton.jsx'
+import { formatearFechaHora } from '../../../../shared/utils/formatearFecha.js'
 
 // Devuelve la URL de la vista, null mientras carga y false si falló la carga.
 export function useVistaImagen(archivoId) {
@@ -28,7 +29,7 @@ function Miniatura({ imagen, proyecciones, editable, ocupado, onAsignar, onRetir
     <button type="button" className="rxe-miniatura-imagen" onClick={() => onAbrir(imagen)} disabled={!url}>
       {url ? <img src={url} alt={`Vista de ${imagen.nombre_original}`} /> : <span role={url === false ? 'alert' : undefined}>{url === false ? 'No se pudo cargar la vista.' : 'Cargando vista…'}</span>}
     </button>
-    <div><strong>{imagen.nombre_original}</strong><small>{tamanoLegible(imagen.tamano_bytes)} · {new Date(imagen.fecha_carga).toLocaleString('es-BO')}</small></div>
+    <div><strong>{imagen.nombre_original}</strong><small>{tamanoLegible(imagen.tamano_bytes)} · {formatearFechaHora(imagen.fecha_carga)}</small></div>
     <label>Proyección<select value={imagen.proyeccion_codigo || ''} disabled={!editable || ocupado} onChange={e => onAsignar(imagen.id, e.target.value || null)}>
       <option value="">Sin asignar</option>{proyecciones.map(p => <option key={p.codigo} value={p.codigo}>{p.nombre}</option>)}
     </select></label>

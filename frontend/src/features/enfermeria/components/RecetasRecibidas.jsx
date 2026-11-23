@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { obtenerRecetasRecibidasEnfermeria } from '../api/enfermeriaApi.js'
-import { formatearFecha } from '../../../shared/utils/formatearFecha.js'
+import { formatearFecha, formatearFechaHora } from '../../../shared/utils/formatearFecha.js'
 
 function fechaReceta(receta) {
-  return receta.publicado_en ? new Date(receta.publicado_en).toLocaleString('es-BO') : formatearFecha(receta.fecha)
+  return receta.publicado_en ? formatearFechaHora(receta.publicado_en) : formatearFecha(receta.fecha)
 }
 
 function RecetaResumen({ receta, onAbrir }) {

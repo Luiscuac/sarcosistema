@@ -11,6 +11,7 @@ import { useVistaImagen } from './GaleriaImagenes.jsx'
 import { detectarCambios, estadoInicialInforme, limpiarContenido } from '../utils/informe.js'
 import Boton from '../../../../shared/ui/Boton.jsx'
 import { mensajeError } from '../../../../shared/utils/mensajeError.js'
+import { formatearFechaHora } from '../../../../shared/utils/formatearFecha.js'
 
 function BotonMiniatura({ imagen, activa, onClick }) {
   const url = useVistaImagen(imagen.archivo_id)
@@ -34,13 +35,13 @@ function TextoInforme({ texto }) {
 }
 
 function Adendas({ adendas }) {
-  return adendas.length > 0 && <section className="rxe-adendas"><h3>Adendas</h3>{adendas.map(adenda => <article key={adenda.id}><header>{new Date(adenda.fecha_hora).toLocaleString('es-BO')} · {adenda.autor_nombre}</header><strong>{adenda.motivo}</strong><p>{adenda.texto}</p></article>)}</section>
+  return adendas.length > 0 && <section className="rxe-adendas"><h3>Adendas</h3>{adendas.map(adenda => <article key={adenda.id}><header>{formatearFechaHora(adenda.fecha_hora)} · {adenda.autor_nombre}</header><strong>{adenda.motivo}</strong><p>{adenda.texto}</p></article>)}</section>
 }
 
 function InformePublicado({ estudioId, detalle }) {
   const informe = detalle.informe
   return <div className="rxe-workspace"><PanelImagenes imagenes={detalle.imagenes || []} /><div className="rxe-work-form rxe-publicado"><p className="rxe-estado">Informe validado. Se muestra en modo de solo lectura.</p><TextoInforme texto={informe.texto} />
-    <dl className="rxe-datos"><div><dt>Profesional responsable</dt><dd>{informe.responsable_nombre || 'No informado'}</dd></div><div><dt>Registro profesional</dt><dd>{informe.registro_profesional || 'No informado'}</dd></div><div><dt>Fecha de validación</dt><dd>{informe.fecha_hora_publicacion ? new Date(informe.fecha_hora_publicacion).toLocaleString('es-BO') : 'No informada'}</dd></div></dl>
+    <dl className="rxe-datos"><div><dt>Profesional responsable</dt><dd>{informe.responsable_nombre || 'No informado'}</dd></div><div><dt>Registro profesional</dt><dd>{informe.registro_profesional || 'No informado'}</dd></div><div><dt>Fecha de validación</dt><dd>{informe.fecha_hora_publicacion ? formatearFechaHora(informe.fecha_hora_publicacion) : 'No informada'}</dd></div></dl>
     <Adendas adendas={detalle.adendas || []} />
     <Link className="primary-button rxe-link-boton" to={`/rayos-x/gestion/estudios/${estudioId}/impresion`}>Ver informe para imprimir</Link>
   </div></div>

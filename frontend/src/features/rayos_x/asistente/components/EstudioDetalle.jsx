@@ -7,6 +7,7 @@ import PanelInforme from './PanelInforme.jsx'
 import EvolucionPaciente from './EvolucionPaciente.jsx'
 import { DECISIONES, enProceso, validarRevision, mensajeErrorAsistente, erroresAnalisis, snapshotCompatible, revisionVigente, lecturaAnormal } from '../analisis.js'
 import Boton from '../../../../shared/ui/Boton.jsx'
+import { formatearFechaHora } from '../../../../shared/utils/formatearFecha.js'
 
 // Vista PNG generada en el servidor (DICOM, 16 bits, paleta); si no está disponible, el archivo original.
 const cargarImagen = async (id, archivoId, signal) => {
@@ -181,7 +182,7 @@ export default function EstudioDetalle({ id, usuario, habilitada, onVolver }) {
                 {revision.isSuccess && <p role="status" className="rx-ia-ok">Revisión guardada. El informe no cambió.</p>}
               </form>
               {(analisis.data.revisiones || []).length > 0 && <details className="rx-ia-plegable"><summary>Revisiones anteriores ({analisis.data.revisiones.length})</summary>
-                <ul className="rx-ia-historial">{analisis.data.revisiones.map(r => <li key={r.version}><strong>{DECISIONES[r.decision] || 'Revisión'}</strong> · {new Date(r.fecha).toLocaleString('es-BO')}
+                <ul className="rx-ia-historial">{analisis.data.revisiones.map(r => <li key={r.version}><strong>{DECISIONES[r.decision] || 'Revisión'}</strong> · {formatearFechaHora(r.fecha)}
                   {r.motivo && <p>{r.motivo}</p>}{r.correccion && <p>Corrección: {r.correccion}</p>}{r.anormal_confirmado != null && <p>Lectura: {r.anormal_confirmado ? 'anormal' : 'normal'}</p>}{r.tb_confirmada != null && <p>Tuberculosis: {r.tb_confirmada ? 'confirmada' : 'descartada'}</p>}</li>)}</ul>
               </details>}
             </>}

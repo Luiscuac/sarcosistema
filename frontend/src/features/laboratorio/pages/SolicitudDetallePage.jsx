@@ -12,13 +12,13 @@ import { progresoSolicitud, siguienteAccion } from '../utils/bandeja.js'
 import { ESTADOS_FINALES, nombreMotivoIncidencia } from '../utils/catalogos.js'
 import { nombreSexo } from '../../../shared/utils/personas.js'
 import { describirEdad } from '../../../shared/utils/edad.js'
-import { formatearFecha } from '../../../shared/utils/formatearFecha.js'
+import { formatearFecha, formatearFechaHora } from '../../../shared/utils/formatearFecha.js'
 import '../components/solicitudes/solicitudes-panel.css'
 import './solicitud-detalle.css'
 import Boton from '../../../shared/ui/Boton.jsx'
 
 const fechaVisible = (valor) => (valor ? formatearFecha(valor) : 'No registrada')
-const fechaHora = (valor) => (valor ? new Date(valor).toLocaleString('es-BO') : 'No registrado')
+const fechaHora = (valor) => (valor ? formatearFechaHora(valor) : 'No registrado')
 /** "09:30:00" -> "09:30". */
 const horaToma = (muestra) => (muestra.hora_toma ? muestra.hora_toma.slice(0, 5) : 'No registrada')
 

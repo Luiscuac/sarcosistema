@@ -9,7 +9,7 @@ import { nombreArea, nombreMotivoIncidencia } from '../utils/catalogos.js'
 import { nombreSexo } from '../../../shared/utils/personas.js'
 import { agruparInformePorArea, fueraDeRango, resumenParaCopiar } from '../utils/informe.js'
 import { describirEdad } from '../../../shared/utils/edad.js'
-import { formatearFecha } from '../../../shared/utils/formatearFecha.js'
+import { formatearFecha, formatearFechaHora } from '../../../shared/utils/formatearFecha.js'
 import './informe-solicitud.css'
 import Boton from '../../../shared/ui/Boton.jsx'
 
@@ -102,12 +102,12 @@ function Informe({ informe }) {
       <ul>{informe.estudios_no_realizados.map((estudio) => <li key={estudio.referencia}>
         <strong>{estudio.nombre}</strong> ({nombreArea(estudio.categoria)}): {nombreMotivoIncidencia(estudio.motivo)}
         {estudio.descripcion && <> — {estudio.descripcion}</>}
-        <span> · {estudio.responsable}, {new Date(estudio.fecha_hora).toLocaleString('es-BO')}</span>
+        <span> · {estudio.responsable}, {formatearFechaHora(estudio.fecha_hora)}</span>
       </li>)}</ul>
     </section>}
     <footer className="lab-report-signature">
       <div>
-        <p>Emitido el {new Date().toLocaleString('es-BO')} · SarcoSistema</p>
+        <p>Emitido el {formatearFechaHora(new Date())} · SarcoSistema</p>
       </div>
       <div className="lab-report-sign-line"><span /><p>Firma y sello</p></div>
     </footer>

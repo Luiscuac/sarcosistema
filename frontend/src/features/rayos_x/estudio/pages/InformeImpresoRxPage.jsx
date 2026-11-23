@@ -10,11 +10,12 @@ import '../../../ecografia/pages/ecografia.css'
 import './estudio.css'
 import Boton from '../../../../shared/ui/Boton.jsx'
 import { mensajeError } from '../../../../shared/utils/mensajeError.js'
+import { formatearFecha } from '../../../../shared/utils/formatearFecha.js'
 
 const LATERALIDADES = { derecha: 'Derecha', izquierda: 'Izquierda', bilateral: 'Bilateral' }
 const nombresProyecciones = detalle => (detalle.adquisicion?.proyecciones_realizadas || []).map(c => detalle.config?.proyecciones?.find(p => p.codigo === c)?.nombre || c).join(', ') || 'No registradas'
 const SEXOS = { M: 'Masculino', F: 'Femenino', masculino: 'Masculino', femenino: 'Femenino' }
-const fechaCorta = valor => valor ? new Date(valor).toLocaleDateString('es-BO') : 'No registrada'
+const fechaCorta = valor => valor ? formatearFecha(valor) : 'No registrada'
 
 function LaminaImagen({ imagen, detalle }) {
   const url = useVistaImagen(imagen.archivo_id)
@@ -47,7 +48,7 @@ export function DocumentoInformeRx({ detalle, incluirImagenes }) {
     {estudio.detalle?.indicacion_clinica && <p className="eco-hallazgo"><strong>INDICACIÓN CLÍNICA: </strong>{estudio.detalle.indicacion_clinica}</p>}
     {cuerpo.map((sec, i) => <p className="eco-hallazgo" key={`${sec.titulo}-${i}`}>{sec.titulo && <strong>{sec.titulo.replace(/:$/, '')}: </strong>}{sec.lineas.join('\n')}</p>)}
     <section className="eco-conclusion"><h3>CONCLUSIÓN</h3><p>{conclusion ? conclusion.lineas.join('\n') : 'Pendiente de registrar.'}</p></section>
-    {adendas.length > 0 && <section className="eco-conclusion"><h3>ADENDAS</h3>{adendas.map(a => <p key={a.id}><strong>{new Date(a.fecha_hora).toLocaleDateString('es-BO')} · {a.motivo}: </strong>{a.texto}</p>)}</section>}
+    {adendas.length > 0 && <section className="eco-conclusion"><h3>ADENDAS</h3>{adendas.map(a => <p key={a.id}><strong>{formatearFecha(a.fecha_hora)} · {a.motivo}: </strong>{a.texto}</p>)}</section>}
     <footer className="lab-report-signature"><div><span /><p>Firma y sello del profesional responsable</p><p>{informe?.responsable_nombre || ''}{informe?.registro_profesional ? ` · Reg. ${informe.registro_profesional}` : ''}</p></div><p>{estudio.referencia_estudio} · {borrador ? 'Borrador' : `Validado el ${fechaCorta(informe?.fecha_hora_publicacion)}`}</p></footer>
     {incluirImagenes && (detalle.imagenes || []).length > 0 && <section className="eco-laminas"><h3>IMÁGENES DEL ESTUDIO</h3><p>{paciente.nombre_completo} · {estudio.referencia_estudio}</p><div className="eco-galeria">{detalle.imagenes.map(imagen => <LaminaImagen key={imagen.id} imagen={imagen} detalle={detalle} />)}</div></section>}
   </article>

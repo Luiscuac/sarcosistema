@@ -4,7 +4,7 @@ import { buscarMedicos, buscarPacientes, crearPaciente, crearSolicitud, obtenerC
 import ConfirmarAccion from '../../../../shared/ui/ConfirmarAccion.jsx'
 import { nombreSexo, SEXOS, TIPOS_DOCUMENTO } from '../../../../shared/utils/personas.js'
 import { describirEdad } from '../../../../shared/utils/edad.js'
-import { formatearFecha } from '../../../../shared/utils/formatearFecha.js'
+import { fechaHoy, formatearFecha } from '../../../../shared/utils/formatearFecha.js'
 import { useValorDiferido } from '../../../../shared/hooks/useValorDiferido.js'
 import { CatalogoEstudiosRx, EstudiosSeleccionadosRx } from './SelectorEstudiosRx.jsx'
 import { erroresDeSolicitud, prepararEstudiosParaApi } from '../utils/solicitud.js'
@@ -172,7 +172,7 @@ export default function NuevaSolicitudRx({ onClose, onCreated }) {
             </div> : registrandoPaciente ? <div className="rxg-paciente-form">
               <div className="lab-form-grid">
                 <label className="lab-full-field">Nombre completo<input required minLength="2" autoFocus value={datosPaciente.nombre_completo} onChange={(e) => cambiarPaciente('nombre_completo', e.target.value)} /></label>
-                <label>Fecha de nacimiento<input required type="date" max={new Date().toLocaleDateString('en-CA')} value={datosPaciente.fecha_nacimiento} onChange={(e) => cambiarPaciente('fecha_nacimiento', e.target.value)} />{datosPaciente.fecha_nacimiento && <small>{describirEdad(datosPaciente.fecha_nacimiento)}</small>}</label>
+                <label>Fecha de nacimiento<input required type="date" max={fechaHoy()} value={datosPaciente.fecha_nacimiento} onChange={(e) => cambiarPaciente('fecha_nacimiento', e.target.value)} />{datosPaciente.fecha_nacimiento && <small>{describirEdad(datosPaciente.fecha_nacimiento)}</small>}</label>
                 <label>Sexo registrado<select value={datosPaciente.sexo} onChange={(e) => cambiarPaciente('sexo', e.target.value)}>{SEXOS.map((sexo) => <option key={sexo.codigo} value={sexo.codigo}>{sexo.nombre}</option>)}</select></label>
                 <label className="lab-checkbox-label lab-full-field"><input type="checkbox" checked={datosPaciente.sin_documento} onChange={(e) => cambiarPaciente('sin_documento', e.target.checked)} /> Persona sin documento</label>
                 {!datosPaciente.sin_documento && <><label>Tipo de documento<select required value={datosPaciente.tipo_documento} onChange={(e) => cambiarPaciente('tipo_documento', e.target.value)}>{TIPOS_DOCUMENTO.map((tipo) => <option key={tipo}>{tipo}</option>)}</select></label><label>Número de documento<input required value={datosPaciente.numero_documento} onChange={(e) => cambiarPaciente('numero_documento', e.target.value)} /></label></>}

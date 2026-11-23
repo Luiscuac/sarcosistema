@@ -10,6 +10,7 @@ import ExamenesComplementarios from './ExamenesComplementarios.jsx'
 import RegistrosPublicados from '../../enfermeria/components/RegistrosPublicados.jsx'
 import RecetaMedica from './RecetaMedica.jsx'
 import { nombreSexo } from '../../../shared/utils/personas.js'
+import { formatearFechaHora } from '../../../shared/utils/formatearFecha.js'
 
 export function IdentidadPaciente({ paciente }) {
   return <div className="med-patient">
@@ -68,7 +69,7 @@ function SolicitudLaboratorioItem({ solicitud, pacienteId }) {
     <details className="med-lab-request-details"><summary>Ver estudios solicitados</summary>
       <ul>{solicitud.estudios.map((estudio) => <li key={estudio.estudio_id}><div><strong>{estudio.tipo_estudio_nombre}</strong><span>{estadoEstudio(estudio)}</span></div>
         {estudio.estado === 'publicado' && <ResultadoPublicadoItem estudioId={estudio.estudio_id} />}
-        {estudio.incidencias.map((incidencia, index) => <p key={index}>Constancia: {incidencia.motivo === 'muestra_no_entregada' ? 'Muestra no entregada' : incidencia.motivo === 'toma_rechazada' ? 'Toma rechazada' : 'Toma no realizada'} · {incidencia.descripcion} · {incidencia.responsable} · {new Date(incidencia.fecha_hora).toLocaleString('es-BO')}</p>)}</li>)}</ul>
+        {estudio.incidencias.map((incidencia, index) => <p key={index}>Constancia: {incidencia.motivo === 'muestra_no_entregada' ? 'Muestra no entregada' : incidencia.motivo === 'toma_rechazada' ? 'Toma rechazada' : 'Toma no realizada'} · {incidencia.descripcion} · {incidencia.responsable} · {formatearFechaHora(incidencia.fecha_hora)}</p>)}</li>)}</ul>
     </details>
   </div>
 }

@@ -1,15 +1,11 @@
 import { describirEdad } from '../../shared/utils/edad.js'
-
-export const fechaLocal = () => {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
+import { fechaHoy } from '../../shared/utils/formatearFecha.js'
 
 export const edadEnEstudio = (nacimiento, fecha) => fecha ? describirEdad(nacimiento, new Date(`${fecha}T12:00:00`)) || 'No registrada' : 'No registrada'
 
 export function iniciarDatos(estudio) {
   return estudio.informe?.datos_ecografia || {
-    version: 1, tipo: estudio.tipo_estudio_codigo, fecha_estudio: fechaLocal(),
+    version: 1, tipo: estudio.tipo_estudio_codigo, fecha_estudio: fechaHoy(),
     establecimiento: 'C.S. Sarcobamba', zona: '', conclusion: '',
     observaciones: estudio.informe?.descripcion_texto || '',
     evaluaciones: Object.fromEntries((estudio.organos || []).map(o => [o, ''])),

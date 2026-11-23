@@ -8,6 +8,7 @@ import '../pages/informe-imagen.css'
 import * as api from '../api/ecografiaApi.js'
 import { contarImagenes } from '../informe.js'
 import Boton from '../../../shared/ui/Boton.jsx'
+import { formatearFecha, formatearFechaHora } from '../../../shared/utils/formatearFecha.js'
 
 function ImagenAdjunta({ archivo }) {
   const [url, setUrl] = useState('')
@@ -85,7 +86,7 @@ export default function InformeLibreEcografia({ estudio }) {
           <header className="lab-report-header"><div><p className="lab-report-institution">SarcoSistema · Diagnóstico por imágenes</p><h1>Informe de {titulo}</h1></div><strong>{estudio.referencia_estudio}</strong></header>
           <dl className="lab-report-meta">
             <div><dt>Paciente</dt><dd>{estudio.paciente_nombre}</dd></div><div><dt>Estudio solicitado</dt><dd>{estudio.tipo_estudio_nombre}</dd></div>
-            <div><dt>Referencia de solicitud</dt><dd>{estudio.referencia_solicitud}</dd></div><div><dt>Fecha de solicitud</dt><dd>{new Date(estudio.fecha_solicitud).toLocaleDateString('es-BO')}</dd></div>
+            <div><dt>Referencia de solicitud</dt><dd>{estudio.referencia_solicitud}</dd></div><div><dt>Fecha de solicitud</dt><dd>{formatearFecha(estudio.fecha_solicitud)}</dd></div>
             <div><dt>Estado</dt><dd>{estadoEstudioImagen(estudio.estado)}</dd></div>{estudio.informe && <div><dt>Versión del informe</dt><dd>{estudio.informe.numero_version}</dd></div>}
           </dl>
           <section className="lab-report-study img-informe-cuerpo">
@@ -99,7 +100,7 @@ export default function InformeLibreEcografia({ estudio }) {
             {imagenes.length > 0 ? <div className="img-informe-imagenes">{imagenes.map(archivo => <ImagenAdjunta key={archivo.id} archivo={archivo} />)}</div> : <p className="lab-report-empty">No hay imágenes adjuntas al informe.</p>}
             {estudio.informe?.archivos?.filter(a => !api.esImagenVisible(a.mime_type)).map(a => <p className="img-meta" key={a.id}>{a.nombre_original} · {formatearTamano(a.tamano_bytes)} (vista previa no disponible)</p>)}
           </section>
-          {publicado && <p className="lab-report-responsible">Informe publicado{estudio.informe?.fecha_hora_publicacion ? ` el ${new Date(estudio.informe.fecha_hora_publicacion).toLocaleString('es-BO')}` : ''}. Disponible en el historial del paciente.</p>}
+          {publicado && <p className="lab-report-responsible">Informe publicado{estudio.informe?.fecha_hora_publicacion ? ` el ${formatearFechaHora(estudio.informe.fecha_hora_publicacion)}` : ''}. Disponible en el historial del paciente.</p>}
           <footer className="lab-report-signature img-informe-firma"><div><span /><p>Firma y sello del profesional responsable</p></div><p>Documento generado por SarcoSistema</p></footer>
           {!publicado && <div className="img-informe-controles"><Boton variante="secundario" type="submit" disabled={enviando}>Guardar borrador</Boton><Boton disabled={enviando || archivos.length > 0 || contarImagenes(estudio.informe?.archivos) === 0} onClick={() => setConfirmar(true)}>Publicar informe</Boton></div>}
           {!publicado && contarImagenes(estudio.informe?.archivos) === 0 && <p className="lab-form-hint">Para publicar, adjunta y guarda al menos una imagen del estudio (JPG, PNG o DICOM).</p>}

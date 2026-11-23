@@ -12,6 +12,7 @@ import { mensajeError } from '../../../shared/utils/mensajeError.js'
 import { useValorDiferido } from '../../../shared/hooks/useValorDiferido.js'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
 import Boton from '../../../shared/ui/Boton.jsx'
+import { fechaHoy } from '../../../shared/utils/formatearFecha.js'
 
 const PACIENTE_VACIO = {
   nombre_completo: '',
@@ -28,7 +29,7 @@ const PACIENTE_VACIO = {
 // Función, no constante: la fecha de hoy se calcula al abrir el formulario.
 const pedidoInicial = () => ({
   referencia_papel_formulario: '',
-  fecha_solicitud: new Date().toLocaleDateString('en-CA'),
+  fecha_solicitud: fechaHoy(),
   procedencia: 'este_centro',
   establecimiento_solicitante_nombre: '',
   medico_solicitante_nombre: '',

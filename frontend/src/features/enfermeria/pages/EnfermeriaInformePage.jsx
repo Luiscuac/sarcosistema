@@ -7,15 +7,15 @@ import {
 import BarraSuperior from '../../../shared/ui/BarraSuperior.jsx'
 import ConfirmarAccion from '../../../shared/ui/ConfirmarAccion.jsx'
 import { MEDICIONES, TEXTOS, formularioDesdeRegistro, resumenDelFormulario } from '../utils/signosVitales.js'
-import { formatearFecha } from '../../../shared/utils/formatearFecha.js'
+import { formatearFecha, formatearFechaHora } from '../../../shared/utils/formatearFecha.js'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
 import './enfermeria.css'
 import Boton from '../../../shared/ui/Boton.jsx'
 import { mensajeError } from '../../../shared/utils/mensajeError.js'
 
-const fechaHora = (value) => value ? new Date(value).toLocaleString('es-BO') : 'Sin fecha'
+const fechaHora = (value) => value ? formatearFechaHora(value) : 'Sin fecha'
 const fechaReceta = (receta) => receta.publicado_en
-  ? new Date(receta.publicado_en).toLocaleString('es-BO')
+  ? formatearFechaHora(receta.publicado_en)
   : formatearFecha(receta.fecha)
 
 function ResumenValores({ lineas }) {
