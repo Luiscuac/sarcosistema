@@ -3,14 +3,14 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import LaboratorioTopbar from '../../laboratorio/components/LaboratorioTopbar.jsx'
 import ConfirmarAccion from '../../laboratorio/components/ConfirmarAccion.jsx'
-import InformeImagenPage from '../../imagenes/components/InformeImagenPage.jsx'
+import InformeLibreEcografia from './InformeLibreEcografia.jsx'
 import * as api from '../api/ecografiaApi.js'
 import { agregarArchivos, iniciarDatos, pendientes } from '../informe.js'
 import InformeEcografiaDocumento from './InformeEcografiaDocumento.jsx'
 import { formatearTamano } from '../../consultas/utils/examenes.js'
 import '../../laboratorio/pages/laboratorio.css'
 import '../../laboratorio/pages/informe-solicitud.css'
-import '../../imagenes/pages/imagenes.css'
+import '../pages/informe-imagen.css'
 import '../pages/ecografia.css'
 
 
@@ -111,6 +111,6 @@ export default function EditorEcografia(props) {
   const consulta = useQuery({ queryKey: ['ecografia', 'estudio', Number(estudioId)], queryFn: () => api.obtenerEstudio(estudioId) })
   if (consulta.isPending) return <p className="img-mensaje" role="status">Cargando ecografía…</p>
   if (consulta.isError) return <p className="img-mensaje" role="alert">No se pudo cargar el estudio. <Link to="/ecografia">Volver a la bandeja</Link></p>
-  if (!consulta.data.organos?.length || (consulta.data.informe?.estado === 'publicado' && !consulta.data.informe.datos_ecografia)) return <InformeImagenPage {...props} modalidad="ecografia" api={api} />
+  if (!consulta.data.organos?.length || (consulta.data.informe?.estado === 'publicado' && !consulta.data.informe.datos_ecografia)) return <InformeLibreEcografia {...props} key={estudioId} estudio={consulta.data} />
   return <Editor {...props} key={estudioId} estudio={consulta.data} />
 }

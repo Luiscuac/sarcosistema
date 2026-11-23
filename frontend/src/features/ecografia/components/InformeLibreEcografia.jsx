@@ -5,16 +5,16 @@ import '../../laboratorio/pages/laboratorio.css'
 import '../../laboratorio/pages/informe-solicitud.css'
 import { estadoEstudioImagen, formatearTamano } from '../../consultas/utils/examenes.js'
 import { useRef } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import '../pages/imagenes.css'
-import { esImagenVisible, obtenerImagenVisible } from '../api/imagenesApi.js'
+import { Link } from 'react-router-dom'
+import '../pages/informe-imagen.css'
+import * as api from '../api/ecografiaApi.js'
 
-function ImagenAdjunta({ archivo, obtenerArchivoImagen }) {
+function ImagenAdjunta({ archivo }) {
   const [url, setUrl] = useState('')
   const imagen = useQuery({
     queryKey: ['imagenes', 'informe', 'archivo', archivo.id],
-    queryFn: () => (archivo.mime_type === 'application/dicom' ? obtenerImagenVisible(archivo) : obtenerArchivoImagen(archivo.id)),
-    enabled: esImagenVisible(archivo.mime_type),
+    queryFn: () => api.obtenerImagenVisible(archivo),
+    enabled: api.esImagenVisible(archivo.mime_type),
   })
   useEffect(() => {
     if (!imagen.data) return undefined
@@ -23,17 +23,18 @@ function ImagenAdjunta({ archivo, obtenerArchivoImagen }) {
     return () => URL.revokeObjectURL(objectUrl)
   }, [imagen.data])
 
-  if (!esImagenVisible(archivo.mime_type)) return null
+  if (!api.esImagenVisible(archivo.mime_type)) return null
   if (imagen.isError) return <p role="alert">No se pudo cargar {archivo.nombre_original}.</p>
   if (!url) return <p role="status">Cargando {archivo.nombre_original}…</p>
   return <figure className="img-informe-figura"><img src={url} alt={`Imagen del estudio: ${archivo.nombre_original}`} /><figcaption>{archivo.nombre_original}</figcaption></figure>
 }
 
-function EditorInforme({ estudio, usuario, logout, modalidad, api }) {
+const titulo = 'Ecografía'
+const rutaBandeja = '/ecografia'
+
+/** Informe de texto libre: ecografías sin plantilla de órganos o publicadas antes de la plantilla. */
+export default function InformeLibreEcografia({ estudio, usuario, logout }) {
   const cache = useQueryClient()
-  const rayosX = modalidad === 'rayos_x'
-  const titulo = rayosX ? 'Rayos X' : 'Ecografía'
-  const rutaBandeja = rayosX ? '/rayos-x/gestion' : '/ecografia'
   const [descripcion, setDescripcion] = useState(estudio.informe?.descripcion_texto || '')
   const [archivos, setArchivos] = useState([])
   const [mensaje, setMensaje] = useState('')
@@ -49,7 +50,7 @@ function EditorInforme({ estudio, usuario, logout, modalidad, api }) {
       setArchivos([])
       if (entrada.current) entrada.current.value = ''
       setMensaje('Borrador guardado. Revisa el informe antes de publicarlo.')
-      await cache.invalidateQueries({ queryKey: [modalidad, 'estudio', estudio.estudio_id] })
+      await cache.invalidateQueries({ queryKey: ['ecografia', 'estudio', estudio.estudio_id] })
     } catch (error) {
       const codigo = error?.response?.status
       setMensaje(codigo === 415 ? 'Hay un archivo con un formato no admitido.' : codigo === 413 ? 'Un archivo supera el tamaño permitido.' : 'No se pudo guardar el informe. Inténtalo de nuevo.')
@@ -64,8 +65,8 @@ function EditorInforme({ estudio, usuario, logout, modalidad, api }) {
     try {
       await api.publicarInforme(estudio.estudio_id)
       setMensaje('Estudio publicado: ya aparece en el historial del paciente.')
-      await cache.invalidateQueries({ queryKey: [modalidad, 'estudio', estudio.estudio_id] })
-      await cache.invalidateQueries({ queryKey: [modalidad, 'bandeja'] })
+      await cache.invalidateQueries({ queryKey: ['ecografia', 'estudio', estudio.estudio_id] })
+      await cache.invalidateQueries({ queryKey: ['ecografia', 'bandeja'] })
     } catch (error) {
       setMensaje(error?.response?.status === 409 ? 'El informe ya estaba publicado o no tiene contenido.' : 'No se pudo publicar. Inténtalo de nuevo.')
     } finally {
@@ -74,7 +75,7 @@ function EditorInforme({ estudio, usuario, logout, modalidad, api }) {
   }
 
   const publicado = estudio.estado === 'publicado'
-  const imagenes = estudio.informe?.archivos?.filter(a => esImagenVisible(a.mime_type)) || []
+  const imagenes = estudio.informe?.archivos?.filter(a => api.esImagenVisible(a.mime_type)) || []
 
   return <main className="lab-page img-page">
     <div className="lab-main">
@@ -96,8 +97,8 @@ function EditorInforme({ estudio, usuario, logout, modalidad, api }) {
             <h2>Imágenes y archivos del estudio</h2>
             {!publicado && <label className="img-informe-campo"><span>Adjuntar archivos</span><input ref={entrada} type="file" multiple accept="image/*,application/pdf,.dcm" onChange={e => setArchivos([...e.target.files])} /></label>}
             {archivos.length > 0 && <ul className="img-archivos">{archivos.map(file => <li key={file.name}>{file.name} · {formatearTamano(file.size)}</li>)}</ul>}
-            {imagenes.length > 0 ? <div className="img-informe-imagenes">{imagenes.map(archivo => <ImagenAdjunta key={archivo.id} archivo={archivo} obtenerArchivoImagen={api.obtenerArchivoImagen} />)}</div> : <p className="lab-report-empty">No hay imágenes adjuntas al informe.</p>}
-            {estudio.informe?.archivos?.filter(a => !esImagenVisible(a.mime_type)).map(a => <p className="img-meta" key={a.id}>{a.nombre_original} · {formatearTamano(a.tamano_bytes)} (vista previa no disponible)</p>)}
+            {imagenes.length > 0 ? <div className="img-informe-imagenes">{imagenes.map(archivo => <ImagenAdjunta key={archivo.id} archivo={archivo} />)}</div> : <p className="lab-report-empty">No hay imágenes adjuntas al informe.</p>}
+            {estudio.informe?.archivos?.filter(a => !api.esImagenVisible(a.mime_type)).map(a => <p className="img-meta" key={a.id}>{a.nombre_original} · {formatearTamano(a.tamano_bytes)} (vista previa no disponible)</p>)}
           </section>
           {publicado && <p className="lab-report-responsible">Informe publicado{estudio.informe?.fecha_hora_publicacion ? ` el ${new Date(estudio.informe.fecha_hora_publicacion).toLocaleString('es-BO')}` : ''}. Disponible en el historial del paciente.</p>}
           <footer className="lab-report-signature img-informe-firma"><div><span /><p>Firma y sello del profesional responsable</p></div><p>Documento generado por SarcoSistema</p></footer>
@@ -107,12 +108,4 @@ function EditorInforme({ estudio, usuario, logout, modalidad, api }) {
       </section>
     </div>
   </main>
-}
-
-export default function InformeImagenPage({ usuario, logout, modalidad = 'ecografia', api }) {
-  const { estudioId } = useParams()
-  const detalle = useQuery({ queryKey: [modalidad, 'estudio', Number(estudioId)], queryFn: () => api.obtenerEstudio(estudioId) })
-  if (detalle.isPending) return <main className="lab-page"><p className="img-mensaje">Cargando informe…</p></main>
-  if (detalle.isError) return <main className="lab-page"><p role="alert" className="img-mensaje">No se pudo cargar el informe del estudio.</p><Link to={modalidad === 'rayos_x' ? '/rayos-x/gestion' : '/ecografia'}>Volver a la bandeja</Link></main>
-  return <EditorInforme key={estudioId} estudio={detalle.data} usuario={usuario} logout={logout} modalidad={modalidad} api={api} />
 }

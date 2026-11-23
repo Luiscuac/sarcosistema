@@ -1,0 +1,24 @@
+.img-archivos { margin: 0; padding-left: 18px; color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
+.img-mensaje { padding: 18px 22px; margin: 0; color: var(--muted); font-size: 13px; }
+.img-meta { margin: 0; color: var(--muted); font-size: 13px; }
+.img-page .lab-secondary-button:disabled { opacity: .55; cursor: not-allowed; }
+.img-informe { margin: 18px 0; }
+.img-informe-campo { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; color: #53606b; font-size: 12px; font-weight: 600; }
+.img-informe-campo textarea, .img-informe-campo input[type="file"] { width: 100%; padding: 11px 12px; border: 1px solid var(--line); border-radius: 4px; background: #fff; color: #26323c; font: inherit; font-size: 13px; font-weight: 400; }
+.img-informe-campo textarea { min-height: 190px; resize: vertical; line-height: 1.6; }
+.img-informe-campo textarea:focus-visible, .img-informe-campo input:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.img-informe-campo textarea:disabled, .img-informe-campo input:disabled { background: #f7f8fa; color: #53606b; }
+.img-informe-adjuntos { margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--line); }
+.img-informe-adjuntos h2 { margin: 0; font-size: 17px; }
+.img-informe-firma { margin-top: 54px; }
+.img-informe-controles { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; margin-top: 28px; }
+.img-informe-imagenes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; margin-top: 18px; }
+.img-informe-figura { margin: 0; padding: 10px; border: 1px solid var(--line); border-radius: 4px; background: #f7f8fa; }
+.img-informe-figura img { display: block; width: 100%; max-height: 620px; object-fit: contain; background: #fff; }
+.img-informe-figura figcaption { padding: 8px 2px 0; color: #617180; font-size: 11px; overflow-wrap: anywhere; }
+@media print { .img-page .lab-content > .lab-title-row, .img-page .lab-content > .lab-list-panel { display: none !important; } .img-informe-controles { display: none !important; } .img-informe { margin: 0; } }
+.med-eco-form { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.med-eco-estudio { border-top: 1px solid #edf1f7; padding: 12px 0; }
+.med-eco-estudio header { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; color: #4b5b7a; }
+/* Enlaces con aspecto de botón secundario (p. ej. "Abrir con asistente IA") */
+a.lab-secondary-button { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
