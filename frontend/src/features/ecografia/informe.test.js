@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { agregarArchivos, iniciarDatos, pendientes, edadEnEstudio } from './informe.js'
+import { accionPrincipalEco, agregarArchivos, iniciarDatos, motivoBloqueoEco, pendientes, edadEnEstudio, resumenRegistro } from './informe.js'
 
 const archivo = name => ({ name, size: 15, lastModified: 1 })
 test('la edad del informe corresponde a la fecha del estudio', () => {
@@ -26,4 +26,23 @@ test('no se permite publicar sin observaciones, conclusión y zona de Doppler', 
   const d = { tipo: 'ECO_DOPPLER', fecha_estudio: '2026-11-14', conclusion: '', zona: '', evaluaciones: { Arterias: '' } }
   assert.deepEqual(pendientes(d, ['Arterias']), ['Arterias', 'Conclusión', 'Zona estudiada'])
   assert.deepEqual(pendientes({ ...d, zona: 'Zona FICTICIA', conclusion: 'Conclusión ficticia.', evaluaciones: { Arterias: 'No evaluadas en esta simulación.' } }, ['Arterias']), [])
+})
+test('el resumen del registro cuenta estructuras, fecha, conclusión y zona cuando corresponde', () => {
+  const d = { tipo: 'ECO_RENAL', fecha_estudio: '2026-11-14', conclusion: '', zona: '', evaluaciones: { 'Riñón derecho': 'Ficticio.', 'Riñón izquierdo': '' } }
+  const r = resumenRegistro(d, ['Riñón derecho', 'Riñón izquierdo'])
+  assert.equal(r.total, 4)
+  assert.equal(r.completos, 2)
+  assert.deepEqual(r.faltan, ['Riñón izquierdo', 'Conclusión'])
+  assert.equal(resumenRegistro({ ...d, tipo: 'ECO_DOPPLER' }, ['Riñón derecho', 'Riñón izquierdo']).total, 5)
+})
+test('publicar se bloquea con faltantes, cambios sin guardar o sin borrador', () => {
+  assert.match(motivoBloqueoEco({ faltan: ['Conclusión'], cambio: false, guardado: true }), /Conclusión/)
+  assert.match(motivoBloqueoEco({ faltan: [], cambio: true, guardado: true }), /Guarda el borrador antes/)
+  assert.match(motivoBloqueoEco({ faltan: [], cambio: false, guardado: false }), /Guarda el borrador para/)
+  assert.equal(motivoBloqueoEco({ faltan: [], cambio: false, guardado: true }), null)
+})
+test('la acción principal sigue el estado del estudio', () => {
+  assert.deepEqual(accionPrincipalEco({ estudio_id: 7, estado: 'pendiente_muestra', informe: null }), { etiqueta: 'Registrar hallazgos', ruta: '/ecografia/estudios/7/registro' })
+  assert.equal(accionPrincipalEco({ estudio_id: 7, estado: 'resultado_en_preparacion', informe: {} }).etiqueta, 'Continuar registro')
+  assert.equal(accionPrincipalEco({ estudio_id: 7, estado: 'publicado', informe: {} }).ruta, '/ecografia/estudios/7/informe')
 })

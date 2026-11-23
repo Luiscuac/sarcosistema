@@ -32,3 +32,26 @@ export function pendientes(datos, organos) {
     !datos.conclusion.trim() && 'Conclusión',
     ['ECO_DOPPLER', 'ECO_PARTES_BLANDAS'].includes(datos.tipo) && !datos.zona.trim() && 'Zona estudiada'].filter(Boolean)
 }
+
+/** Avance del registro para ResumenCaptura (mismo formato que Laboratorio): estructuras + datos obligatorios. */
+export function resumenRegistro(datos, organos) {
+  const faltan = pendientes(datos, organos)
+  const total = organos.length + 2 + (['ECO_DOPPLER', 'ECO_PARTES_BLANDAS'].includes(datos.tipo) ? 1 : 0)
+  return { total, completos: total - faltan.length, fueraDeRango: [], faltan }
+}
+
+/** Por qué todavía no se puede publicar (null si se puede). */
+export function motivoBloqueoEco({ faltan, cambio, guardado }) {
+  if (faltan.length) return `Para publicar falta completar: ${faltan.join(', ')}.`
+  if (cambio) return 'Guarda el borrador antes de publicar.'
+  if (!guardado) return 'Guarda el borrador para poder revisarlo y publicarlo.'
+  return null
+}
+
+/** Acción principal del detalle, como la de Laboratorio. */
+export function accionPrincipalEco(estudio) {
+  const base = `/ecografia/estudios/${estudio.estudio_id}`
+  if (estudio.estado === 'publicado') return { etiqueta: 'Ver informe', ruta: `${base}/informe` }
+  if (estudio.informe) return { etiqueta: 'Continuar registro', ruta: `${base}/registro` }
+  return { etiqueta: 'Registrar hallazgos', ruta: `${base}/registro` }
+}
