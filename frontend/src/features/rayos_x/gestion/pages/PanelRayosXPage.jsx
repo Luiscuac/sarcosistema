@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { listarEstudios, mensajeErrorApi } from '../../compartido/api/radiologiaApi.js'
+import { listarEstudios } from '../../compartido/api/radiologiaApi.js'
 import RayosXLayout from '../../compartido/RayosXLayout.jsx'
 import { agruparPorSolicitud, contarIndicadores, filtrarYOrdenarEstudios, INDICADORES_RX } from '../utils/bandejaRx.js'
 import '../../../laboratorio/components/solicitudes/solicitudes-panel.css'
 import '../gestion.css'
 import { avisoPatronTb } from '../../asistente/analisis.js'
 import { BotonEnlace } from '../../../../shared/ui/Boton.jsx'
+import { mensajeError } from '../../../../shared/utils/mensajeError.js'
 
 const ACTUALIZACION_MS = 45_000
 const ETAPAS = [
@@ -115,7 +116,7 @@ export default function PanelRayosXPage({ usuario, logout }) {
         <label>Etapa<select value={etapa} onChange={(e) => setEtapa(e.target.value)}><option value="">Todas</option>{ETAPAS.map(([codigo, nombre]) => <option key={codigo} value={codigo}>{nombre}</option>)}</select></label>
       </div>
       {consulta.isLoading && <div className="rxg-estado"><strong>Cargando estudios...</strong><span>La bandeja estará disponible en un momento.</span></div>}
-      {consulta.isError && <div className="rxg-estado" role="alert"><strong>No se pudo cargar la bandeja.</strong><span>{mensajeErrorApi(consulta.error, 'Comprueba la conexión e intenta nuevamente.')}</span></div>}
+      {consulta.isError && <div className="rxg-estado" role="alert"><strong>No se pudo cargar la bandeja.</strong><span>{mensajeError(consulta.error, 'Comprueba la conexión e intenta nuevamente.')}</span></div>}
       {consulta.isSuccess && solicitudes.length === 0 && <div className="rxg-estado"><strong>{!listaBaseVacia && hayFiltros ? 'No hay estudios con esos filtros.' : vista === 'activos' ? 'No hay estudios en curso.' : 'Todavía no hay estudios finalizados.'}</strong><span>{!listaBaseVacia && hayFiltros ? 'Prueba otra búsqueda o quita los filtros activos.' : vista === 'activos' ? usuario?.rol === 'rayos_x' ? 'Registra una nueva solicitud para iniciar el recorrido.' : 'Los estudios aparecerán cuando el personal técnico complete la adquisición.' : 'Los estudios aparecerán aquí cuando concluyan su recorrido.'}</span></div>}
       {consulta.isSuccess && solicitudes.length > 0 && <TablaEstudios solicitudes={solicitudes} />}
     </section>

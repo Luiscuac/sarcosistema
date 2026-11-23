@@ -20,6 +20,7 @@ import ConfirmarAccion from '../../../shared/ui/ConfirmarAccion.jsx'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
 import { calcularEdad } from '../../../shared/utils/edad.js'
 import Boton from '../../../shared/ui/Boton.jsx'
+import { mensajeError } from '../../../shared/utils/mensajeError.js'
 
 // Signos vitales: la presión se escribe en un campo ("120/80") en lugar de dos.
 const CAMPOS_VITALES = ['peso_kg', 'talla_cm', 'temperatura_c', 'frecuencia_cardiaca', 'frecuencia_respiratoria', 'presion', 'saturacion_oxigeno']
@@ -78,8 +79,7 @@ function FormularioPaciente({ id, usuario }) {
   }, onError: (err) => {
     envio.current = false
     setConfirmarFinal(false)
-    const detalle = err.response?.data?.detail
-    setError(typeof detalle === 'string' ? detalle : 'No se pudo guardar la consulta. Revisa los datos e inténtalo de nuevo.')
+    setError(mensajeError(err, 'No se pudo guardar la consulta. Revisa los datos e inténtalo de nuevo.'))
   } })
 
   const reemplazarForm = useCallback((nuevo) => {

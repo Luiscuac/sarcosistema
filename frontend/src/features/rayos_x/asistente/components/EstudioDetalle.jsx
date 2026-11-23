@@ -5,7 +5,7 @@ import VisorRadiografia from './VisorRadiografia.jsx'
 import PanelAsistente, { VeredictoAsistente } from './PanelAsistente.jsx'
 import PanelInforme from './PanelInforme.jsx'
 import EvolucionPaciente from './EvolucionPaciente.jsx'
-import { DECISIONES, enProceso, validarRevision, mensajeError, erroresAnalisis, snapshotCompatible, revisionVigente, lecturaAnormal } from '../analisis.js'
+import { DECISIONES, enProceso, validarRevision, mensajeErrorAsistente, erroresAnalisis, snapshotCompatible, revisionVigente, lecturaAnormal } from '../analisis.js'
 import Boton from '../../../../shared/ui/Boton.jsx'
 
 // Vista PNG generada en el servidor (DICOM, 16 bits, paleta); si no está disponible, el archivo original.
@@ -76,7 +76,7 @@ export default function EstudioDetalle({ id, usuario, habilitada, onVolver }) {
   if (detalle.isPending) return <p role="status">Cargando estudio…</p>
   if (detalle.error) return <section className="rx-ia"><header className="rx-ia-cabecera">{onVolver && <Boton variante="secundario" onClick={onVolver}>← Volver a la lista</Boton>}</header>
     <div className="rx-ia-tarjeta" role="alert"><h3>No se puede abrir este estudio en el asistente</h3>
-      <p>{detalle.error?.response?.status === 404 ? 'El asistente de IA solo analiza radiografías de tórax con informe publicado. Este estudio no cumple esa condición; su informe sigue disponible en la ficha del paciente.' : mensajeError(detalle.error)}</p></div></section>
+      <p>{detalle.error?.response?.status === 404 ? 'El asistente de IA solo analiza radiografías de tórax con informe publicado. Este estudio no cumple esa condición; su informe sigue disponible en la ficha del paciente.' : mensajeErrorAsistente(detalle.error)}</p></div></section>
   const d = detalle.data
   const advertencias = resultado ? [...new Set([...(resultado.fusion.advertencias || []), ...(resultado.rag.advertencias || []), ...(resultado.vision.warnings || [])])] : []
 
@@ -90,7 +90,7 @@ export default function EstudioDetalle({ id, usuario, habilitada, onVolver }) {
     <div className="rx-ia-cuerpo">
       <aside className={`rx-ia-visor${procesando ? ' es-analizando' : ''}`} aria-label="Radiografía" aria-busy={procesando}>
         {imagen.isFetching && <p role="status">Cargando radiografía…</p>}
-        {imagen.error && <p role="alert">{mensajeError(imagen.error)}</p>}
+        {imagen.error && <p role="alert">{mensajeErrorAsistente(imagen.error)}</p>}
         {archivoId && imagen.data && url && <VisorRadiografia url={url} alt={`Radiografía del estudio ${d.referencia}`} vision={resultado?.vision} mapa={mapa} onMapa={setMapa} />}
         {!archivoId && <p>No hay archivo activo disponible.</p>}
       </aside>
@@ -107,8 +107,8 @@ export default function EstudioDetalle({ id, usuario, habilitada, onVolver }) {
           <div><h3>{analisis.data.estado === 'en_cola' ? 'En cola' : 'Analizando…'}</h3><p>Puede tardar hasta un minuto. No cierres esta pantalla.</p></div>
         </section>}
 
-        {solicitar.error && <p role="alert" className="rx-ia-error">{mensajeError(solicitar.error)}</p>}
-        {analisis.error && <p role="alert" className="rx-ia-error">{mensajeError(analisis.error)}</p>}
+        {solicitar.error && <p role="alert" className="rx-ia-error">{mensajeErrorAsistente(solicitar.error)}</p>}
+        {analisis.error && <p role="alert" className="rx-ia-error">{mensajeErrorAsistente(analisis.error)}</p>}
         {analisis.data && !compatible && <p role="alert" className="rx-ia-error">El análisis anterior corresponde a otra versión del informe o de la imagen. Solicita un análisis nuevo.</p>}
         {['error', 'interrumpido'].includes(analisis.data?.estado) && <p role="alert" className="rx-ia-error">{erroresAnalisis[analisis.data.error_codigo] || 'El análisis falló; el informe no se modificó.'}</p>}
 
@@ -177,7 +177,7 @@ export default function EstudioDetalle({ id, usuario, habilitada, onVolver }) {
                   <Boton type="submit" disabled={revision.isPending || conflicto || !revisionVigente(versionBorrador, analisis.data.version_revision) || !validarRevision(decision, motivo, correccion)}>Guardar revisión</Boton>
                   {versionBorrador !== null && <Boton variante="secundario" onClick={() => { limpiarRevision(); analisis.refetch() }}>Descartar cambios</Boton>}
                 </div>
-                {revision.error && <p role="alert" className="rx-ia-error">{mensajeError(revision.error)}</p>}
+                {revision.error && <p role="alert" className="rx-ia-error">{mensajeErrorAsistente(revision.error)}</p>}
                 {revision.isSuccess && <p role="status" className="rx-ia-ok">Revisión guardada. El informe no cambió.</p>}
               </form>
               {(analisis.data.revisiones || []).length > 0 && <details className="rx-ia-plegable"><summary>Revisiones anteriores ({analisis.data.revisiones.length})</summary>

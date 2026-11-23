@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
-import { mensajeErrorApi, obtenerSolicitud } from '../../compartido/api/radiologiaApi.js'
+import { obtenerSolicitud } from '../../compartido/api/radiologiaApi.js'
 import RayosXLayout from '../../compartido/RayosXLayout.jsx'
 import '../gestion.css'
 import { BotonEnlace } from '../../../../shared/ui/Boton.jsx'
+import { mensajeError } from '../../../../shared/utils/mensajeError.js'
 
 const LATERALIDAD = { derecha: 'Derecha', izquierda: 'Izquierda', bilateral: 'Bilateral' }
 const valor = (dato) => dato || 'No registrado'
@@ -17,7 +18,7 @@ export default function SolicitudRayosXPage({ usuario, logout }) {
   const paciente = datos?.paciente
   return <RayosXLayout usuario={usuario} logout={logout} navegacion={{ volverA: '/rayos-x/gestion', textoVolver: 'Volver a estudios', migas: [{ texto: 'Estudios', ruta: '/rayos-x/gestion' }, { texto: solicitud?.referencia ?? 'Solicitud' }] }}>
     {consulta.isLoading && <div className="rxg-estado"><strong>Cargando solicitud...</strong></div>}
-    {consulta.isError && <div className="rxg-estado" role="alert"><h1>{consulta.error?.response?.status === 404 ? 'Solicitud no encontrada' : 'No se pudo cargar la solicitud'}</h1><span>{mensajeErrorApi(consulta.error, 'Vuelve a la bandeja e intenta nuevamente.')}</span></div>}
+    {consulta.isError && <div className="rxg-estado" role="alert"><h1>{consulta.error?.response?.status === 404 ? 'Solicitud no encontrada' : 'No se pudo cargar la solicitud'}</h1><span>{mensajeError(consulta.error, 'Vuelve a la bandeja e intenta nuevamente.')}</span></div>}
     {datos && <>
       <div className="lab-title-row"><div><p className="lab-eyebrow">SOLICITUD · {solicitud.referencia}</p><h1>{paciente.nombre_completo}</h1><p className="lab-intro">{solicitud.prioridad === 'urgente' ? 'Urgente' : 'Sin prioridad'} · {datos.estudios.length} {datos.estudios.length === 1 ? 'estudio' : 'estudios'}</p></div></div>
       <section className="lab-detail-card rxg-detalle-card"><div className="rxg-detalle-heading"><div><h2>Paciente</h2><p>Datos de identificación asociados al pedido.</p></div><BotonEnlace variante="secundario" to={`/rayos-x/gestion/pacientes/${paciente.id}`}>Ver historial de Rayos X</BotonEnlace></div>

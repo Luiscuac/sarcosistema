@@ -14,7 +14,7 @@ export function validarRevision(decision, motivo, correccion) {
     (decision === 'corregida' && Boolean(motivo.trim() && correccion.trim()))
 }
 
-export function mensajeError(error) {
+export function mensajeErrorAsistente(error) {
   const estado = error?.response?.status
   if (estado === 401 || estado === 403) return 'Tu sesión no tiene permiso para esta operación.'
   if (estado === 404) return 'El estudio, archivo o análisis no está disponible para tu cuenta.'

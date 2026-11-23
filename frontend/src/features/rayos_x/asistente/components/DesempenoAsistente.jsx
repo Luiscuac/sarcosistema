@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import Dialogo from '../../../../shared/ui/Dialogo.jsx'
 import { obtenerConcordancia } from '../api/rayosXAiApi.js'
-import { de10, mensajeError, porcentaje, progresoCalibracion } from '../analisis.js'
+import { de10, mensajeErrorAsistente, porcentaje, progresoCalibracion } from '../analisis.js'
 
 function Cifra({ titulo, valor, detalle }) {
   return <div className="rx-des-cifra"><span>{titulo}</span><strong>{valor}</strong>{detalle && <small>{detalle}</small>}</div>
@@ -37,7 +37,7 @@ export default function DesempenoAsistente({ usuario, onCerrar }) {
     descripcion="Cómo se está usando la IA y cuánto falta para ajustarla a los pacientes de aquí. Solo cifras agregadas: no se muestran pacientes.">
     <div className="rx-des">
       {consulta.isPending && <p role="status">Cargando desempeño del asistente…</p>}
-      {consulta.error && <p role="alert">{mensajeError(consulta.error)}</p>}
+      {consulta.error && <p role="alert">{mensajeErrorAsistente(consulta.error)}</p>}
       {d && <>
         <section aria-labelledby="rx-des-uso">
           <h3 id="rx-des-uso">Uso</h3>

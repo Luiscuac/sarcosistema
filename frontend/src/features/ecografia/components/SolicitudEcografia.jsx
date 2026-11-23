@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { obtenerCatalogoImagenes, solicitarEcografia } from '../../consultas/api/consultasApi.js'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
 import Boton from '../../../shared/ui/Boton.jsx'
+import { mensajeError } from '../../../shared/utils/mensajeError.js'
 
 /** El médico pide una o varias ecografías desde la ficha del paciente. */
 export default function SolicitudEcografia({ pacienteId, usuario }) {
@@ -42,8 +43,7 @@ export default function SolicitudEcografia({ pacienteId, usuario }) {
       notificar(`${seleccion.length} ${seleccion.length === 1 ? 'ecografía solicitada' : 'ecografías solicitadas'}${urgente ? ' con prioridad urgente' : ''}. El servicio de imagen la recibió en su bandeja.`, 'exito')
       setAbierto(false)
     } catch (err) {
-      const detalle = err.response?.data?.detail
-      setError(typeof detalle === 'string' ? detalle : 'No se pudo enviar la solicitud. Inténtalo de nuevo.')
+      setError(mensajeError(err, 'No se pudo enviar la solicitud. Inténtalo de nuevo.'))
     } finally {
       setEnviando(false)
     }

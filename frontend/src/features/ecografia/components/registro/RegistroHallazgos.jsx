@@ -8,8 +8,7 @@ import { agregarArchivos, contarImagenes, iniciarDatos, motivoBloqueoEco, resume
 import ConfirmarPublicacionEco from './ConfirmarPublicacionEco.jsx'
 import { SeccionAdjuntos, SeccionCierre, SeccionDatos, SeccionHallazgos } from './Secciones.jsx'
 import Boton from '../../../../shared/ui/Boton.jsx'
-
-const mensajeApi = (err, otro) => (typeof err.response?.data?.detail === 'string' ? err.response.data.detail : otro)
+import { mensajeError } from '../../../../shared/utils/mensajeError.js'
 
 /** Registro por órganos: mismo esquema que la captura de resultados de Laboratorio. */
 export default function RegistroHallazgos({ estudio }) {
@@ -55,7 +54,7 @@ export default function RegistroHallazgos({ estudio }) {
       cache.setQueryData(['ecografia', 'estudio', estudio.estudio_id], { ...estudio, estado: 'resultado_en_preparacion', informe: nuevo })
       await cache.invalidateQueries({ queryKey: ['ecografia', 'bandeja'] })
       notificar('Borrador guardado con sus adjuntos.', 'exito')
-    } catch (err) { notificar(mensajeApi(err, 'No se pudo guardar el borrador.'), 'error') }
+    } catch (err) { notificar(mensajeError(err, 'No se pudo guardar el borrador.'), 'error') }
     finally { setOcupado(false) }
   }
 
@@ -66,7 +65,7 @@ export default function RegistroHallazgos({ estudio }) {
       await cache.invalidateQueries({ queryKey: ['ecografia'] })
       notificar('Informe publicado. El médico ya puede consultarlo en la ficha del paciente.', 'exito')
       navegar(`/ecografia/estudios/${estudio.estudio_id}/informe`)
-    } catch (err) { notificar(mensajeApi(err, 'No se pudo publicar el informe.'), 'error'); setConfirmando(false) }
+    } catch (err) { notificar(mensajeError(err, 'No se pudo publicar el informe.'), 'error'); setConfirmando(false) }
     finally { setOcupado(false) }
   }
 

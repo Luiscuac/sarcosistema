@@ -5,11 +5,12 @@ import Dialogo from '../../../../shared/ui/Dialogo.jsx'
 import VisorRadiografia from '../../asistente/components/VisorRadiografia.jsx'
 import { useAvisoCambiosSinGuardar } from '../../../../shared/hooks/useAvisoCambiosSinGuardar.js'
 import { useNotificacion } from '../../../../shared/notifications/NotificationContext.jsx'
-import { guardarBorradorInforme, mensajeErrorApi, previsualizarInforme, validarInforme } from '../../compartido/api/radiologiaApi.js'
+import { guardarBorradorInforme, previsualizarInforme, validarInforme } from '../../compartido/api/radiologiaApi.js'
 import FormularioInforme from './FormularioInforme.jsx'
 import { useVistaImagen } from './GaleriaImagenes.jsx'
 import { detectarCambios, estadoInicialInforme, limpiarContenido } from '../utils/informe.js'
 import Boton from '../../../../shared/ui/Boton.jsx'
+import { mensajeError } from '../../../../shared/utils/mensajeError.js'
 
 function BotonMiniatura({ imagen, activa, onClick }) {
   const url = useVistaImagen(imagen.archivo_id)
@@ -55,9 +56,9 @@ export default function SeccionInforme({ estudioId, detalle, irA }) {
   const hayCambios = detectarCambios(edicion, inicial); useAvisoCambiosSinGuardar(hayCambios && Boolean(detalle.permisos.redactar_informe))
   const actualizar = d => queryClient.setQueryData(clave, d)
   const payload = () => ({ contenido: limpiarContenido(edicion.contenido), texto_final: edicion.textoFinal?.trim() || null, version_edicion: detalle.informe?.version_edicion ?? null })
-  const guardar = useMutation({ mutationFn: () => guardarBorradorInforme(estudioId, payload()), onSuccess: d => { actualizar(d); setConflicto(false); notificar('Borrador guardado.', 'exito'); return d }, onError: e => { if (e.response?.status === 409) setConflicto(true); notificar(e.response?.status === 409 ? 'Otra persona guardó antes. Tu texto local se conserva.' : mensajeErrorApi(e), 'error') } })
-  const previa = useMutation({ mutationFn: () => previsualizarInforme(estudioId, limpiarContenido(edicion.contenido)), onSuccess: d => setVista(d.texto), onError: e => notificar(mensajeErrorApi(e), 'error') })
-  const validar = useMutation({ mutationFn: () => validarInforme(estudioId, { version_edicion: detalleConfirmacion?.informe?.version_edicion, responsable_nombre: validacion.responsable_nombre.trim(), registro_profesional: validacion.registro_profesional.trim() || null, confirmo: true }), onSuccess: d => { actualizar(d); setConfirmando(false); setDetalleConfirmacion(null); notificar('Informe validado.', 'exito') }, onError: e => notificar(mensajeErrorApi(e), 'error') })
+  const guardar = useMutation({ mutationFn: () => guardarBorradorInforme(estudioId, payload()), onSuccess: d => { actualizar(d); setConflicto(false); notificar('Borrador guardado.', 'exito'); return d }, onError: e => { if (e.response?.status === 409) setConflicto(true); notificar(e.response?.status === 409 ? 'Otra persona guardó antes. Tu texto local se conserva.' : mensajeError(e), 'error') } })
+  const previa = useMutation({ mutationFn: () => previsualizarInforme(estudioId, limpiarContenido(edicion.contenido)), onSuccess: d => setVista(d.texto), onError: e => notificar(mensajeError(e), 'error') })
+  const validar = useMutation({ mutationFn: () => validarInforme(estudioId, { version_edicion: detalleConfirmacion?.informe?.version_edicion, responsable_nombre: validacion.responsable_nombre.trim(), registro_profesional: validacion.registro_profesional.trim() || null, confirmo: true }), onSuccess: d => { actualizar(d); setConfirmando(false); setDetalleConfirmacion(null); notificar('Informe validado.', 'exito') }, onError: e => notificar(mensajeError(e), 'error') })
   const publicado = detalle.informe?.estado === 'publicado'
   if (publicado) return <InformePublicado estudioId={estudioId} detalle={detalle} />
   const faltaAdquisicion = ['pendiente_realizacion', 'en_adquisicion'].includes(detalle.estudio.etapa)

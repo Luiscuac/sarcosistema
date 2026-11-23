@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import Dialogo from '../../../shared/ui/Dialogo.jsx'
 import { buscarPacientes, crearSolicitud, obtenerCatalogo } from '../api/ecografiaApi.js'
 import Boton from '../../../shared/ui/Boton.jsx'
+import { mensajeError } from '../../../shared/utils/mensajeError.js'
 
 export default function NuevaSolicitudEcografia({ onCerrar, onCreada }) {
   const cache = useQueryClient()
@@ -25,7 +26,7 @@ export default function NuevaSolicitudEcografia({ onCerrar, onCreada }) {
       await cache.invalidateQueries({ queryKey: ['ecografia', 'bandeja'] })
       onCreada?.({ ...resultado, paciente: paciente.nombre_completo, cantidad: tipos.length })
       onCerrar()
-    } catch (err) { setError(typeof err.response?.data?.detail === 'string' ? err.response.data.detail : 'No se pudo crear la solicitud.') }
+    } catch (err) { setError(mensajeError(err, 'No se pudo crear la solicitud.')) }
     finally { setOcupado(false) }
   }
 

@@ -9,6 +9,7 @@ import {
   rellenarCamposDestino,
 } from '../api/agenteLocalApi.js'
 import './transcriptor.css'
+import { mensajeError } from '../../../../shared/utils/mensajeError.js'
 
 const camposRegistro = [
   { clave: 'medico_nombre', etiqueta: 'Profesional de salud' },
@@ -74,7 +75,7 @@ export default function TranscriptorPage({ usuario, logout }) {
       const resultado = await buscarPacientes(buscar.trim())
       setPacientes(resultado.items)
     } catch (errorBusqueda) {
-      setError(errorBusqueda.response?.data?.detail || 'No se pudieron buscar pacientes. Comprueba tu sesión médica.')
+      setError(mensajeError(errorBusqueda, 'No se pudieron buscar pacientes. Comprueba tu sesión médica.'))
     } finally {
       setBuscandoPacientes(false)
     }
@@ -91,7 +92,7 @@ export default function TranscriptorPage({ usuario, logout }) {
       const historial = await obtenerHistorial(item.id)
       setConsultas(historial.items)
     } catch (errorHistorial) {
-      setError(errorHistorial.response?.data?.detail || 'No se pudo cargar el historial de consultas.')
+      setError(mensajeError(errorHistorial, 'No se pudo cargar el historial de consultas.'))
     } finally {
       setBuscandoPacientes(false)
     }

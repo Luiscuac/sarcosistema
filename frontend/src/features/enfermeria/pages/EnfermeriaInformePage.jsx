@@ -11,6 +11,7 @@ import { formatearFecha } from '../../../shared/utils/formatearFecha.js'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
 import './enfermeria.css'
 import Boton from '../../../shared/ui/Boton.jsx'
+import { mensajeError } from '../../../shared/utils/mensajeError.js'
 
 const fechaHora = (value) => value ? new Date(value).toLocaleString('es-BO') : 'Sin fecha'
 const fechaReceta = (receta) => receta.publicado_en
@@ -140,8 +141,7 @@ export default function EnfermeriaInformePage({ usuario, logout }) {
       await publicarRegistroEnfermeria(registroSeleccionado.id)
       notificar('Registro publicado. Ya está disponible en la ficha médica del paciente.', 'exito')
     } catch (error) {
-      const detalle = error.response?.data?.detail
-      notificar(typeof detalle === 'string' ? detalle : 'No se pudo publicar el registro.', 'error')
+      notificar(mensajeError(error, 'No se pudo publicar el registro.'), 'error')
     } finally {
       await cache.invalidateQueries({ queryKey: ['enfermeria', 'registros', pacienteId] })
       setOcupado(false)

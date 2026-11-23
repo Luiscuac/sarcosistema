@@ -15,3 +15,9 @@ test('distingue la falta de conexión y usa el mensaje predeterminado en otros c
   assert.match(mensajeError({ code: 'ERR_NETWORK' }), /conexión/)
   assert.equal(mensajeError({ response: { status: 500, data: {} } }, 'No se pudo guardar.'), 'No se pudo guardar.')
 })
+
+test('usa detail.mensaje (409 con pendientes) y explica el 403 sin detalle', () => {
+  assert.equal(mensajeError({ response: { status: 409, data: { detail: { mensaje: 'Faltan proyecciones', pendientes: ['PA'] } } } }), 'Faltan proyecciones')
+  assert.equal(mensajeError({ response: { status: 403, data: {} } }), 'Tu rol no permite esta acción.')
+  assert.equal(mensajeError({ response: { status: 500, data: {} } }, 'Otro'), 'Otro')
+})

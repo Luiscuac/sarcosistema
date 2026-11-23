@@ -2,13 +2,14 @@ import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import RayosXLayout from '../../compartido/RayosXLayout.jsx'
-import { mensajeErrorApi, obtenerEstudio } from '../../compartido/api/radiologiaApi.js'
+import { obtenerEstudio } from '../../compartido/api/radiologiaApi.js'
 import { useVistaImagen } from '../components/GaleriaImagenes.jsx'
 import { partirTextoInforme } from '../utils/informe.js'
 import '../../../laboratorio/pages/informe-solicitud.css'
 import '../../../ecografia/pages/ecografia.css'
 import './estudio.css'
 import Boton from '../../../../shared/ui/Boton.jsx'
+import { mensajeError } from '../../../../shared/utils/mensajeError.js'
 
 const LATERALIDADES = { derecha: 'Derecha', izquierda: 'Izquierda', bilateral: 'Bilateral' }
 const nombresProyecciones = detalle => (detalle.adquisicion?.proyecciones_realizadas || []).map(c => detalle.config?.proyecciones?.find(p => p.codigo === c)?.nombre || c).join(', ') || 'No registradas'
@@ -57,5 +58,5 @@ export default function InformeImpresoRxPage({ usuario, logout }) {
   const { data: detalle, isLoading, isError, error } = useQuery({ queryKey: ['radiologia', 'estudio', estudioId], queryFn: ({ signal }) => obtenerEstudio(estudioId, signal) })
   const navegacion = { volverA: `/rayos-x/gestion/estudios/${estudioId}?seccion=informe`, textoVolver: 'Volver al estudio', migas: [{ texto: 'Rayos X', ruta: '/rayos-x/gestion' }, { texto: detalle?.estudio?.referencia_estudio || 'Estudio', ruta: `/rayos-x/gestion/estudios/${estudioId}` }, { texto: 'Informe impreso' }] }
   return <RayosXLayout usuario={usuario} logout={logout} navegacion={navegacion}><div className="lab-report-controls rxe-controles-impresión"><label><input type="checkbox" checked={incluir} onChange={e => setIncluir(e.target.checked)} /> Incluir imágenes como anexo</label><Boton disabled={!detalle} onClick={() => window.print()}>Imprimir o guardar PDF</Boton></div>
-    {isLoading && <p>Cargando informe...</p>}{isError && <p role="alert" className="lab-report-error">{mensajeErrorApi(error, 'No se pudo cargar el informe.')}</p>}{detalle && <DocumentoInformeRx detalle={detalle} incluirImagenes={incluir} />}</RayosXLayout>
+    {isLoading && <p>Cargando informe...</p>}{isError && <p role="alert" className="lab-report-error">{mensajeError(error, 'No se pudo cargar el informe.')}</p>}{detalle && <DocumentoInformeRx detalle={detalle} incluirImagenes={incluir} />}</RayosXLayout>
 }

@@ -1,12 +1,13 @@
 import { useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { crearSolicitud, mensajeErrorApi, obtenerCatalogo } from './api/radiologiaApi.js'
+import { crearSolicitud, obtenerCatalogo } from './api/radiologiaApi.js'
 import SelectorEstudiosRx from '../gestion/components/SelectorEstudiosRx.jsx'
 import { erroresDeEstudios, prepararEstudiosParaApi } from '../gestion/utils/solicitud.js'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
 import './rx-tokens.css'
 import '../gestion/gestion.css'
 import Boton from '../../../shared/ui/Boton.jsx'
+import { mensajeError } from '../../../shared/utils/mensajeError.js'
 
 /** El médico pide uno o varios estudios de Rayos X desde la ficha del paciente. */
 export default function SolicitudRayosX({ pacienteId }) {
@@ -41,7 +42,7 @@ export default function SolicitudRayosX({ pacienteId }) {
       notificar(`${estudios.length} ${estudios.length === 1 ? 'estudio de Rayos X solicitado' : 'estudios de Rayos X solicitados'}${urgente ? ' con prioridad urgente' : ''}. El servicio los recibió en su lista de trabajo.`, 'exito')
       setAbierto(false)
     } catch (error) {
-      setErrores([mensajeErrorApi(error, 'No se pudo enviar la solicitud. Inténtalo de nuevo.')])
+      setErrores([mensajeError(error, 'No se pudo enviar la solicitud. Inténtalo de nuevo.')])
     } finally {
       setEnviando(false)
     }

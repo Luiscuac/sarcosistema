@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { enProceso, validarRevision, mensajeError, snapshotCompatible, revisionVigente } from './analisis.js'
+import { enProceso, validarRevision, mensajeErrorAsistente, snapshotCompatible, revisionVigente } from './analisis.js'
 
 test('solo estados activos mantienen el seguimiento', () => {
   assert.equal(enProceso('en_cola'), true)
@@ -18,9 +18,9 @@ test('revisión exige motivo y corrección explícitos', () => {
 })
 
 test('errores distinguen recursos sin filtrar detalles técnicos', () => {
-  assert.match(mensajeError({ response: { status: 409 } }), /recarga/i)
-  assert.match(mensajeError({ response: { status: 503 } }), /habilitada/i)
-  assert.equal(mensajeError({ response: { status: 500, data: { detail: 'secreto' } } }).includes('secreto'), false)
+  assert.match(mensajeErrorAsistente({ response: { status: 409 } }), /recarga/i)
+  assert.match(mensajeErrorAsistente({ response: { status: 503 } }), /habilitada/i)
+  assert.equal(mensajeErrorAsistente({ response: { status: 500, data: { detail: 'secreto' } } }).includes('secreto'), false)
 })
 
 test('un análisis histórico no se muestra junto a otro informe o archivo', () => {

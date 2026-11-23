@@ -16,6 +16,7 @@ import { nombreSexo } from '../../../shared/utils/personas.js'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
 import { calcularEdad, describirEdad } from '../../../shared/utils/edad.js'
 import Boton from '../../../shared/ui/Boton.jsx'
+import { mensajeError } from '../../../shared/utils/mensajeError.js'
 import {
   FORMULARIO_VACIO, MEDICIONES, TEXTOS, cuerpoDesdeFormulario, erroresDelFormulario,
   formularioDesdeRegistro, formularioVacio, resumenDelFormulario,
@@ -27,7 +28,8 @@ const etiquetasCampos = {
   ...Object.fromEntries(Object.entries(MEDICIONES).map(([campo, { etiqueta }]) => [campo, etiqueta])),
   presion_sistolica: 'Presión sistólica', presion_diastolica: 'Presión diastólica', dolor_escala: 'Dolor',
 }
-function mensajeErrorApi(error, porDefecto) {
+/** Errores de validación con el nombre del campo de signos vitales; lo demás, el mensaje estándar. */
+function mensajeErrorRegistro(error, porDefecto) {
   const detalle = error.response?.data?.detail
   if (Array.isArray(detalle)) return detalle.map((item) => {
     const campo = item.loc?.at(-1)
@@ -35,8 +37,7 @@ function mensajeErrorApi(error, porDefecto) {
     const mensaje = String(item.msg || 'Dato no válido').replace(/^Value error, /, '')
     return `${etiqueta ? `${etiqueta}: ` : ''}${mensaje}`
   }).join(' ')
-  if (typeof detalle === 'string') return detalle
-  return porDefecto
+  return mensajeError(error, porDefecto)
 }
 const edadTexto = (nacimiento) => describirEdad(nacimiento) || 'Edad no registrada'
 const MENSAJE_PUBLICADO = 'Registro publicado. Ya está disponible en la ficha médica del paciente.'
@@ -176,7 +177,7 @@ export default function EnfermeriaPage({ usuario, logout }) {
       setEntrada('')
       notificar('Paciente registrado. Ya puedes completar su admisión.', 'exito')
     } catch (err) {
-      setErrorPaciente(mensajeErrorApi(err, 'No se pudo registrar el paciente. Revisa los datos e inténtalo de nuevo.'))
+      setErrorPaciente(mensajeErrorRegistro(err, 'No se pudo registrar el paciente. Revisa los datos e inténtalo de nuevo.'))
     } finally {
       setOcupado(false)
     }
@@ -263,9 +264,9 @@ export default function EnfermeriaPage({ usuario, logout }) {
     } catch (err) {
       if (guardado) {
         limpiarFormulario()
-        notificar(`Se guardó como borrador, pero no se pudo publicar: ${mensajeErrorApi(err, 'inténtalo desde la lista de registros.')}`, 'error')
+        notificar(`Se guardó como borrador, pero no se pudo publicar: ${mensajeErrorRegistro(err, 'inténtalo desde la lista de registros.')}`, 'error')
       } else {
-        setError(mensajeErrorApi(err, 'No se pudo guardar. Revisa los datos e inténtalo de nuevo.'))
+        setError(mensajeErrorRegistro(err, 'No se pudo guardar. Revisa los datos e inténtalo de nuevo.'))
       }
     } finally {
       await cache.invalidateQueries({ queryKey: ['enfermeria', 'registros', paciente.id] })
@@ -281,7 +282,7 @@ export default function EnfermeriaPage({ usuario, logout }) {
       if (edicion?.id === registro.id) limpiarFormulario()
       notificar(MENSAJE_PUBLICADO, 'exito')
     } catch (err) {
-      notificar(mensajeErrorApi(err, 'No se pudo publicar el registro.'), 'error')
+      notificar(mensajeErrorRegistro(err, 'No se pudo publicar el registro.'), 'error')
     } finally {
       await cache.invalidateQueries({ queryKey: ['enfermeria', 'registros', paciente.id] })
       setOcupado(false); setConfirmacion(null)

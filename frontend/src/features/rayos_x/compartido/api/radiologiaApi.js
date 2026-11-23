@@ -57,14 +57,4 @@ export const entregarEstudio = (estudioId, entregadoA) => datos(api.post(`${base
 export const obtenerVistaImagen = (archivoId, signal) => datos(api.get(`/imagenes/archivos/${archivoId}/vista`, { responseType: 'blob', signal }))
 export const obtenerArchivoOriginal = (archivoId, signal) => datos(api.get(`/imagenes/archivos/${archivoId}`, { responseType: 'blob', signal }))
 
-/** Mensaje legible de un error de la API, incluidos los 409 con lista de pendientes. */
-export function mensajeErrorApi(error, porDefecto = 'No se pudo completar la operación.') {
-  if (!error?.response) return 'No se pudo conectar con el servidor.'
-  const detalle = error.response.data?.detail
-  if (typeof detalle === 'string') return detalle
-  if (detalle?.mensaje) return detalle.mensaje
-  if (Array.isArray(detalle) && detalle[0]?.msg) return 'Revisa los datos ingresados.'
-  if (error.response.status === 403) return 'Tu rol no permite esta acción.'
-  return porDefecto
-}
 export const pendientesDeError = error => error?.response?.data?.detail?.pendientes || []

@@ -2,13 +2,11 @@ import { useEffect, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import ConfirmarAccion from '../../../../shared/ui/ConfirmarAccion.jsx'
 import { useNotificacion } from '../../../../shared/notifications/NotificationContext.jsx'
-import {
-  adjuntarInformeExterno, asignarProyeccion, completarAdquisicion, descargarInformeExterno,
-  guardarAdquisicion, mensajeErrorApi, pendientesDeError, retirarImagen, retirarInformeExterno, subirImagenes,
-} from '../../compartido/api/radiologiaApi.js'
+import { adjuntarInformeExterno, asignarProyeccion, completarAdquisicion, descargarInformeExterno, guardarAdquisicion, pendientesDeError, retirarImagen, retirarInformeExterno, subirImagenes } from '../../compartido/api/radiologiaApi.js'
 import GaleriaImagenes from './GaleriaImagenes.jsx'
 import { parametrosANumeros, tamanoLegible, validarArchivoImagen } from '../utils/informe.js'
 import Boton from '../../../../shared/ui/Boton.jsx'
+import { mensajeError } from '../../../../shared/utils/mensajeError.js'
 
 const VACIO = { proyecciones_realizadas: [], lateralidad_realizada: '', posicion_paciente: '', fecha_hora_adquisicion: '', operador_nombre: '', calidad: '', limitaciones: '', repeticiones: 0, motivo_repeticion: '', observaciones: '', parametros: {} }
 const aLocal = iso => {
@@ -43,12 +41,12 @@ function InformesExternos({ estudioId, informes, editable, actualizar }) {
   const [archivo, setArchivo] = useState(null)
   const [campos, setCampos] = useState({ establecimiento: '', profesional: '', fecha_informe: '', observaciones: '' })
   const [retirar, setRetirar] = useState(null); const [motivo, setMotivo] = useState('')
-  const adjuntar = useMutation({ mutationFn: () => adjuntarInformeExterno(estudioId, archivo, campos), onSuccess: dato => { actualizar(dato); setArchivo(null); setCampos({ establecimiento: '', profesional: '', fecha_informe: '', observaciones: '' }); notificar('Informe externo adjuntado.', 'exito') }, onError: e => notificar(mensajeErrorApi(e), 'error') })
-  const quitar = useMutation({ mutationFn: () => retirarInformeExterno(estudioId, retirar.id, motivo.trim()), onSuccess: dato => { actualizar(dato); setRetirar(null); setMotivo(''); notificar('Informe externo retirado.', 'exito') }, onError: e => notificar(mensajeErrorApi(e), 'error') })
+  const adjuntar = useMutation({ mutationFn: () => adjuntarInformeExterno(estudioId, archivo, campos), onSuccess: dato => { actualizar(dato); setArchivo(null); setCampos({ establecimiento: '', profesional: '', fecha_informe: '', observaciones: '' }); notificar('Informe externo adjuntado.', 'exito') }, onError: e => notificar(mensajeError(e), 'error') })
+  const quitar = useMutation({ mutationFn: () => retirarInformeExterno(estudioId, retirar.id, motivo.trim()), onSuccess: dato => { actualizar(dato); setRetirar(null); setMotivo(''); notificar('Informe externo retirado.', 'exito') }, onError: e => notificar(mensajeError(e), 'error') })
   const descargar = async externo => {
     const pestana = window.open('about:blank', '_blank')
     if (pestana) pestana.opener = null
-    try { const blob = await descargarInformeExterno(externo.id); const url = URL.createObjectURL(blob); if (pestana) pestana.location = url; else window.open(url, '_blank', 'noopener,noreferrer'); setTimeout(() => URL.revokeObjectURL(url), 60000) } catch (e) { pestana?.close(); notificar(mensajeErrorApi(e), 'error') }
+    try { const blob = await descargarInformeExterno(externo.id); const url = URL.createObjectURL(blob); if (pestana) pestana.location = url; else window.open(url, '_blank', 'noopener,noreferrer'); setTimeout(() => URL.revokeObjectURL(url), 60000) } catch (e) { pestana?.close(); notificar(mensajeError(e), 'error') }
   }
   return <details className="rxe-bloque rxe-desplegable" open={abierto} onToggle={e => setAbierto(e.currentTarget.open)}>
     <summary><h2>Informes externos</h2><span>{informes.length ? `${informes.length} adjunto${informes.length === 1 ? '' : 's'}` : 'Opcional'}</span></summary>
@@ -76,7 +74,7 @@ export default function SeccionAdquisicion({ estudioId, detalle }) {
   const clave = ['radiologia', 'estudio', estudioId]
   const actualizar = dato => queryClient.setQueryData(clave, dato)
   useEffect(() => { const a = detalle.adquisicion; setForm(a ? { ...VACIO, ...a, fecha_hora_adquisicion: aLocal(a.fecha_hora_adquisicion), parametros: a.parametros || {} } : VACIO) }, [detalle.adquisicion])
-  const fallo = e => notificar(mensajeErrorApi(e), 'error')
+  const fallo = e => notificar(mensajeError(e), 'error')
   const datosRegistro = () => ({
     proyecciones_realizadas: form.proyecciones_realizadas,
     lateralidad_realizada: form.lateralidad_realizada || null,

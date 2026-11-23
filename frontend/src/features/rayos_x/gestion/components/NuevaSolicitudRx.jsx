@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { buscarMedicos, buscarPacientes, crearPaciente, crearSolicitud, mensajeErrorApi, obtenerCatalogo } from '../../compartido/api/radiologiaApi.js'
+import { buscarMedicos, buscarPacientes, crearPaciente, crearSolicitud, obtenerCatalogo } from '../../compartido/api/radiologiaApi.js'
 import ConfirmarAccion from '../../../../shared/ui/ConfirmarAccion.jsx'
 import { nombreSexo, SEXOS, TIPOS_DOCUMENTO } from '../../../../shared/utils/personas.js'
 import { describirEdad } from '../../../../shared/utils/edad.js'
@@ -9,6 +9,7 @@ import { useValorDiferido } from '../../../../shared/hooks/useValorDiferido.js'
 import { CatalogoEstudiosRx, EstudiosSeleccionadosRx } from './SelectorEstudiosRx.jsx'
 import { erroresDeSolicitud, prepararEstudiosParaApi } from '../utils/solicitud.js'
 import Boton from '../../../../shared/ui/Boton.jsx'
+import { mensajeError } from '../../../../shared/utils/mensajeError.js'
 
 const PACIENTE_VACIO = {
   nombre_completo: '', fecha_nacimiento: '', sexo: 'no_especificado', tipo_documento: 'CI',
@@ -74,7 +75,7 @@ export default function NuevaSolicitudRx({ onClose, onCreated }) {
       setErrores([])
       queryClient.invalidateQueries({ queryKey: ['radiologia', 'pacientes'] })
     },
-    onError: (error) => setErrores([mensajeErrorApi(error, 'No se pudo registrar el paciente.')]),
+    onError: (error) => setErrores([mensajeError(error, 'No se pudo registrar el paciente.')]),
   })
   const solicitudMutation = useMutation({
     mutationFn: crearSolicitud,
@@ -85,7 +86,7 @@ export default function NuevaSolicitudRx({ onClose, onCreated }) {
     },
     onError: (error) => {
       setConfirmarRegistro(false)
-      setErrores([mensajeErrorApi(error, 'No se pudo registrar la solicitud.')])
+      setErrores([mensajeError(error, 'No se pudo registrar la solicitud.')])
     },
   })
 
@@ -185,7 +186,7 @@ export default function NuevaSolicitudRx({ onClose, onCreated }) {
                 <input autoFocus type="search" value={terminoPaciente} onChange={(e) => setTerminoPaciente(e.target.value)} placeholder="Escribe al menos 2 caracteres" />
               </label>
               {terminoPaciente.trim().length >= 2 && (pacientesQuery.isFetching || terminoPaciente.trim() !== pacienteDiferido) && <p className="lab-form-hint">Buscando pacientes...</p>}
-              {pacientesQuery.isError && <p className="lab-form-error" role="alert">{mensajeErrorApi(pacientesQuery.error, 'No se pudo buscar pacientes.')}</p>}
+              {pacientesQuery.isError && <p className="lab-form-error" role="alert">{mensajeError(pacientesQuery.error, 'No se pudo buscar pacientes.')}</p>}
               {resultadosPacientes.map((item) => <button className="rxg-opcion-persona" type="button" key={item.id} onClick={() => { setPaciente(item); setErrores([]) }}><strong>{item.nombre_completo}</strong><span>{detallePaciente(item)}</span></button>)}
               {pacientesQuery.isSuccess && !pacientesQuery.isFetching && pacienteDiferido.length >= 2 && resultadosPacientes.length === 0 && <p className="lab-form-hint">No se encontró el paciente. Revisa la escritura o regístralo.</p>}
               <button className="rxg-text-button" type="button" onClick={() => setRegistrandoPaciente(true)}>Registrar paciente nuevo</button>
@@ -193,7 +194,7 @@ export default function NuevaSolicitudRx({ onClose, onCreated }) {
           </section>
 
           <CatalogoEstudiosRx catalogo={catalogoQuery.data} valor={estudios} onChange={setEstudios} deshabilitado={ocupado} />
-          {catalogoQuery.isError && <p className="lab-form-error" role="alert">{mensajeErrorApi(catalogoQuery.error, 'No se pudo cargar el catálogo de Rayos X.')}</p>}
+          {catalogoQuery.isError && <p className="lab-form-error" role="alert">{mensajeError(catalogoQuery.error, 'No se pudo cargar el catálogo de Rayos X.')}</p>}
         </div>
         <aside className="rxg-nueva-derecha">
           <EstudiosSeleccionadosRx catalogo={catalogoQuery.data} valor={estudios} onChange={setEstudios} deshabilitado={ocupado} titulo={estudios.length ? `Estudios seleccionados (${estudios.length})` : 'Estudios seleccionados'} />
@@ -206,7 +207,7 @@ export default function NuevaSolicitudRx({ onClose, onCreated }) {
               {pedido.procedencia === 'este_centro' && pedido.medico_solicitante_id ? <div className="rxg-medico-seleccionado"><span className="lab-field-label">Médico solicitante</span><span className="lab-chip">{pedido.medico_solicitante_nombre}<button type="button" onClick={() => cambiarPedido('medico_solicitante_nombre', '')}>Cambiar</button></span></div> : <label className="lab-full-field">Médico solicitante<input required autoComplete="off" value={pedido.medico_solicitante_nombre} onChange={(e) => cambiarPedido('medico_solicitante_nombre', e.target.value)} placeholder={pedido.procedencia === 'este_centro' ? 'Escribe y elige de la lista' : 'Nombre del médico'} /></label>}
               {pedido.procedencia === 'este_centro' && !pedido.medico_solicitante_id && medicoDiferido.length >= 2 && <div className="lab-full-field">
                 {medicosQuery.isFetching && <p className="lab-form-hint">Buscando médicos...</p>}
-                {medicosQuery.isError && <p className="lab-form-error" role="alert">{mensajeErrorApi(medicosQuery.error, 'No se pudo buscar médicos.')}</p>}
+                {medicosQuery.isError && <p className="lab-form-error" role="alert">{mensajeError(medicosQuery.error, 'No se pudo buscar médicos.')}</p>}
                 {(medicosQuery.data ?? []).map((medico) => <button className="rxg-opcion-persona" type="button" key={medico.id} onClick={() => setPedido((actual) => ({ ...actual, medico_solicitante_id: medico.id, medico_solicitante_nombre: medico.nombre }))}><strong>{medico.nombre}</strong></button>)}
               </div>}
               <label className="lab-full-field">Diagnóstico o motivo general (opcional)<textarea rows="3" value={pedido.diagnostico_principal} onChange={(e) => cambiarPedido('diagnostico_principal', e.target.value)} /></label>
