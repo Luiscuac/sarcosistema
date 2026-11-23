@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import Dialogo from '../../../laboratorio/components/Dialogo.jsx'
-import VisorRadiografia from '../../components/VisorRadiografia.jsx'
-import { obtenerVistaImagen } from '../../api/radiologiaApi.js'
+import VisorRadiografia from '../../asistente/components/VisorRadiografia.jsx'
+import { obtenerVistaImagen } from '../../compartido/api/radiologiaApi.js'
 import { tamanoLegible } from '../utils/informe.js'
 
 // Devuelve la URL de la vista, null mientras carga y false si falló la carga.

@@ -1,7 +1,7 @@
 import LaboratorioTopbar from '../../laboratorio/components/LaboratorioTopbar.jsx'
 import NavegacionLab from '../../laboratorio/components/NavegacionLab.jsx'
 import '../../laboratorio/pages/laboratorio.css'
-import '../pages/rx-tokens.css'
+import './rx-tokens.css'
 
 export const RUTA_RAYOS_X = '/rayos-x/gestion'
 export const ROL_TECNICO = 'rayos_x'

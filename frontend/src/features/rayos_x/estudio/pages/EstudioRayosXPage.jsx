@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import RayosXLayout from '../../components/RayosXLayout.jsx'
+import RayosXLayout from '../../compartido/RayosXLayout.jsx'
 import ConfirmarAccion from '../../../laboratorio/components/ConfirmarAccion.jsx'
-import { entregarEstudio, marcarNoRealizado, mensajeErrorApi, obtenerEstudio } from '../../api/radiologiaApi.js'
+import { entregarEstudio, marcarNoRealizado, mensajeErrorApi, obtenerEstudio } from '../../compartido/api/radiologiaApi.js'
 import { useNotificacion } from '../../../../shared/notifications/NotificationContext.jsx'
 import SeccionAdquisicion from '../components/SeccionAdquisicion.jsx'
 import SeccionInforme from '../components/SeccionInforme.jsx'
-import '../../pages/rayos-x.css'
+import '../../asistente/pages/rayos-x.css'
 import './estudio.css'
 
 const SECCIONES = ['resumen', 'adquisicion', 'informe', 'historial']

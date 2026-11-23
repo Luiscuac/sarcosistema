@@ -1,10 +1,10 @@
 import { useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { crearSolicitud, mensajeErrorApi, obtenerCatalogo } from '../api/radiologiaApi.js'
+import { crearSolicitud, mensajeErrorApi, obtenerCatalogo } from './api/radiologiaApi.js'
 import SelectorEstudiosRx from '../gestion/components/SelectorEstudiosRx.jsx'
 import { erroresDeEstudios, prepararEstudiosParaApi } from '../gestion/utils/solicitud.js'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
-import '../pages/rx-tokens.css'
+import './rx-tokens.css'
 import '../gestion/gestion.css'
 
 /** El médico pide uno o varios estudios de Rayos X desde la ficha del paciente. */

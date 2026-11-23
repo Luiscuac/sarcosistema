@@ -1,5 +1,5 @@
 // Cliente de la API de radiología convencional. Contrato: docs/imagenes/radiologia-api.md
-import api from '../../../shared/api/httpClient.js'
+import api from '../../../../shared/api/httpClient.js'
 
 const base = '/imagenes/radiologia'
 const datos = async promesa => (await promesa).data

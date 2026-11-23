@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { listarEstudios, mensajeErrorApi } from '../../api/radiologiaApi.js'
-import RayosXLayout from '../../components/RayosXLayout.jsx'
+import { listarEstudios, mensajeErrorApi } from '../../compartido/api/radiologiaApi.js'
+import RayosXLayout from '../../compartido/RayosXLayout.jsx'
 import { agruparPorSolicitud, contarIndicadores, filtrarYOrdenarEstudios, INDICADORES_RX } from '../utils/bandejaRx.js'
 import '../../../laboratorio/components/solicitudes/solicitudes-panel.css'
 import '../gestion.css'
-import { avisoPatronTb } from '../../analisis.js'
+import { avisoPatronTb } from '../../asistente/analisis.js'
 
 const ACTUALIZACION_MS = 45_000
 const ETAPAS = [

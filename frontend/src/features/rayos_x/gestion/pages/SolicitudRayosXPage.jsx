@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
-import { mensajeErrorApi, obtenerSolicitud } from '../../api/radiologiaApi.js'
-import RayosXLayout from '../../components/RayosXLayout.jsx'
+import { mensajeErrorApi, obtenerSolicitud } from '../../compartido/api/radiologiaApi.js'
+import RayosXLayout from '../../compartido/RayosXLayout.jsx'
 import '../gestion.css'
 
 const LATERALIDAD = { derecha: 'Derecha', izquierda: 'Izquierda', bilateral: 'Bilateral' }

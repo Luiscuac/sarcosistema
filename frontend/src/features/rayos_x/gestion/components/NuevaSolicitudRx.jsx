@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { buscarMedicos, buscarPacientes, crearPaciente, crearSolicitud, mensajeErrorApi, obtenerCatalogo } from '../../api/radiologiaApi.js'
+import { buscarMedicos, buscarPacientes, crearPaciente, crearSolicitud, mensajeErrorApi, obtenerCatalogo } from '../../compartido/api/radiologiaApi.js'
 import ConfirmarAccion from '../../../laboratorio/components/ConfirmarAccion.jsx'
 import { nombreSexo, SEXOS, TIPOS_DOCUMENTO } from '../../../laboratorio/utils/catalogos.js'
 import { describirEdad } from '../../../../shared/utils/edad.js'

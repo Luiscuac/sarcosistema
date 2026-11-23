@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import RayosXLayout from '../../components/RayosXLayout.jsx'
+import RayosXLayout from '../../compartido/RayosXLayout.jsx'
 import NuevaSolicitudRx from '../components/NuevaSolicitudRx.jsx'
 import '../gestion.css'
 

@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import ConsultasLayout from '../../consultas/components/ConsultasLayout.jsx'
+import ConsultasLayout from '../../../consultas/components/ConsultasLayout.jsx'
 import EstudioDetalle from '../components/EstudioDetalle.jsx'
 import DesempenoAsistente from '../components/DesempenoAsistente.jsx'
 import { listarEstudios } from '../api/rayosXAiApi.js'
 import { mensajeError } from '../analisis.js'
-import '../../laboratorio/pages/laboratorio.css'
+import '../../../laboratorio/pages/laboratorio.css'
 import './rayos-x.css'
 
 export default function RayosXPage({ usuario, logout }) {

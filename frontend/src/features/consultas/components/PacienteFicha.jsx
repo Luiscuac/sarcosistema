@@ -5,7 +5,7 @@ import { useHistorial, usePaginaHistorial, usePaciente } from '../hooks/useConsu
 import { obtenerResultadoPublicadoLaboratorio, obtenerSolicitudesLaboratorio } from '../api/consultasApi.js'
 import { edad, fecha } from '../utils/paciente.js'
 import SolicitudEcografia from '../../ecografia/components/SolicitudEcografia.jsx'
-import SolicitudRayosX from '../../rayos_x/components/SolicitudRayosX.jsx'
+import SolicitudRayosX from '../../rayos_x/compartido/SolicitudRayosX.jsx'
 import ExamenesComplementarios from './ExamenesComplementarios.jsx'
 import RegistrosPublicados from '../../enfermeria/components/RegistrosPublicados.jsx'
 import RecetaMedica from './RecetaMedica.jsx'

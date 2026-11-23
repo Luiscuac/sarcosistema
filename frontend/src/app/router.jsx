@@ -19,7 +19,7 @@ import InformeImpresoRxPage from '../features/rayos_x/estudio/pages/InformeImpre
 import EnfermeriaPage from '../features/enfermeria/pages/EnfermeriaPage.jsx'
 import EnfermeriaInformePage from '../features/enfermeria/pages/EnfermeriaInformePage.jsx'
 import FarmaciaPage from '../features/enfermeria/pages/FarmaciaPage.jsx'
-import RayosXPage from '../features/rayos_x/pages/RayosXPage.jsx'
+import RayosXPage from '../features/rayos_x/asistente/pages/RayosXPage.jsx'
 // El personal de Rayos X (rayos_x) se encarga de todo el flujo: solicitud, imágenes e informe.
 const ROLES_RAYOS_X = ['rayos_x']
 

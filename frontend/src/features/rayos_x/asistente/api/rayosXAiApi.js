@@ -1,4 +1,4 @@
-import api from '../../../shared/api/httpClient.js'
+import api from '../../../../shared/api/httpClient.js'
 
 export const listarEstudios = async (pagina, signal) => (await api.get('/imagenes/analisis/estudios', { params: { pagina }, signal })).data
 export const obtenerEstudio = async (id, signal) => (await api.get(`/imagenes/analisis/estudios/${id}`, { signal })).data

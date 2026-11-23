@@ -5,7 +5,7 @@ import { useNotificacion } from '../../../../shared/notifications/NotificationCo
 import {
   adjuntarInformeExterno, asignarProyeccion, completarAdquisicion, descargarInformeExterno,
   guardarAdquisicion, mensajeErrorApi, pendientesDeError, retirarImagen, retirarInformeExterno, subirImagenes,
-} from '../../api/radiologiaApi.js'
+} from '../../compartido/api/radiologiaApi.js'
 import GaleriaImagenes from './GaleriaImagenes.jsx'
 import { parametrosANumeros, tamanoLegible, validarArchivoImagen } from '../utils/informe.js'
 
