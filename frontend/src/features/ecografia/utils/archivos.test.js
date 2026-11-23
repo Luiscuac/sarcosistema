@@ -1,8 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import {
-  esDescargable, estadoEstudioImagen, etiquetaArchivo, formatearTamano,
-} from './examenes.js'
+import { estadoEstudioImagen, formatearTamano } from './archivos.js'
 
 test('el tamaño se muestra en la unidad legible mas cercana', () => {
   assert.equal(formatearTamano(512), '512 B')
@@ -15,19 +13,6 @@ test('el tamaño se muestra en la unidad legible mas cercana', () => {
 test('valores invalidos no inventan un tamaño', () => {
   assert.equal(formatearTamano(undefined), '---')
   assert.equal(formatearTamano(-1), '---')
-})
-
-test('las imagenes se pueden previsualizar, DICOM y PDF no', () => {
-  assert.equal(esDescargable('image/png'), false)
-  assert.equal(esDescargable('image/jpeg'), false)
-  assert.equal(esDescargable('application/dicom'), true)
-  assert.equal(esDescargable('application/pdf'), true)
-})
-
-test('la etiqueta explica por que un archivo no se previsualiza', () => {
-  assert.equal(etiquetaArchivo('image/png', 'eco.png'), 'eco.png')
-  assert.equal(etiquetaArchivo('application/dicom', 'estudio.dcm'), 'DICOM (descargar)')
-  assert.equal(etiquetaArchivo('application/pdf', 'informe.pdf'), 'PDF (descargar)')
 })
 
 test('cada estado del estudio tiene texto para el medico', () => {

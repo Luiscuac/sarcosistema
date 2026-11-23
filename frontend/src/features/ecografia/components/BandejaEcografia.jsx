@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import LaboratorioTopbar from '../../laboratorio/components/LaboratorioTopbar.jsx'
 import { formatearFecha } from '../../../shared/utils/formatearFecha.js'
-import { estadoEstudioImagen } from '../../consultas/utils/examenes.js'
+import { estadoEstudioImagen } from '../utils/archivos.js'
 import { VISTAS, filtrarEstudios } from '../bandeja.js'
 import '../../laboratorio/pages/laboratorio.css'
 

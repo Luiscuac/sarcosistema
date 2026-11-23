@@ -1,4 +1,4 @@
-/** Utilidades de examenes complementarios (imagen, DICOM y formatos futuros). */
+/** Utilidades de archivos y estados de los estudios de ecografía. */
 
 const UNIDADES = ['B', 'KB', 'MB', 'GB']
 
@@ -12,20 +12,6 @@ export function formatearTamano(bytes) {
     indice += 1
   }
   return `${valor.toFixed(valor >= 10 ? 0 : 1)} ${UNIDADES[indice]}`
-}
-
-/** El navegador no puede mostrar DICOM: se ofrece como descarga. */
-export function esDescargable(mime) {
-  return !String(mime || '').startsWith('image/')
-}
-
-export function etiquetaArchivo(mime, nombre) {
-  if (esDescargable(mime)) {
-    if (String(mime).includes('dicom')) return 'DICOM (descargar)'
-    if (String(mime).includes('pdf')) return 'PDF (descargar)'
-    return 'Archivo (descargar)'
-  }
-  return nombre
 }
 
 export function estadoEstudioImagen(estado) {
