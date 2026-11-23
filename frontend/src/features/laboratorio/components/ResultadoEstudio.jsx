@@ -10,6 +10,7 @@ import { mensajeError } from '../utils/mensajeError.js'
 import { useAvisoCambiosSinGuardar } from '../../../shared/hooks/useAvisoCambiosSinGuardar.js'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
 import './resultados/ResultadoEstudio.css'
+import Boton from '../../../shared/ui/Boton.jsx'
 
 export default function ResultadoEstudio({ estudioId, usuario }) {
   const queryClient = useQueryClient()
@@ -120,8 +121,8 @@ export default function ResultadoEstudio({ estudioId, usuario }) {
         </div>
         {editable && <footer className="lab-result-sheet-footer">
           <button type="submit" disabled={ocupado || responsable.trim().length < 2 || !hayCambios}>{guardar.isPending ? 'Guardando…' : 'Guardar borrador'}</button>
-          <button className="primary-button" type="button" disabled={ocupado || Boolean(motivoBloqueo)} title={motivoBloqueo ?? undefined}
-            onClick={() => setConfirmando(true)}>Revisar y publicar</button>
+          <Boton disabled={ocupado || Boolean(motivoBloqueo)} title={motivoBloqueo ?? undefined}
+            onClick={() => setConfirmando(true)}>Revisar y publicar</Boton>
         </footer>}
       </form>}
       {confirmando && <ConfirmarPublicacion estudios={[{ ...data, parametros }]} valores={valores} responsable={responsable.trim()}

@@ -14,6 +14,7 @@ import { mensajeError } from '../utils/mensajeError.js'
 import { useAvisoCambiosSinGuardar } from '../../../shared/hooks/useAvisoCambiosSinGuardar.js'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
 import './area-resultados.css'
+import Boton from '../../../shared/ui/Boton.jsx'
 
 const SIN_RESULTADOS = []
 
@@ -178,8 +179,8 @@ export default function AreaResultadosPage({ usuario, logout }) {
             {!todoPublicado && <footer className="lab-area-result-actions">
               <span className="lab-form-hint">Consejo: pulsa Enter para pasar al siguiente campo.</span>
               <button type="submit" disabled={ocupado || responsable.trim().length < 2 || !hayCambios}>{guardar.isPending ? 'Guardando…' : 'Guardar borrador'}</button>
-              <button className="primary-button" type="button" disabled={ocupado || Boolean(motivoBloqueo)} title={motivoBloqueo ?? undefined}
-                onClick={() => setConfirmando(true)}>Revisar y publicar</button>
+              <Boton disabled={ocupado || Boolean(motivoBloqueo)} title={motivoBloqueo ?? undefined}
+                onClick={() => setConfirmando(true)}>Revisar y publicar</Boton>
             </footer>}
           </form>}
         </>}

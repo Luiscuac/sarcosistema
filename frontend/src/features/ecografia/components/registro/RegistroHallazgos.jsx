@@ -7,6 +7,7 @@ import * as api from '../../api/ecografiaApi.js'
 import { agregarArchivos, contarImagenes, iniciarDatos, motivoBloqueoEco, resumenRegistro } from '../../informe.js'
 import ConfirmarPublicacionEco from './ConfirmarPublicacionEco.jsx'
 import { SeccionAdjuntos, SeccionCierre, SeccionDatos, SeccionHallazgos } from './Secciones.jsx'
+import Boton from '../../../../shared/ui/Boton.jsx'
 
 const mensajeApi = (err, otro) => (typeof err.response?.data?.detail === 'string' ? err.response.data.detail : otro)
 
@@ -90,8 +91,8 @@ export default function RegistroHallazgos({ estudio }) {
       <footer className="lab-area-result-actions eco-acciones-pie">
         <span className={`eco-estado-guardado${cambio ? ' es-pendiente' : ''}`} role="status">{cambio ? 'Cambios sin guardar' : informe ? 'Borrador guardado' : 'Aún sin guardar'}</span>
         <button type="submit" disabled={ocupado || (!cambio && Boolean(informe))}>{ocupado ? 'Guardando…' : 'Guardar borrador'}</button>
-        <button className="primary-button" type="button" disabled={ocupado || Boolean(motivoBloqueo)} title={motivoBloqueo ?? undefined}
-          onClick={() => setConfirmando(true)}>Revisar y publicar</button>
+        <Boton disabled={ocupado || Boolean(motivoBloqueo)} title={motivoBloqueo ?? undefined}
+          onClick={() => setConfirmando(true)}>Revisar y publicar</Boton>
       </footer>
     </form>
     {confirmando && <ConfirmarPublicacionEco estudio={estudio} datos={datos} guardados={guardados} pendiente={ocupado}

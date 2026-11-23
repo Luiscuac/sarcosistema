@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import BarraSuperior from '../../../shared/ui/BarraSuperior.jsx'
 import NuevaSolicitud from '../components/NuevaSolicitud.jsx'
 import ResumenSolicitudes from '../components/ResumenSolicitudes.jsx'
 import SolicitudesPanel from '../components/SolicitudesPanel.jsx'
+import Boton, { BotonEnlace } from '../../../shared/ui/Boton.jsx'
 
 export default function LaboratorioPage({ usuario, logout }) {
   const [mostrarNuevaSolicitud, setMostrarNuevaSolicitud] = useState(false)
@@ -32,13 +32,13 @@ export default function LaboratorioPage({ usuario, logout }) {
               <h1>Solicitudes de laboratorio</h1>
             </div>
             <div className="lab-title-actions">
-              <button className="primary-button" type="button" onClick={() => { setSolicitudCreada(null); setMostrarNuevaSolicitud(true) }}>+ Nueva solicitud</button>
+              <Boton onClick={() => { setSolicitudCreada(null); setMostrarNuevaSolicitud(true) }}>+ Nueva solicitud</Boton>
             </div>
           </div>
 
           {solicitudCreada && <div className="lab-created-notice" role="status">
             <span>Solicitud <strong>{solicitudCreada.referencia}</strong> registrada para {solicitudCreada.paciente_nombre}.</span>
-            <Link className="primary-button" to={`/laboratorio/solicitudes/${solicitudCreada.id}?accion=muestra`}>Registrar muestra ahora</Link>
+            <BotonEnlace to={`/laboratorio/solicitudes/${solicitudCreada.id}?accion=muestra`}>Registrar muestra ahora</BotonEnlace>
             <button type="button" onClick={() => setSolicitudCreada(null)} aria-label="Cerrar aviso">×</button>
           </div>}
 

@@ -2,6 +2,7 @@ import { describirEdad } from '../../../../shared/utils/edad.js'
 import { formatearFecha } from '../../../../shared/utils/formatearFecha.js'
 import { nombreSexo, SEXOS, TIPOS_DOCUMENTO } from '../../../../shared/utils/personas.js'
 import './PacienteSolicitud.css'
+import Boton from '../../../../shared/ui/Boton.jsx'
 
 function detallePaciente(paciente) {
   return [
@@ -37,7 +38,7 @@ export function FormularioPaciente({ datos, pendiente, onChange, onCancelar, onG
     </div>
     <div className="lab-inline-actions">
       <button type="button" onClick={onCancelar}>Volver a buscar</button>
-      <button className="primary-button" type="button" disabled={pendiente} onClick={onGuardar}>{pendiente ? 'Guardando…' : 'Guardar paciente'}</button>
+      <Boton disabled={pendiente} onClick={onGuardar}>{pendiente ? 'Guardando…' : 'Guardar paciente'}</Boton>
     </div>
   </div>
 }

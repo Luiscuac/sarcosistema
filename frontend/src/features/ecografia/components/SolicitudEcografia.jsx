@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { obtenerCatalogoImagenes, solicitarEcografia } from '../../consultas/api/consultasApi.js'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
+import Boton from '../../../shared/ui/Boton.jsx'
 
 /** El médico pide una o varias ecografías desde la ficha del paciente. */
 export default function SolicitudEcografia({ pacienteId, usuario }) {
@@ -85,9 +86,9 @@ export default function SolicitudEcografia({ pacienteId, usuario }) {
       </div>
       <div className="med-eco-actions">
         <button type="button" className="med-secondary-button" disabled={enviando} onClick={() => setAbierto(false)}>Cancelar</button>
-        <button type="submit" className="primary-button" disabled={!seleccion.length || enviando}>
+        <Boton type="submit" disabled={!seleccion.length || enviando}>
           {enviando ? 'Enviando…' : `Enviar solicitud${seleccion.length ? ` (${seleccion.length})` : ''}`}
-        </button>
+        </Boton>
       </div>
     </form>
   )

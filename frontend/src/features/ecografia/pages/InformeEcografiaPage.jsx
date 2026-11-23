@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import MarcoEcografia, { migasEstudio } from '../components/MarcoEcografia.jsx'
 import InformeLibreEcografia from '../components/InformeLibreEcografia.jsx'
 import InformeEcografiaDocumento from '../components/InformeEcografiaDocumento.jsx'
@@ -7,6 +7,7 @@ import { useEstudioEcografia, usaPlantilla } from '../hooks/useEstudioEcografia.
 import { iniciarDatos } from '../informe.js'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
 import '../../laboratorio/pages/informe-solicitud.css'
+import Boton, { BotonEnlace } from '../../../shared/ui/Boton.jsx'
 
 /** Informe (borrador o publicado) listo para imprimir, como el informe final de Laboratorio. */
 export default function InformeEcografiaPage({ usuario, logout }) {
@@ -29,13 +30,13 @@ export default function InformeEcografiaPage({ usuario, logout }) {
     {consulta.isError && <p role="alert">No se pudo cargar el informe. Vuelve a la bandeja e inténtalo de nuevo.</p>}
     {estudio && !usaPlantilla(estudio) && <InformeLibreEcografia key={estudioId} estudio={estudio} />}
     {estudio && usaPlantilla(estudio) && !estudio.informe && <div className="lab-detail-card"><h2>Todavía no hay informe</h2><p>Registra los hallazgos para generar el informe.</p>
-      <Link className="primary-button" to={`/ecografia/estudios/${estudioId}/registro`}>Registrar hallazgos</Link></div>}
+      <BotonEnlace to={`/ecografia/estudios/${estudioId}/registro`}>Registrar hallazgos</BotonEnlace></div>}
     {estudio?.informe && usaPlantilla(estudio) && <>
       <div className="lab-report-controls">
         <p className="eco-informe-estado">{publicado ? 'Informe publicado' : 'Borrador: así se verá al publicarlo.'}</p>
         <div className="eco-informe-acciones">
-          {!publicado && <Link className="lab-secondary-button" to={`/ecografia/estudios/${estudioId}/registro`}>Seguir editando</Link>}
-          <button className="primary-button" type="button" onClick={imprimir}>Imprimir o guardar PDF</button>
+          {!publicado && <BotonEnlace variante="secundario" to={`/ecografia/estudios/${estudioId}/registro`}>Seguir editando</BotonEnlace>}
+          <Boton onClick={imprimir}>Imprimir o guardar PDF</Boton>
         </div>
       </div>
       <InformeEcografiaDocumento estudio={estudio} datos={iniciarDatos(estudio)} guardados={estudio.informe.archivos || []} archivos={[]}

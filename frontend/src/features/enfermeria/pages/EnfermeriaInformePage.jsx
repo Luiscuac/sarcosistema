@@ -10,6 +10,7 @@ import { MEDICIONES, TEXTOS, formularioDesdeRegistro, resumenDelFormulario } fro
 import { formatearFecha } from '../../../shared/utils/formatearFecha.js'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
 import './enfermeria.css'
+import Boton from '../../../shared/ui/Boton.jsx'
 
 const fechaHora = (value) => value ? new Date(value).toLocaleString('es-BO') : 'Sin fecha'
 const fechaReceta = (receta) => receta.publicado_en
@@ -57,7 +58,7 @@ function InformeAdmision({ registro, paciente, onVolver, onEditar, onPublicar, o
       {!lineas.length && <p className="enf-message">Este registro no contiene datos para mostrar.</p>}
       {registro.estado === 'borrador' && <div className="enf-report-actions">
         <button type="button" onClick={() => onEditar(registro)} disabled={ocupado}>Editar borrador</button>
-        <button type="button" className="primary-button" onClick={() => onPublicar(registro)} disabled={ocupado}>Publicar para el médico…</button>
+        <Boton onClick={() => onPublicar(registro)} disabled={ocupado}>Publicar para el médico…</Boton>
       </div>}
     </div>
   </section>

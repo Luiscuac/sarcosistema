@@ -6,6 +6,7 @@ import PanelAsistente, { VeredictoAsistente } from './PanelAsistente.jsx'
 import PanelInforme from './PanelInforme.jsx'
 import EvolucionPaciente from './EvolucionPaciente.jsx'
 import { DECISIONES, enProceso, validarRevision, mensajeError, erroresAnalisis, snapshotCompatible, revisionVigente, lecturaAnormal } from '../analisis.js'
+import Boton from '../../../../shared/ui/Boton.jsx'
 
 // Vista PNG generada en el servidor (DICOM, 16 bits, paleta); si no está disponible, el archivo original.
 const cargarImagen = async (id, archivoId, signal) => {
@@ -27,7 +28,7 @@ function SolicitarAnalisis({ confirmado, setConfirmado, proyeccion, setProyeccio
     <label className="rx-ia-campo">Proyección<select value={proyeccion} onChange={e => setProyeccion(e.target.value)}>
       <option value="PA">Posteroanterior (PA)</option><option value="AP">Anteroposterior (AP)</option><option value="frontal_no_especificada">Frontal no especificada</option>
     </select></label>
-    <button type="button" className="primary-button" disabled={deshabilitado} onClick={onAnalizar}>{compacto ? 'Analizar de nuevo' : 'Analizar con IA'}</button>
+    <Boton disabled={deshabilitado} onClick={onAnalizar}>{compacto ? 'Analizar de nuevo' : 'Analizar con IA'}</Boton>
     {!habilitada && <p className="rx-nota">La asistencia de IA está deshabilitada en este servidor; el informe sigue disponible.</p>}
   </div>
 }
@@ -73,7 +74,7 @@ export default function EstudioDetalle({ id, usuario, habilitada, onVolver }) {
   const puedeAnalizar = habilitada && confirmado && archivoId && !solicitar.isPending && !procesando
 
   if (detalle.isPending) return <p role="status">Cargando estudio…</p>
-  if (detalle.error) return <section className="rx-ia"><header className="rx-ia-cabecera">{onVolver && <button type="button" className="lab-secondary-button" onClick={onVolver}>← Volver a la lista</button>}</header>
+  if (detalle.error) return <section className="rx-ia"><header className="rx-ia-cabecera">{onVolver && <Boton variante="secundario" onClick={onVolver}>← Volver a la lista</Boton>}</header>
     <div className="rx-ia-tarjeta" role="alert"><h3>No se puede abrir este estudio en el asistente</h3>
       <p>{detalle.error?.response?.status === 404 ? 'El asistente de IA solo analiza radiografías de tórax con informe publicado. Este estudio no cumple esa condición; su informe sigue disponible en la ficha del paciente.' : mensajeError(detalle.error)}</p></div></section>
   const d = detalle.data
@@ -81,7 +82,7 @@ export default function EstudioDetalle({ id, usuario, habilitada, onVolver }) {
 
   return <section className="rx-ia" aria-label="Asistente de IA del estudio">
     <header className="rx-ia-cabecera">
-      {onVolver && <button type="button" className="lab-secondary-button" onClick={onVolver}>← Volver a la lista</button>}
+      {onVolver && <Boton variante="secundario" onClick={onVolver}>← Volver a la lista</Boton>}
       <div><p className="rx-ia-etiqueta">{d.estudio} · {d.referencia}</p><h2>{d.paciente || 'Paciente'}</h2></div>
       <span className="rx-ia-experimental">IA experimental · no diagnostica</span>
     </header>
@@ -173,8 +174,8 @@ export default function EstudioDetalle({ id, usuario, habilitada, onVolver }) {
                 </fieldset>
                 {conflicto && <p role="alert" className="rx-ia-error">Otra persona guardó una revisión más reciente. Tu borrador no se guardará encima.</p>}
                 <div className="rx-ia-acciones">
-                  <button className="primary-button" disabled={revision.isPending || conflicto || !revisionVigente(versionBorrador, analisis.data.version_revision) || !validarRevision(decision, motivo, correccion)}>Guardar revisión</button>
-                  {versionBorrador !== null && <button type="button" className="lab-secondary-button" onClick={() => { limpiarRevision(); analisis.refetch() }}>Descartar cambios</button>}
+                  <Boton type="submit" disabled={revision.isPending || conflicto || !revisionVigente(versionBorrador, analisis.data.version_revision) || !validarRevision(decision, motivo, correccion)}>Guardar revisión</Boton>
+                  {versionBorrador !== null && <Boton variante="secundario" onClick={() => { limpiarRevision(); analisis.refetch() }}>Descartar cambios</Boton>}
                 </div>
                 {revision.error && <p role="alert" className="rx-ia-error">{mensajeError(revision.error)}</p>}
                 {revision.isSuccess && <p role="status" className="rx-ia-ok">Revisión guardada. El informe no cambió.</p>}

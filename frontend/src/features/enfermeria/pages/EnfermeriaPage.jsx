@@ -15,6 +15,7 @@ import BarraSuperior from '../../../shared/ui/BarraSuperior.jsx'
 import { nombreSexo } from '../../../shared/utils/personas.js'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
 import { calcularEdad, describirEdad } from '../../../shared/utils/edad.js'
+import Boton from '../../../shared/ui/Boton.jsx'
 import {
   FORMULARIO_VACIO, MEDICIONES, TEXTOS, cuerpoDesdeFormulario, erroresDelFormulario,
   formularioDesdeRegistro, formularioVacio, resumenDelFormulario,
@@ -308,7 +309,7 @@ export default function EnfermeriaPage({ usuario, logout }) {
           <div className="enf-panel-heading"><h2>Buscar paciente</h2>
             <div className="enf-search-heading-actions">
               {paciente && <button type="button" className="enf-change-patient" onClick={() => setBuscando(false)}>Volver a {paciente.nombre_completo}</button>}
-              {!nuevoPaciente && <button type="button" className="primary-button" onClick={() => { setNuevoPaciente(true); setErrorPaciente('') }}>+ Registrar paciente nuevo</button>}
+              {!nuevoPaciente && <Boton onClick={() => { setNuevoPaciente(true); setErrorPaciente('') }}>+ Registrar paciente nuevo</Boton>}
             </div>
           </div>
           {nuevoPaciente

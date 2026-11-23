@@ -6,6 +6,7 @@ import { obtenerRecetasPublicadas } from '../../enfermeria/api/enfermeriaApi.js'
 import ConfirmarAccion from '../../../shared/ui/ConfirmarAccion.jsx'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
 import { fecha, fechaLocalDe } from '../utils/paciente.js'
+import Boton from '../../../shared/ui/Boton.jsx'
 
 const medicamentoVacio = () => ({ nombre_generico: '', forma_concentracion: '', indicaciones: '', cantidad_recetada: '' })
 
@@ -156,7 +157,7 @@ export default function RecetaMedica({ paciente, mode = 'lista', recetaId }) {
           </div>
           {mutation.isError && <p role="alert" className="med-error">No se pudo emitir la receta. Revisa los datos e inténtalo de nuevo.</p>}
           <div className="med-form-actions">
-            <button className="primary-button" disabled={mutation.isPending}>{mutation.isPending ? 'Emitiendo…' : 'Revisar y emitir…'}</button>
+            <Boton type="submit" disabled={mutation.isPending}>{mutation.isPending ? 'Emitiendo…' : 'Revisar y emitir…'}</Boton>
           </div>
         </form>
       </>

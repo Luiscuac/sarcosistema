@@ -7,6 +7,7 @@ import { useRef } from 'react'
 import '../pages/informe-imagen.css'
 import * as api from '../api/ecografiaApi.js'
 import { contarImagenes } from '../informe.js'
+import Boton from '../../../shared/ui/Boton.jsx'
 
 function ImagenAdjunta({ archivo }) {
   const [url, setUrl] = useState('')
@@ -79,7 +80,7 @@ export default function InformeLibreEcografia({ estudio }) {
   const imagenes = estudio.informe?.archivos?.filter(a => api.esImagenVisible(a.mime_type)) || []
 
   return <div className="img-page">
-        <div className="lab-report-controls"><p className="eco-informe-estado">Informe de texto libre{publicado ? ' · publicado' : ' · borrador'}</p><button type="button" className="primary-button" onClick={() => window.print()}>Imprimir o guardar PDF</button></div>
+        <div className="lab-report-controls"><p className="eco-informe-estado">Informe de texto libre{publicado ? ' · publicado' : ' · borrador'}</p><Boton onClick={() => window.print()}>Imprimir o guardar PDF</Boton></div>
         <form className="lab-report-document img-informe" onSubmit={guardar}>
           <header className="lab-report-header"><div><p className="lab-report-institution">SarcoSistema · Diagnóstico por imágenes</p><h1>Informe de {titulo}</h1></div><strong>{estudio.referencia_estudio}</strong></header>
           <dl className="lab-report-meta">
@@ -100,7 +101,7 @@ export default function InformeLibreEcografia({ estudio }) {
           </section>
           {publicado && <p className="lab-report-responsible">Informe publicado{estudio.informe?.fecha_hora_publicacion ? ` el ${new Date(estudio.informe.fecha_hora_publicacion).toLocaleString('es-BO')}` : ''}. Disponible en el historial del paciente.</p>}
           <footer className="lab-report-signature img-informe-firma"><div><span /><p>Firma y sello del profesional responsable</p></div><p>Documento generado por SarcoSistema</p></footer>
-          {!publicado && <div className="img-informe-controles"><button type="submit" className="lab-secondary-button" disabled={enviando}>Guardar borrador</button><button type="button" className="primary-button" disabled={enviando || archivos.length > 0 || contarImagenes(estudio.informe?.archivos) === 0} onClick={() => setConfirmar(true)}>Publicar informe</button></div>}
+          {!publicado && <div className="img-informe-controles"><Boton variante="secundario" type="submit" disabled={enviando}>Guardar borrador</Boton><Boton disabled={enviando || archivos.length > 0 || contarImagenes(estudio.informe?.archivos) === 0} onClick={() => setConfirmar(true)}>Publicar informe</Boton></div>}
           {!publicado && contarImagenes(estudio.informe?.archivos) === 0 && <p className="lab-form-hint">Para publicar, adjunta y guarda al menos una imagen del estudio (JPG, PNG o DICOM).</p>}
           {!publicado && archivos.length > 0 && <p className="lab-form-hint">Guarda el borrador para incluir los archivos nuevos antes de publicar.</p>}
           {mensaje && <p className="img-mensaje" role="status">{mensaje}</p>}

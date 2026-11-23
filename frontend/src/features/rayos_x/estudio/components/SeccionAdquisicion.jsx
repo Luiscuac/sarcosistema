@@ -8,6 +8,7 @@ import {
 } from '../../compartido/api/radiologiaApi.js'
 import GaleriaImagenes from './GaleriaImagenes.jsx'
 import { parametrosANumeros, tamanoLegible, validarArchivoImagen } from '../utils/informe.js'
+import Boton from '../../../../shared/ui/Boton.jsx'
 
 const VACIO = { proyecciones_realizadas: [], lateralidad_realizada: '', posicion_paciente: '', fecha_hora_adquisicion: '', operador_nombre: '', calidad: '', limitaciones: '', repeticiones: 0, motivo_repeticion: '', observaciones: '', parametros: {} }
 const aLocal = iso => {
@@ -31,8 +32,8 @@ function ZonaCarga({ proyecciones, disabled, onSubir }) {
         <option value="">Sin asignar</option>{proyecciones.map(p => <option key={p.codigo} value={p.codigo}>{p.nombre}</option>)}
       </select></label>{item.error && <p className="lab-form-error" role="alert">{item.error}</p>}
     </div>)}
-    {items.length > 0 && <button type="button" className="primary-button" disabled={disabled || !validos}
-      onClick={() => onSubir(items.map(x => x.archivo), items.map(x => x.proyeccion), () => setItems([]))}>Subir imágenes</button>}
+    {items.length > 0 && <Boton disabled={disabled || !validos}
+      onClick={() => onSubir(items.map(x => x.archivo), items.map(x => x.proyeccion), () => setItems([]))}>Subir imágenes</Boton>}
   </div>
 }
 
@@ -57,10 +58,10 @@ function InformesExternos({ estudioId, informes, editable, actualizar }) {
       <label>Profesional<input value={campos.profesional} onChange={e => setCampos({ ...campos, profesional: e.target.value })} /></label>
       <label>Fecha del informe<input type="date" value={campos.fecha_informe} onChange={e => setCampos({ ...campos, fecha_informe: e.target.value })} /></label>
       <label className="rxe-span">Observaciones<textarea value={campos.observaciones} onChange={e => setCampos({ ...campos, observaciones: e.target.value })} /></label>
-      <button type="submit" className="primary-button" disabled={adjuntar.isPending || !archivo || !campos.establecimiento.trim()}>Adjuntar informe externo</button>
+      <Boton type="submit" disabled={adjuntar.isPending || !archivo || !campos.establecimiento.trim()}>Adjuntar informe externo</Boton>
     </form>}
     <ul className="rxe-lista">{informes.map(externo => <li key={externo.id}><div><strong>Informe externo — {externo.establecimiento}</strong><span>{externo.profesional || 'Profesional no informado'} · {externo.fecha_informe || externo.fecha_carga}</span></div>
-      <button type="button" className="lab-secondary-button" onClick={() => descargar(externo)}>Descargar</button>{editable && <button type="button" className="lab-secondary-button" onClick={() => setRetirar(externo)}>Retirar</button>}</li>)}</ul>
+      <Boton variante="secundario" onClick={() => descargar(externo)}>Descargar</Boton>{editable && <Boton variante="secundario" onClick={() => setRetirar(externo)}>Retirar</Boton>}</li>)}</ul>
     {retirar && <ConfirmarAccion titulo="Retirar informe externo" textoConfirmar="Retirar" peligro pendiente={quitar.isPending} onCancelar={() => setRetirar(null)} onConfirmar={() => motivo.trim() && quitar.mutate()}>
       <label className="lab-search-label">Motivo *<textarea value={motivo} onChange={e => setMotivo(e.target.value)} /></label>
     </ConfirmarAccion>}
@@ -102,22 +103,22 @@ export default function SeccionAdquisicion({ estudioId, detalle }) {
     <section className="rxe-bloque"><h2>Registro técnico</h2>{!editableRegistro && <p className="rxe-estado">Registro en modo de solo lectura.</p>}
       <form className="rxe-form-grid" onSubmit={e => { e.preventDefault(); guardar.mutate() }}>
         <fieldset className="rxe-span"><legend>Proyecciones realizadas</legend>{proyecciones.map(p => <label className="rxe-check" key={p.codigo}><input type="checkbox" checked={form.proyecciones_realizadas.includes(p.codigo)} disabled={!editableRegistro || ocupado} onChange={() => alternar(p.codigo)} />{p.nombre}</label>)}
-          {editableRegistro && <button type="button" className="lab-secondary-button" onClick={() => setForm({ ...form, proyecciones_realizadas: [...(detalle.estudio.detalle?.proyecciones_solicitadas || [])] })}>Usar las solicitadas</button>}</fieldset>
+          {editableRegistro && <Boton variante="secundario" onClick={() => setForm({ ...form, proyecciones_realizadas: [...(detalle.estudio.detalle?.proyecciones_solicitadas || [])] })}>Usar las solicitadas</Boton>}</fieldset>
         {detalle.config?.requiere_lateralidad && <label>Lateralidad realizada<select value={form.lateralidad_realizada || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, lateralidad_realizada: e.target.value })}><option value="">Seleccionar</option><option value="derecha">Derecha</option><option value="izquierda">Izquierda</option>{detalle.config.permite_bilateral && <option value="bilateral">Bilateral</option>}</select></label>}
         <label>Posición del paciente<select value={form.posicion_paciente || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, posicion_paciente: e.target.value })}><option value="">Seleccionar</option>{Object.entries(POSICIONES).map(([x, nombre]) => <option key={x} value={x}>{nombre}</option>)}</select></label>
         <label>Fecha y hora<input type="datetime-local" value={form.fecha_hora_adquisicion || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, fecha_hora_adquisicion: e.target.value })} /></label>
         <label>Operador<input value={form.operador_nombre || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, operador_nombre: e.target.value })} /></label>
         <label>Calidad<select value={form.calidad || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, calidad: e.target.value })}><option value="">Seleccionar</option><option value="adecuada">Adecuada</option><option value="limitada">Limitada</option><option value="no_diagnostica">No diagnóstica</option></select></label>
         <label className="rxe-span">Observaciones<textarea value={form.observaciones || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, observaciones: e.target.value })} /></label>
-        {editableRegistro && <div className="rxe-acciones rxe-span"><button type="submit" className="lab-secondary-button" disabled={ocupado}>Guardar registro</button></div>}
+        {editableRegistro && <div className="rxe-acciones rxe-span"><Boton variante="secundario" type="submit" disabled={ocupado}>Guardar registro</Boton></div>}
       </form>
     </section>
     <section className="rxe-bloque"><h2>Imágenes</h2>{editableImagenes && <ZonaCarga proyecciones={proyecciones} disabled={ocupado} onSubir={(archivos, proys, fin) => subir.mutate({ archivos, proyecciones: proys, fin })} />}
       <GaleriaImagenes imagenes={detalle.imagenes || []} proyecciones={proyecciones} editable={editableImagenes} ocupado={ocupado} onAsignar={(id, codigo) => asignar.mutate({ id, codigo })} onRetirar={(id, motivo, fin) => motivo.trim() && retirar.mutate({ id, motivo: motivo.trim(), fin })} />
     </section>
     {editableRegistro && <section className="rxe-bloque rxe-cierre"><div><h2>Completar adquisición</h2><p>Cuando el registro técnico esté guardado y las imágenes subidas, completa la adquisición para pasar al informe.</p></div>
-      <button type="button" className="primary-button" disabled={ocupado} onClick={() => { setPendientes(detalle.pendientes?.adquisicion || []); if (!(detalle.pendientes?.adquisicion || []).length) completar.mutate() }}>Completar adquisición</button>
-      {pendientes.length > 0 && <div className="rxe-pendientes" role="alert"><strong>Pendientes antes de completar:</strong><ul>{pendientes.map(p => <li key={p}>{p}</li>)}</ul><button type="button" className="primary-button" disabled={ocupado} onClick={() => completar.mutate()}>Comprobar y completar</button></div>}
+      <Boton disabled={ocupado} onClick={() => { setPendientes(detalle.pendientes?.adquisicion || []); if (!(detalle.pendientes?.adquisicion || []).length) completar.mutate() }}>Completar adquisición</Boton>
+      {pendientes.length > 0 && <div className="rxe-pendientes" role="alert"><strong>Pendientes antes de completar:</strong><ul>{pendientes.map(p => <li key={p}>{p}</li>)}</ul><Boton disabled={ocupado} onClick={() => completar.mutate()}>Comprobar y completar</Boton></div>}
     </section>}
     <InformesExternos estudioId={estudioId} informes={detalle.informes_externos || []} editable={Boolean(detalle.permisos.adjuntar_externo)} actualizar={actualizar} />
   </div>

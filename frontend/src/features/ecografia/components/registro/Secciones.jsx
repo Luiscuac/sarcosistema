@@ -1,4 +1,5 @@
 import { formatearTamano } from '../../utils/archivos.js'
+import Boton from '../../../../shared/ui/Boton.jsx'
 
 const ACEPTA = 'image/jpeg,image/png,image/webp,image/gif,image/tiff,application/pdf,.dcm'
 
@@ -41,9 +42,9 @@ export function SeccionAdjuntos({ guardados, nuevos, maximo, onAgregar, onQuitar
     <p className="lab-form-hint">Para publicar se necesita al menos una imagen del estudio (JPG, PNG o DICOM). Puedes añadir también PDF y elegir varios archivos a la vez.</p>
     {total > 0 && <ul className="eco-adjuntos">
       {guardados.map(a => <li key={a.id}><span>{a.nombre_original} · {formatearTamano(a.tamano_bytes)}</span><small>Guardado</small>
-        <button type="button" className="lab-secondary-button" disabled={deshabilitado} onClick={() => onQuitarGuardado(a.id)}>Quitar</button></li>)}
+        <Boton variante="secundario" disabled={deshabilitado} onClick={() => onQuitarGuardado(a.id)}>Quitar</Boton></li>)}
       {nuevos.map((a, i) => <li key={`${a.name}:${i}`}><span>{a.name} · {formatearTamano(a.size)}</span><small className="es-nuevo">Sin guardar</small>
-        <button type="button" className="lab-secondary-button" disabled={deshabilitado} onClick={() => onQuitarNuevo(i)}>Quitar</button></li>)}
+        <Boton variante="secundario" disabled={deshabilitado} onClick={() => onQuitarNuevo(i)}>Quitar</Boton></li>)}
     </ul>}
   </Seccion>
 }

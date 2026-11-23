@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import Dialogo from '../../../shared/ui/Dialogo.jsx'
 import { buscarPacientes, crearSolicitud, obtenerCatalogo } from '../api/ecografiaApi.js'
+import Boton from '../../../shared/ui/Boton.jsx'
 
 export default function NuevaSolicitudEcografia({ onCerrar, onCreada }) {
   const cache = useQueryClient()
@@ -31,7 +32,7 @@ export default function NuevaSolicitudEcografia({ onCerrar, onCreada }) {
   return <Dialogo titulo="Nueva solicitud de ecografía" eyebrow="ECOGRAFÍA" onCerrar={onCerrar} bloqueado={ocupado}>
     <div className="lab-dialog-body eco-solicitud">
       <div className="eco-modal-intro"><span className="eco-section-number">1</span><div><h3>Identifica al paciente</h3><p>Busca y selecciona a la persona que recibirá el estudio.</p></div></div>
-      <form className="eco-patient-search" onSubmit={e => { e.preventDefault(); setBusqueda(entrada.trim()); setPaciente(null) }}><label>Nombre, documento o código<input minLength={2} maxLength={100} value={entrada} onChange={e => setEntrada(e.target.value)} placeholder="Escribe al menos dos caracteres" required /></label><button className="lab-secondary-button" type="submit" disabled={ocupado}>Buscar paciente</button></form>
+      <form className="eco-patient-search" onSubmit={e => { e.preventDefault(); setBusqueda(entrada.trim()); setPaciente(null) }}><label>Nombre, documento o código<input minLength={2} maxLength={100} value={entrada} onChange={e => setEntrada(e.target.value)} placeholder="Escribe al menos dos caracteres" required /></label><Boton variante="secundario" type="submit" disabled={ocupado}>Buscar paciente</Boton></form>
       {pacientes.isFetching && <p role="status">Buscando pacientes…</p>}
       {pacientes.isError && <p role="alert">No se pudo buscar al paciente.</p>}
       {pacientes.data?.items.length === 0 && <p>No se encontraron pacientes.</p>}
@@ -45,6 +46,6 @@ export default function NuevaSolicitudEcografia({ onCerrar, onCreada }) {
         <label className="eco-check"><input type="checkbox" checked={urgente} onChange={e => setUrgente(e.target.checked)} />Prioridad urgente</label>
       </fieldset></form>
       {error && <p role="alert">{error}</p>}
-    </div><footer className="lab-dialog-footer"><p className="lab-dialog-summary">{tipos.length} {tipos.length === 1 ? 'estudio seleccionado' : 'estudios seleccionados'}</p><button type="button" disabled={ocupado} onClick={onCerrar}>Cancelar</button><button form="eco-nueva-solicitud" type="submit" className="primary-button" disabled={ocupado || !paciente || !tipos.length || medico.trim().length < 2}>{ocupado ? 'Creando…' : 'Crear solicitud'}</button></footer>
+    </div><footer className="lab-dialog-footer"><p className="lab-dialog-summary">{tipos.length} {tipos.length === 1 ? 'estudio seleccionado' : 'estudios seleccionados'}</p><button type="button" disabled={ocupado} onClick={onCerrar}>Cancelar</button><Boton form="eco-nueva-solicitud" type="submit" disabled={ocupado || !paciente || !tipos.length || medico.trim().length < 2}>{ocupado ? 'Creando…' : 'Crear solicitud'}</Boton></footer>
   </Dialogo>
 }

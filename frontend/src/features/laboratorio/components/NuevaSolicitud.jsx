@@ -11,6 +11,7 @@ import { AREAS_LABORATORIO } from '../utils/catalogos.js'
 import { mensajeError } from '../utils/mensajeError.js'
 import { useValorDiferido } from '../../../shared/hooks/useValorDiferido.js'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
+import Boton from '../../../shared/ui/Boton.jsx'
 
 const PACIENTE_VACIO = {
   nombre_completo: '',
@@ -189,9 +190,9 @@ export default function NuevaSolicitud({ onClose, onCreated }) {
             {pedido.prioridad === 'urgente' && <strong className="lab-priority"> · Urgente</strong>}
           </p>
           <button type="button" onClick={solicitarCierre} disabled={ocupado}>Cancelar</button>
-          <button className="primary-button" type="submit" disabled={ocupado || !catalogo.length}>
+          <Boton type="submit" disabled={ocupado || !catalogo.length}>
             {crearSolicitudMutation.isPending ? 'Registrando…' : 'Registrar solicitud'}
-          </button>
+          </Boton>
         </footer>
       </form>
     </Dialogo>

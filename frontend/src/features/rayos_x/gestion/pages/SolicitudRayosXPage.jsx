@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { mensajeErrorApi, obtenerSolicitud } from '../../compartido/api/radiologiaApi.js'
 import RayosXLayout from '../../compartido/RayosXLayout.jsx'
 import '../gestion.css'
+import { BotonEnlace } from '../../../../shared/ui/Boton.jsx'
 
 const LATERALIDAD = { derecha: 'Derecha', izquierda: 'Izquierda', bilateral: 'Bilateral' }
 const valor = (dato) => dato || 'No registrado'
@@ -19,7 +20,7 @@ export default function SolicitudRayosXPage({ usuario, logout }) {
     {consulta.isError && <div className="rxg-estado" role="alert"><h1>{consulta.error?.response?.status === 404 ? 'Solicitud no encontrada' : 'No se pudo cargar la solicitud'}</h1><span>{mensajeErrorApi(consulta.error, 'Vuelve a la bandeja e intenta nuevamente.')}</span></div>}
     {datos && <>
       <div className="lab-title-row"><div><p className="lab-eyebrow">SOLICITUD · {solicitud.referencia}</p><h1>{paciente.nombre_completo}</h1><p className="lab-intro">{solicitud.prioridad === 'urgente' ? 'Urgente' : 'Sin prioridad'} · {datos.estudios.length} {datos.estudios.length === 1 ? 'estudio' : 'estudios'}</p></div></div>
-      <section className="lab-detail-card rxg-detalle-card"><div className="rxg-detalle-heading"><div><h2>Paciente</h2><p>Datos de identificación asociados al pedido.</p></div><Link className="lab-secondary-button" to={`/rayos-x/gestion/pacientes/${paciente.id}`}>Ver historial de Rayos X</Link></div>
+      <section className="lab-detail-card rxg-detalle-card"><div className="rxg-detalle-heading"><div><h2>Paciente</h2><p>Datos de identificación asociados al pedido.</p></div><BotonEnlace variante="secundario" to={`/rayos-x/gestion/pacientes/${paciente.id}`}>Ver historial de Rayos X</BotonEnlace></div>
         <dl className="lab-detail-grid rxg-datos"><div><dt>Nombre</dt><dd>{paciente.nombre_completo}</dd></div><div><dt>Documento</dt><dd>{valor(paciente.numero_documento)}</dd></div><div><dt>Código de paciente</dt><dd>{valor(paciente.codigo_paciente)}</dd></div><div><dt>Fecha de nacimiento</dt><dd>{valor(paciente.fecha_nacimiento)}</dd></div><div><dt>Sexo</dt><dd>{valor(paciente.sexo)}</dd></div><div><dt>Edad</dt><dd>{paciente.edad ?? 'No registrada'}</dd></div></dl>
       </section>
       <section className="lab-detail-card rxg-detalle-card"><h2>Datos del pedido</h2><dl className="lab-detail-grid rxg-datos"><div><dt>Referencia</dt><dd>{solicitud.referencia}</dd></div><div><dt>Fecha</dt><dd>{fecha(solicitud.fecha_solicitud)}</dd></div><div><dt>Procedencia</dt><dd>{solicitud.procedencia === 'otro_centro' ? 'Otro centro' : 'Este centro'}</dd></div><div><dt>Médico solicitante</dt><dd>{valor(solicitud.medico_solicitante ?? solicitud.medico_solicitante_nombre)}</dd></div><div><dt>Establecimiento</dt><dd>{valor(solicitud.establecimiento ?? solicitud.establecimiento_solicitante_nombre)}</dd></div><div><dt>Diagnóstico o motivo</dt><dd>{valor(solicitud.diagnostico_principal)}</dd></div></dl></section>

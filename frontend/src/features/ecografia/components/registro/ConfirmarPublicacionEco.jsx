@@ -1,5 +1,6 @@
 import Dialogo from '../../../../shared/ui/Dialogo.jsx'
 import InformeEcografiaDocumento from '../InformeEcografiaDocumento.jsx'
+import Boton from '../../../../shared/ui/Boton.jsx'
 
 /** "Revisar y publicar": el documento tal como lo verá el médico, antes de confirmar (como en Laboratorio). */
 export default function ConfirmarPublicacionEco({ estudio, datos, guardados, pendiente, onConfirmar, onCancelar }) {
@@ -11,7 +12,7 @@ export default function ConfirmarPublicacionEco({ estudio, datos, guardados, pen
     <footer className="lab-dialog-footer">
       <p className="lab-dialog-summary">{guardados.length} {guardados.length === 1 ? 'adjunto' : 'adjuntos'}</p>
       <button type="button" disabled={pendiente} onClick={onCancelar}>Seguir editando</button>
-      <button type="button" className="primary-button" disabled={pendiente} onClick={onConfirmar}>{pendiente ? 'Publicando…' : 'Publicar informe'}</button>
+      <Boton disabled={pendiente} onClick={onConfirmar}>{pendiente ? 'Publicando…' : 'Publicar informe'}</Boton>
     </footer>
   </Dialogo>
 }

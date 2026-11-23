@@ -8,6 +8,7 @@ import { formatearFecha } from '../../../../shared/utils/formatearFecha.js'
 import { useValorDiferido } from '../../../../shared/hooks/useValorDiferido.js'
 import { CatalogoEstudiosRx, EstudiosSeleccionadosRx } from './SelectorEstudiosRx.jsx'
 import { erroresDeSolicitud, prepararEstudiosParaApi } from '../utils/solicitud.js'
+import Boton from '../../../../shared/ui/Boton.jsx'
 
 const PACIENTE_VACIO = {
   nombre_completo: '', fecha_nacimiento: '', sexo: 'no_especificado', tipo_documento: 'CI',
@@ -178,7 +179,7 @@ export default function NuevaSolicitudRx({ onClose, onCreated }) {
                 <label>Código interno (opcional)<input maxLength="80" value={datosPaciente.codigo_externo} onChange={(e) => cambiarPaciente('codigo_externo', e.target.value)} /></label>
                 <label>Teléfono (opcional)<input type="tel" maxLength="40" value={datosPaciente.telefono} onChange={(e) => cambiarPaciente('telefono', e.target.value)} /></label>
               </div>
-              <div className="rxg-inline-actions"><button type="button" onClick={() => setRegistrandoPaciente(false)}>Volver a buscar</button><button className="primary-button" type="button" disabled={pacienteMutation.isPending} onClick={registrarPaciente}>{pacienteMutation.isPending ? 'Guardando...' : 'Guardar paciente'}</button></div>
+              <div className="rxg-inline-actions"><button type="button" onClick={() => setRegistrandoPaciente(false)}>Volver a buscar</button><Boton disabled={pacienteMutation.isPending} onClick={registrarPaciente}>{pacienteMutation.isPending ? 'Guardando...' : 'Guardar paciente'}</Boton></div>
             </div> : <>
               <label className="lab-search-label">Buscar por nombre, documento, historia clínica o código
                 <input autoFocus type="search" value={terminoPaciente} onChange={(e) => setTerminoPaciente(e.target.value)} placeholder="Escribe al menos 2 caracteres" />
@@ -214,8 +215,8 @@ export default function NuevaSolicitudRx({ onClose, onCreated }) {
           {errores.length > 0 && <div className="rxg-errores" role="alert" ref={avisoErrores}><strong>Revisa la solicitud:</strong><ul>{errores.map((error) => <li key={error}>{error}</li>)}</ul></div>}
           <div className="rxg-nueva-acciones">
             <p className="lab-dialog-summary">{paciente ? <strong>{paciente.nombre_completo}</strong> : 'Sin paciente'} · {estudios.length} {estudios.length === 1 ? 'estudio' : 'estudios'}{pedido.prioridad === 'urgente' && ' · Urgente'}</p>
-            <button type="button" className="lab-secondary-button" onClick={solicitarCierre} disabled={ocupado}>Cancelar</button>
-            <button className="primary-button" type="submit" disabled={ocupado || catalogoQuery.isLoading}>Revisar solicitud</button>
+            <Boton variante="secundario" onClick={solicitarCierre} disabled={ocupado}>Cancelar</Boton>
+            <Boton type="submit" disabled={ocupado || catalogoQuery.isLoading}>Revisar solicitud</Boton>
           </div>
         </aside>
       </div>

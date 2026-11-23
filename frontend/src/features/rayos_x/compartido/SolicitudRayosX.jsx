@@ -6,6 +6,7 @@ import { erroresDeEstudios, prepararEstudiosParaApi } from '../gestion/utils/sol
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
 import './rx-tokens.css'
 import '../gestion/gestion.css'
+import Boton from '../../../shared/ui/Boton.jsx'
 
 /** El médico pide uno o varios estudios de Rayos X desde la ficha del paciente. */
 export default function SolicitudRayosX({ pacienteId }) {
@@ -74,9 +75,9 @@ export default function SolicitudRayosX({ pacienteId }) {
     </div>
     <div className="med-eco-actions">
       <button type="button" className="med-secondary-button" disabled={enviando} onClick={() => setAbierto(false)}>Cancelar</button>
-      <button type="submit" className="primary-button" disabled={!estudios.length || enviando}>
+      <Boton type="submit" disabled={!estudios.length || enviando}>
         {enviando ? 'Enviando…' : `Enviar solicitud${estudios.length ? ` (${estudios.length})` : ''}`}
-      </button>
+      </Boton>
     </div>
   </form>
 }

@@ -9,6 +9,7 @@ import SeccionAdquisicion from '../components/SeccionAdquisicion.jsx'
 import SeccionInforme from '../components/SeccionInforme.jsx'
 import '../../asistente/pages/rayos-x.css'
 import './estudio.css'
+import Boton, { BotonEnlace } from '../../../../shared/ui/Boton.jsx'
 
 const SECCIONES = ['resumen', 'adquisicion', 'informe', 'historial']
 const NOMBRES_SECCION = { resumen: 'Resumen', adquisicion: 'Adquisición e imágenes', informe: 'Informe', historial: 'Historial' }
@@ -45,9 +46,9 @@ function Resumen({ estudioId, detalle, irA }) {
       : <section className="rxe-bloque rxe-avance-bloque"><ol className="rxe-avance" aria-label="Avance del estudio">{avanceDelFlujo(etapa).map((paso, i) => <li key={paso.id} data-estado={paso.estado} aria-current={paso.estado === 'actual' ? 'step' : undefined}>
         <span className="rxe-avance-marca" aria-hidden="true">{paso.estado === 'hecho' ? '✓' : i + 1}</span><span>{ETAPAS_TEXTO[paso.id]}<small className="rxe-sr">{paso.estado === 'hecho' ? ' (hecho)' : paso.estado === 'actual' ? ' (en curso)' : ' (pendiente)'}</small></span></li>)}</ol>
         <div className="rxe-siguiente">
-          {siguiente && (permisos.registrar_adquisicion || permisos.redactar_informe) && <button type="button" className="primary-button" onClick={() => irA(siguiente[1])}>{siguiente[0]}</button>}
-          {permisos.entregar && <button type="button" className="primary-button" onClick={() => setAccion('entregar')}>Registrar entrega</button>}
-          {['validado', 'entregado'].includes(etapa) && <Link className="lab-secondary-button" to={`/rayos-x/gestion/estudios/${estudioId}/impresion`}>Ver informe impreso</Link>}
+          {siguiente && (permisos.registrar_adquisicion || permisos.redactar_informe) && <Boton onClick={() => irA(siguiente[1])}>{siguiente[0]}</Boton>}
+          {permisos.entregar && <Boton onClick={() => setAccion('entregar')}>Registrar entrega</Boton>}
+          {['validado', 'entregado'].includes(etapa) && <BotonEnlace variante="secundario" to={`/rayos-x/gestion/estudios/${estudioId}/impresion`}>Ver informe impreso</BotonEnlace>}
         </div></section>}
     <section className="rxe-bloque"><h2>Datos del estudio</h2><dl className="rxe-datos rxe-datos-resumen">{datos.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
       <p className="rxe-enlaces"><Link to={`/rayos-x/gestion/pacientes/${detalle.paciente.id}`}>Ver historial radiológico del paciente</Link></p></section>

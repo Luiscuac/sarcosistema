@@ -11,6 +11,7 @@ import { agruparInformePorArea, fueraDeRango, resumenParaCopiar } from '../utils
 import { describirEdad } from '../../../shared/utils/edad.js'
 import { formatearFecha } from '../../../shared/utils/formatearFecha.js'
 import './informe-solicitud.css'
+import Boton from '../../../shared/ui/Boton.jsx'
 
 function FilaInforme({ fila, columnas }) {
   if (fila.tipo === 'estudio') return <tr className="lab-report-row-study"><th scope="rowgroup" colSpan={columnas}>{fila.nombre}</th></tr>
@@ -66,7 +67,7 @@ function ResumenCopiable({ informe }) {
   return <section className="lab-report-copy" aria-labelledby="lab-report-copy-title">
     <div className="lab-report-copy-head">
       <h2 id="lab-report-copy-title">Resumen para la nota clínica</h2>
-      <button className="lab-secondary-button" type="button" onClick={copiar}>{estado === 'copiado' ? 'Copiado ✓' : 'Copiar'}</button>
+      <Boton variante="secundario" onClick={copiar}>{estado === 'copiado' ? 'Copiado ✓' : 'Copiar'}</Boton>
     </div>
     <textarea ref={campo} readOnly value={texto} rows={Math.min(8, texto.split('\n').length + 1)} onFocus={(evento) => evento.target.select()} />
     {estado === 'manual' && <p role="status" className="lab-report-copy-hint">No se pudo copiar automáticamente: el texto quedó seleccionado, usa Ctrl + C.</p>}
@@ -129,7 +130,7 @@ export default function InformeSolicitudPage({ usuario, logout, modoMedico = fal
           { texto: informe?.referencia ?? 'Solicitud', ruta: `/laboratorio/solicitudes/${solicitudId}` },
           { texto: 'Informe' },
         ]} />}
-      {informe && <button className="primary-button" type="button" onClick={() => window.print()}>Imprimir o guardar PDF</button>}
+      {informe && <Boton onClick={() => window.print()}>Imprimir o guardar PDF</Boton>}
     </div>
     {isLoading && <p>Cargando informe…</p>}
     {isError && <p role="alert" className="lab-report-error">{error?.response?.status === 409

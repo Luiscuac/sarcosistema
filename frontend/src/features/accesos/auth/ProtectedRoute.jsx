@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuth } from './AuthContext.jsx'
 import { obtenerUsuarioActual } from '../api/accesosApi.js'
+import Boton from '../../../shared/ui/Boton.jsx'
 
 const SIN_ROLES_RESTRINGIDOS = []
 
@@ -40,7 +41,7 @@ export default function ProtectedRoute({
   if (estado === 'sin-permiso') return (
     <main className="session-status">
       <p>Tu cuenta no tiene acceso a este módulo.</p>
-      <button className="primary-button" onClick={logout}>Cerrar sesión</button>
+      <Boton type="submit" onClick={logout}>Cerrar sesión</Boton>
     </main>
   )
   return children({ usuario, logout })

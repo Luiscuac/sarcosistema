@@ -15,6 +15,7 @@ import { describirEdad } from '../../../shared/utils/edad.js'
 import { formatearFecha } from '../../../shared/utils/formatearFecha.js'
 import '../components/solicitudes/solicitudes-panel.css'
 import './solicitud-detalle.css'
+import Boton from '../../../shared/ui/Boton.jsx'
 
 const fechaVisible = (valor) => (valor ? formatearFecha(valor) : 'No registrada')
 const fechaHora = (valor) => (valor ? new Date(valor).toLocaleString('es-BO') : 'No registrado')
@@ -24,7 +25,7 @@ const horaToma = (muestra) => (muestra.hora_toma ? muestra.hora_toma.slice(0, 5)
 function AccionPrincipal({ solicitud, onRegistrarMuestra }) {
   const accion = siguienteAccion(solicitud)
   if (accion.tipo === 'muestra') {
-    return <button className="primary-button" type="button" onClick={onRegistrarMuestra}>Registrar muestra</button>
+    return <Boton onClick={onRegistrarMuestra}>Registrar muestra</Boton>
   }
   if (accion.tipo === 'abrir') return null
   return <Link className="primary-button lab-report-link" to={accion.ruta}>{accion.etiqueta}</Link>
@@ -132,7 +133,7 @@ export default function SolicitudDetallePage({ usuario, logout }) {
           </div>
           <section className="lab-detail-card">
             <div className="lab-detail-heading"><div><h2>Estudios solicitados</h2><p>{solicitud.estudios.length} estudios en este pedido</p></div>
-              {pendientes.length > 0 && <button type="button" className="lab-secondary-button" onClick={() => setMuestraAbierta(true)}>Registrar muestra o incidencia</button>}
+              {pendientes.length > 0 && <Boton variante="secundario" onClick={() => setMuestraAbierta(true)}>Registrar muestra o incidencia</Boton>}
             </div>
             {pendientes.length > 0 && <p className="lab-form-hint">Una misma muestra puede servir para varios estudios. Si no se recibió, registra la incidencia desde ese mismo formulario.</p>}
             <EstudiosPorArea solicitud={solicitud} />

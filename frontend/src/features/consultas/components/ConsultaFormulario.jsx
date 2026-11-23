@@ -19,6 +19,7 @@ import { MEDICIONES, erroresDelFormulario } from '../../enfermeria/utils/signosV
 import ConfirmarAccion from '../../../shared/ui/ConfirmarAccion.jsx'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
 import { calcularEdad } from '../../../shared/utils/edad.js'
+import Boton from '../../../shared/ui/Boton.jsx'
 
 // Signos vitales: la presión se escribe en un campo ("120/80") en lugar de dos.
 const CAMPOS_VITALES = ['peso_kg', 'talla_cm', 'temperatura_c', 'frecuencia_cardiaca', 'frecuencia_respiratoria', 'presion', 'saturacion_oxigeno']
@@ -294,7 +295,7 @@ function FormularioPaciente({ id, usuario }) {
         <button type="button" onClick={() => setSeccionActiva(actual => Math.min(grupos.length - 1, actual + 1))} disabled={seccionActiva === grupos.length - 1}>Siguiente sección</button>
         <span className="med-form-spacer" />
         <button type="button" onClick={() => navegar(`/consultas/pacientes/${id}`)}>Volver a ficha</button>
-        <button className="primary-button" type="submit" disabled={mutation.isPending || transportando || estadoIA.bloqueado}>{mutation.isPending ? 'Guardando…' : 'Finalizar y guardar consulta…'}</button>
+        <Boton type="submit" disabled={mutation.isPending || transportando || estadoIA.bloqueado}>{mutation.isPending ? 'Guardando…' : 'Finalizar y guardar consulta…'}</Boton>
       </div>
       <details className="med-experimental">
         <summary>Herramientas experimentales</summary>

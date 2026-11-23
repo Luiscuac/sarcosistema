@@ -7,6 +7,7 @@ import { agruparPorSolicitud, contarIndicadores, filtrarYOrdenarEstudios, INDICA
 import '../../../laboratorio/components/solicitudes/solicitudes-panel.css'
 import '../gestion.css'
 import { avisoPatronTb } from '../../asistente/analisis.js'
+import { BotonEnlace } from '../../../../shared/ui/Boton.jsx'
 
 const ACTUALIZACION_MS = 45_000
 const ETAPAS = [
@@ -95,7 +96,7 @@ export default function PanelRayosXPage({ usuario, logout }) {
   return <RayosXLayout usuario={usuario} logout={logout}>
     <div className="lab-title-row">
       <div><p className="lab-eyebrow">RAYOS X</p><h1>Estudios de Rayos X</h1></div>
-      {usuario?.rol === 'rayos_x' && <div className="lab-title-actions"><Link className="primary-button" to="/rayos-x/gestion/solicitudes/nueva">Nueva solicitud</Link></div>}
+      {usuario?.rol === 'rayos_x' && <div className="lab-title-actions"><BotonEnlace to="/rayos-x/gestion/solicitudes/nueva">Nueva solicitud</BotonEnlace></div>}
     </div>
 
     <div className="lab-summary rxg-resumen" aria-label="Indicadores de Rayos X">{INDICADORES_RX.map((item) => {
