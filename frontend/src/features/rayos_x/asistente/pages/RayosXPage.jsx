@@ -21,8 +21,8 @@ export default function RayosXPage({ usuario, logout }) {
     <EstudioDetalle key={`${usuario.id}:${seleccion}`} id={seleccion} usuario={usuario} habilitada={consulta.data?.ia_habilitada} onVolver={volver} />
   </ConsultasLayout>
   return <ConsultasLayout usuario={usuario} logout={logout} area="rayos-x">
-        <div className="lab-title-row"><div><p className="lab-eyebrow">RAYOS X</p><h1>Estudios radiológicos</h1><p className="lab-intro">Radiografías de tórax con informe publicado. Abre una para analizarla con el asistente.</p></div><button type="button" className="lab-secondary-button" aria-pressed={verDesempeno} onClick={() => setVerDesempeno(v => !v)}>{verDesempeno ? 'Ocultar desempeño' : 'Desempeño del asistente'}</button></div>
-        {verDesempeno && <DesempenoAsistente usuario={usuario} />}
+        <div className="lab-title-row"><div><p className="lab-eyebrow">RAYOS X</p><h1>Estudios radiológicos</h1><p className="lab-intro">Radiografías de tórax con informe publicado. Abre una para analizarla con el asistente.</p></div><button type="button" className="lab-secondary-button" aria-haspopup="dialog" onClick={() => setVerDesempeno(true)}>Desempeño del asistente</button></div>
+        {verDesempeno && <DesempenoAsistente usuario={usuario} onCerrar={() => setVerDesempeno(false)} />}
         <p className="rx-advertencia">Prototipo universitario. La IA no diagnostica, no publica informes y no sustituye la revisión médica.</p>
         {consulta.isPending && <p role="status">Cargando estudios…</p>}
         {consulta.error && <p role="alert">{mensajeError(consulta.error)}</p>}

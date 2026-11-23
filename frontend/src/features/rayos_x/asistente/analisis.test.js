@@ -143,3 +143,13 @@ test('evolución: no compara patrones TB de versiones distintas', async () => {
   assert.equal(r.indice, null)
   assert.equal(r.hace, 'del mismo día')
 })
+
+test('desempeño: avance hacia la calibración y cifras "de cada 10"', async () => {
+  const { de10, progresoCalibracion } = await import('./analisis.js')
+  assert.deepEqual(progresoCalibracion({ minimo_por_clase: 20, anormales: 3, normales: 25 }, 'prioridad').map(f => [f.etiqueta, f.actual, f.meta]),
+    [['Placas anormales', 3, 20], ['Placas normales', 25, 20]])
+  assert.deepEqual(progresoCalibracion({ minimo_por_clase: 20, con_tb: 1, sin_tb: 0 }, 'tb').map(f => f.etiqueta), ['TB confirmada', 'TB descartada'])
+  assert.deepEqual(progresoCalibracion(null, 'tb'), [])
+  assert.equal(de10(0.84), 8)
+  assert.equal(de10(null), '—')
+})

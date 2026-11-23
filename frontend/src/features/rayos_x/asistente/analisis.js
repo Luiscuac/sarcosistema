@@ -173,3 +173,15 @@ export function lecturaEvolucion(evolucion) {
   const cambios = (c.categorias || []).map(x => ({ nombre: nombreHallazgo(x.name), tendencia: x.tendencia, antes: Math.round(x.antes * 100), ahora: Math.round(x.ahora * 100) }))
   return { indice, tb, categorias, cambios, hace, avisos: c.avisos || [], referencia: c.con_referencia }
 }
+
+/** "N de cada 10" para lectores no técnicos; null si no hay dato. */
+export const de10 = valor => (typeof valor === 'number' && Number.isFinite(valor) ? Math.round(valor * 10) : '—')
+
+/** Avance hacia el mínimo de casos por tipo que pide la calibración local (prioridad o TB). */
+export function progresoCalibracion(c, tipo) {
+  if (!c) return []
+  const meta = c.minimo_por_clase
+  return tipo === 'tb'
+    ? [{ etiqueta: 'TB confirmada', actual: c.con_tb, meta }, { etiqueta: 'TB descartada', actual: c.sin_tb, meta }]
+    : [{ etiqueta: 'Placas anormales', actual: c.anormales, meta }, { etiqueta: 'Placas normales', actual: c.normales, meta }]
+}
