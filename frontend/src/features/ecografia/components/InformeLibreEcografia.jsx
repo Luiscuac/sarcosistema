@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import ConfirmarAccion from '../../laboratorio/components/ConfirmarAccion.jsx'
+import ConfirmarAccion from '../../../shared/ui/ConfirmarAccion.jsx'
 import '../../laboratorio/pages/informe-solicitud.css'
 import { estadoEstudioImagen, formatearTamano } from '../utils/archivos.js'
 import { useRef } from 'react'

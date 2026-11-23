@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import LaboratorioTopbar from '../components/LaboratorioTopbar.jsx'
+import BarraSuperior from '../../../shared/ui/BarraSuperior.jsx'
 import NuevaSolicitud from '../components/NuevaSolicitud.jsx'
 import ResumenSolicitudes from '../components/ResumenSolicitudes.jsx'
 import SolicitudesPanel from '../components/SolicitudesPanel.jsx'
@@ -25,7 +25,7 @@ export default function LaboratorioPage({ usuario, logout }) {
   return (
     <main className="lab-page">
       <div className="lab-main">
-        <LaboratorioTopbar usuario={usuario} onLogout={logout} />
+        <BarraSuperior usuario={usuario} titulo="Laboratorio" inicio="/laboratorio" onLogout={logout} />
         <section className="lab-content">
           <div className="lab-title-row">
             <div>

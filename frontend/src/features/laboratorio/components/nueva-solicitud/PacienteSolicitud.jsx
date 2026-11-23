@@ -1,6 +1,6 @@
 import { describirEdad } from '../../../../shared/utils/edad.js'
 import { formatearFecha } from '../../../../shared/utils/formatearFecha.js'
-import { nombreSexo, SEXOS, TIPOS_DOCUMENTO } from '../../utils/catalogos.js'
+import { nombreSexo, SEXOS, TIPOS_DOCUMENTO } from '../../../../shared/utils/personas.js'
 import './PacienteSolicitud.css'
 
 function detallePaciente(paciente) {

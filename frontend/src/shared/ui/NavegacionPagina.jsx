@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom'
+import './marco.css'
 
 /**
  * Botón visible para volver a la pantalla anterior y ruta de navegación.
  * `migas`: [{ texto, ruta? }]; la última es la pantalla actual y no lleva enlace.
  */
-export default function NavegacionLab({ volverA, textoVolver, migas }) {
+export default function NavegacionPagina({ volverA, textoVolver, migas }) {
   return (
     <div className="lab-nav">
       <Link className="lab-back-button" to={volverA}><span aria-hidden="true">←</span> {textoVolver}</Link>

@@ -1,5 +1,5 @@
-import LaboratorioTopbar from '../../laboratorio/components/LaboratorioTopbar.jsx'
-import NavegacionLab from '../../laboratorio/components/NavegacionLab.jsx'
+import BarraSuperior from '../../../shared/ui/BarraSuperior.jsx'
+import NavegacionPagina from '../../../shared/ui/NavegacionPagina.jsx'
 import '../../laboratorio/pages/laboratorio.css'
 import './rx-tokens.css'
 
@@ -14,9 +14,9 @@ export const ROL_TECNICO = 'rayos_x'
 export default function RayosXLayout({ usuario, logout, navegacion, ancho = false, children }) {
   return <main className={`lab-page rx-page rx-gestion${ancho ? ' rx-gestion--ancho' : ''}`}>
     <div className="lab-main">
-      <LaboratorioTopbar usuario={usuario} titulo="Rayos X" inicio={RUTA_RAYOS_X} onLogout={logout} />
+      <BarraSuperior usuario={usuario} titulo="Rayos X" inicio={RUTA_RAYOS_X} onLogout={logout} />
       <section className="lab-content">
-        {navegacion && <NavegacionLab {...navegacion} />}
+        {navegacion && <NavegacionPagina {...navegacion} />}
         {children}
       </section>
     </div>

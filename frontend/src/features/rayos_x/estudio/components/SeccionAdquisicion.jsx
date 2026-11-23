@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import ConfirmarAccion from '../../../laboratorio/components/ConfirmarAccion.jsx'
+import ConfirmarAccion from '../../../../shared/ui/ConfirmarAccion.jsx'
 import { useNotificacion } from '../../../../shared/notifications/NotificationContext.jsx'
 import {
   adjuntarInformeExterno, asignarProyeccion, completarAdquisicion, descargarInformeExterno,

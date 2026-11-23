@@ -1,6 +1,6 @@
 import { useId } from 'react'
-import { useDialogo } from '../../../shared/hooks/useDialogo.js'
-import './formularios.css'
+import { useDialogo } from '../hooks/useDialogo.js'
+import './dialogo.css'
 
 /** Diálogo modal del laboratorio: Escape, clic fuera y × llaman a onCerrar salvo si está bloqueado. */
 export default function Dialogo({ eyebrow, titulo, descripcion, onCerrar, bloqueado = false, compacto = false, children }) {

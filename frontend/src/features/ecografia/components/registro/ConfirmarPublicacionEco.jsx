@@ -1,4 +1,4 @@
-import Dialogo from '../../../laboratorio/components/Dialogo.jsx'
+import Dialogo from '../../../../shared/ui/Dialogo.jsx'
 import InformeEcografiaDocumento from '../InformeEcografiaDocumento.jsx'
 
 /** "Revisar y publicar": el documento tal como lo verá el médico, antes de confirmar (como en Laboratorio). */

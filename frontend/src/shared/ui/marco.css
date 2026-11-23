@@ -1,0 +1,51 @@
+/* Marco de las pantallas: barra superior, volver + migas y barra de avance (compartidos). */
+.lab-signout {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  color: #53606b;
+  font-size: 12px;
+  cursor: pointer;
+}
+.lab-signout:hover { background: #f5f6f8; }
+.lab-topbar {
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 0 32px;
+  border-bottom: 1px solid var(--line);
+  background: #fff;
+}
+.lab-brand { display: grid; gap: 2px; }
+.lab-brand strong { color: var(--ink); font-size: 16px; font-weight: 600; letter-spacing: -.02em; }
+.lab-brand span { color: var(--muted); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
+.lab-session { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.lab-session-user { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); font-size: 12px; font-weight: 600; }
+/* Ruta de navegación */
+.lab-breadcrumb { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 22px; color: var(--muted); font-size: 13px; }
+.lab-breadcrumb a { color: var(--brand); text-decoration: none; }
+.lab-breadcrumb a:hover { text-decoration: underline; }
+.lab-breadcrumb [aria-current] { color: var(--ink); font-weight: 600; }
+/* Barra de avance reutilizable */
+.lab-progress-bar { position: relative; height: 6px; overflow: hidden; border-radius: 999px; background: #e9edf1; }
+.lab-progress-bar > span { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: var(--brand); transition: width .25s ease; }
+/* Botón de volver + ruta de navegación */
+a.lab-brand { text-decoration: none; }
+.lab-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; margin-bottom: 22px; }
+.lab-nav .lab-breadcrumb { margin-bottom: 0; }
+.lab-back-button { display: inline-flex; align-items: center; gap: 8px; min-height: 38px; padding: 0 14px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--ink); font-size: 13px; font-weight: 600; text-decoration: none; box-shadow: 0 1px 2px rgb(15 23 42 / 4%); }
+.lab-back-button:hover { border-color: var(--brand); background: #f7fbfa; color: var(--brand); }
+.lab-back-button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.lab-breadcrumb-item { display: inline-flex; align-items: center; gap: 8px; }
+
+@media (max-width: 700px) {
+  .lab-topbar { min-height: 58px; padding: 10px 20px; }
+  .lab-session-user { max-width: 120px; }
+  .lab-signout { min-height: 32px; padding: 0 9px; }
+}
+@media print { .lab-nav { display: none; } }
+@media (prefers-reduced-motion: reduce) { .lab-progress-bar > span { transition: none; } }

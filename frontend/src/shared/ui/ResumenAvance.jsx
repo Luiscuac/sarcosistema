@@ -1,7 +1,8 @@
-import './captura.css'
+import './marco.css'
+import './resumen-avance.css'
 
 /** Barra de avance y motivo por el que todavía no se puede publicar. */
-export default function ResumenCaptura({ resumen, motivoBloqueo }) {
+export default function ResumenAvance({ resumen, motivoBloqueo }) {
   const porcentaje = resumen.total ? Math.round((resumen.completos / resumen.total) * 100) : 0
   return (
     <div className="lab-capture-summary" aria-live="polite">

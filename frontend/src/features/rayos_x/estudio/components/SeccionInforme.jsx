@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import Dialogo from '../../../laboratorio/components/Dialogo.jsx'
+import Dialogo from '../../../../shared/ui/Dialogo.jsx'
 import VisorRadiografia from '../../asistente/components/VisorRadiografia.jsx'
 import { useAvisoCambiosSinGuardar } from '../../../../shared/hooks/useAvisoCambiosSinGuardar.js'
 import { useNotificacion } from '../../../../shared/notifications/NotificationContext.jsx'

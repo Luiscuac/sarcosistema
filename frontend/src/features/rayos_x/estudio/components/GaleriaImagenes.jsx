@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import Dialogo from '../../../laboratorio/components/Dialogo.jsx'
+import Dialogo from '../../../../shared/ui/Dialogo.jsx'
 import VisorRadiografia from '../../asistente/components/VisorRadiografia.jsx'
 import { obtenerVistaImagen } from '../../compartido/api/radiologiaApi.js'
 import { tamanoLegible } from '../utils/informe.js'

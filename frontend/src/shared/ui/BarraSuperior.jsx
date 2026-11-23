@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
+import './marco.css'
 
-/** Barra superior compartida. `inicio` es la pantalla principal del servicio que muestra la barra. */
-export default function LaboratorioTopbar({ usuario, onLogout, titulo = 'Laboratorio', inicio = '/laboratorio' }) {
+/** Barra superior de los servicios (Laboratorio, Ecografía, Rayos X…): `titulo` y `inicio` los da cada módulo. */
+export default function BarraSuperior({ usuario, onLogout, titulo, inicio }) {
   return (
     <header className="lab-topbar">
       <Link className="lab-brand" to={inicio} title={`Ir al inicio de ${titulo}`}>

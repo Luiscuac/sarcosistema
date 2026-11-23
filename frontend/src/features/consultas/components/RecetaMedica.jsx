@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { emitirRecetaMedica } from '../api/consultasApi.js'
 import { obtenerRecetasPublicadas } from '../../enfermeria/api/enfermeriaApi.js'
-import ConfirmarAccion from '../../laboratorio/components/ConfirmarAccion.jsx'
+import ConfirmarAccion from '../../../shared/ui/ConfirmarAccion.jsx'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
 import { fecha, fechaLocalDe } from '../utils/paciente.js'
 

@@ -1,4 +1,4 @@
-import ConfirmarAccion from '../ConfirmarAccion.jsx'
+import ConfirmarAccion from '../../../../shared/ui/ConfirmarAccion.jsx'
 import { ETIQUETA_FUERA_DE_RANGO, evaluarValor } from '../../utils/rangoReferencia.js'
 import { parametrosVisibles } from '../../utils/captura.js'
 

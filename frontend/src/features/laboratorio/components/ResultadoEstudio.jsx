@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { guardarBorrador, obtenerExamen, publicarResultado } from '../api/laboratorioApi.js'
 import CampoResultado from './resultados/CampoResultado.jsx'
 import ConfirmarPublicacion from './resultados/ConfirmarPublicacion.jsx'
-import ResumenCaptura from './resultados/ResumenCaptura.jsx'
+import ResumenAvance from '../../../shared/ui/ResumenAvance.jsx'
 import { useResponsableRecordado } from '../hooks/useResponsableRecordado.js'
 import { agruparPorSeccion, enfocarSiguienteCampo, motivoPublicacionBloqueada, parametrosVisibles, resumenCaptura } from '../utils/captura.js'
 import { mensajeError } from '../utils/mensajeError.js'
@@ -91,7 +91,7 @@ export default function ResultadoEstudio({ estudioId, usuario }) {
           {soloLectura && <p role="status" className="lab-result-status">Resultado publicado. Se muestra en modo lectura.</p>}
           {esperandoMuestra && <p className="lab-result-note">Primero registra la muestra de este estudio desde la solicitud.</p>}
           {!data.plantilla_configurada && <p className="lab-result-note">Este estudio todavía no tiene campos de resultado configurados.</p>}
-          {editable && <ResumenCaptura resumen={resumen} motivoBloqueo={motivoBloqueo} />}
+          {editable && <ResumenAvance resumen={resumen} motivoBloqueo={motivoBloqueo} />}
           {data.plantilla_configurada && !esperandoMuestra && <>
             {agruparPorSeccion(parametros).map(([seccion, grupo]) => <section className="lab-result-group" key={seccion}>
               <h3>{seccion}</h3>

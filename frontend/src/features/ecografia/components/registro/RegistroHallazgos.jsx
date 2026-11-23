@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useBlocker, useNavigate } from 'react-router-dom'
-import ResumenCaptura from '../../../laboratorio/components/resultados/ResumenCaptura.jsx'
+import ResumenAvance from '../../../../shared/ui/ResumenAvance.jsx'
 import { useNotificacion } from '../../../../shared/notifications/NotificationContext.jsx'
 import * as api from '../../api/ecografiaApi.js'
 import { agregarArchivos, contarImagenes, iniciarDatos, motivoBloqueoEco, resumenRegistro } from '../../informe.js'
@@ -76,7 +76,7 @@ export default function RegistroHallazgos({ estudio }) {
       <p>{estudio.paciente_nombre}{estudio.codigo_paciente ? ` · ${estudio.codigo_paciente}` : ''}{estudio.medico_solicitante ? ` · Solicitó ${estudio.medico_solicitante}` : ''}</p>
     </header>
     <form className="lab-area-result-form eco-registro" onSubmit={guardar}>
-      <ResumenCaptura resumen={resumen} motivoBloqueo={motivoBloqueo} />
+      <ResumenAvance resumen={resumen} motivoBloqueo={motivoBloqueo} />
       <SeccionDatos datos={datos} cambiar={cambiar} requiereZona={['ECO_DOPPLER', 'ECO_PARTES_BLANDAS'].includes(datos.tipo)} deshabilitado={ocupado} />
       <SeccionHallazgos organos={organos} evaluaciones={datos.evaluaciones} cambiarOrgano={cambiarOrgano} deshabilitado={ocupado} />
       <SeccionAdjuntos guardados={guardados} nuevos={nuevos} maximo={estudio.max_archivos} deshabilitado={ocupado}

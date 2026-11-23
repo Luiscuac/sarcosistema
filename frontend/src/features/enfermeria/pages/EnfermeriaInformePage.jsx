@@ -4,8 +4,8 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   obtenerRecetasRecibidasEnfermeria, obtenerRegistrosEnfermeria, publicarRegistroEnfermeria,
 } from '../api/enfermeriaApi.js'
-import LaboratorioTopbar from '../../laboratorio/components/LaboratorioTopbar.jsx'
-import ConfirmarAccion from '../../laboratorio/components/ConfirmarAccion.jsx'
+import BarraSuperior from '../../../shared/ui/BarraSuperior.jsx'
+import ConfirmarAccion from '../../../shared/ui/ConfirmarAccion.jsx'
 import '../../laboratorio/pages/laboratorio.css'
 import { MEDICIONES, TEXTOS, formularioDesdeRegistro, resumenDelFormulario } from '../utils/signosVitales.js'
 import { formatearFecha } from '../../../shared/utils/formatearFecha.js'
@@ -153,7 +153,7 @@ export default function EnfermeriaInformePage({ usuario, logout }) {
   const error = esReceta ? recetas.isError && !receta : registros.isError && !registro
   const encontrado = esReceta ? receta : registro
   return <main className="lab-page enf-page">
-    <LaboratorioTopbar usuario={usuario} titulo="Enfermería" inicio="/enfermeria" onLogout={logout} />
+    <BarraSuperior usuario={usuario} titulo="Enfermería" inicio="/enfermeria" onLogout={logout} />
     <div className="enf-content">
       {cargando
         ? <p role="status" className="enf-message">Cargando informe…</p>

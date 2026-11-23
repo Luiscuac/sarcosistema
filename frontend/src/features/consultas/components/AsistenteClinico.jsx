@@ -4,7 +4,7 @@ import { transcribirAudio } from '../../ia/whisper/api/iaApi.js'
 import { extraerDatosClinicos } from '../api/consultasApi.js'
 import { grupos } from '../utils/formulario.js'
 import PropuestaCampo from './PropuestaCampo.jsx'
-import ConfirmarAccion from '../../laboratorio/components/ConfirmarAccion.jsx'
+import ConfirmarAccion from '../../../shared/ui/ConfirmarAccion.jsx'
 
 const etiquetas = Object.fromEntries(grupos.flatMap(g => g.campos))
 const ttl = Math.max(10, Math.min(900, Number(import.meta.env.VITE_CLINICAL_AUDIO_TTL_SECONDS) || 300))

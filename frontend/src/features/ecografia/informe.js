@@ -33,7 +33,7 @@ export function pendientes(datos, organos) {
     ['ECO_DOPPLER', 'ECO_PARTES_BLANDAS'].includes(datos.tipo) && !datos.zona.trim() && 'Zona estudiada'].filter(Boolean)
 }
 
-/** Avance del registro para ResumenCaptura (mismo formato que Laboratorio): estructuras + datos obligatorios. */
+/** Avance del registro para ResumenAvance (mismo formato que Laboratorio): estructuras + datos obligatorios. */
 /** Imagen del estudio (JPG, PNG, DICOM…); un PDF no cuenta como imagen. */
 export const esImagenEco = mime => String(mime || '').startsWith('image/') || mime === 'application/dicom'
 

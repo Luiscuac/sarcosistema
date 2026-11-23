@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import Dialogo from '../../laboratorio/components/Dialogo.jsx'
+import Dialogo from '../../../shared/ui/Dialogo.jsx'
 import { buscarPacientes, crearSolicitud, obtenerCatalogo } from '../api/ecografiaApi.js'
 
 export default function NuevaSolicitudEcografia({ onCerrar, onCreada }) {

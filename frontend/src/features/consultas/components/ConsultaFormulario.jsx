@@ -16,7 +16,7 @@ import { transportarConsultaDemo } from '../../ia/transporter/api/agenteLocalApi
 import { obtenerRegistrosPublicados } from '../../enfermeria/api/enfermeriaApi.js'
 import CampoMedicion, { pasarAlSiguiente } from '../../enfermeria/components/CampoMedicion.jsx'
 import { MEDICIONES, erroresDelFormulario } from '../../enfermeria/utils/signosVitales.js'
-import ConfirmarAccion from '../../laboratorio/components/ConfirmarAccion.jsx'
+import ConfirmarAccion from '../../../shared/ui/ConfirmarAccion.jsx'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
 import { calcularEdad } from '../../../shared/utils/edad.js'
 

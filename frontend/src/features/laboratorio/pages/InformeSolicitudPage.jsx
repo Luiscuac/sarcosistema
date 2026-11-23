@@ -3,9 +3,10 @@ import { useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import { obtenerInformeSolicitud } from '../api/laboratorioApi.js'
 import { obtenerInformeLaboratorio } from '../../consultas/api/consultasApi.js'
-import LaboratorioTopbar from '../components/LaboratorioTopbar.jsx'
-import NavegacionLab from '../components/NavegacionLab.jsx'
-import { nombreArea, nombreMotivoIncidencia, nombreSexo } from '../utils/catalogos.js'
+import BarraSuperior from '../../../shared/ui/BarraSuperior.jsx'
+import NavegacionPagina from '../../../shared/ui/NavegacionPagina.jsx'
+import { nombreArea, nombreMotivoIncidencia } from '../utils/catalogos.js'
+import { nombreSexo } from '../../../shared/utils/personas.js'
 import { agruparInformePorArea, fueraDeRango, resumenParaCopiar } from '../utils/informe.js'
 import { describirEdad } from '../../../shared/utils/edad.js'
 import { formatearFecha } from '../../../shared/utils/formatearFecha.js'
@@ -124,7 +125,7 @@ export default function InformeSolicitudPage({ usuario, logout, modoMedico = fal
     <div className="lab-report-controls">
       {modoMedico
         ? <Link className="lab-back-link" to={`/consultas/pacientes/${pacienteId}`}>← Volver a la ficha</Link>
-        : <NavegacionLab volverA={`/laboratorio/solicitudes/${solicitudId}`} textoVolver="Volver a la solicitud" migas={[
+        : <NavegacionPagina volverA={`/laboratorio/solicitudes/${solicitudId}`} textoVolver="Volver a la solicitud" migas={[
           { texto: 'Solicitudes', ruta: '/laboratorio' },
           { texto: informe?.referencia ?? 'Solicitud', ruta: `/laboratorio/solicitudes/${solicitudId}` },
           { texto: 'Informe' },
@@ -142,7 +143,7 @@ export default function InformeSolicitudPage({ usuario, logout, modoMedico = fal
   if (modoMedico) return <section className="lab-report-page">{contenido}</section>
   return <main className="lab-page">
     <div className="lab-main">
-      <LaboratorioTopbar usuario={usuario} onLogout={logout} />
+      <BarraSuperior usuario={usuario} titulo="Laboratorio" inicio="/laboratorio" onLogout={logout} />
       <section className="lab-content lab-report-page">{contenido}</section>
     </div>
   </main>

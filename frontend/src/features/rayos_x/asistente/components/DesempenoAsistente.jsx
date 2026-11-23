@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import Dialogo from '../../../laboratorio/components/Dialogo.jsx'
+import Dialogo from '../../../../shared/ui/Dialogo.jsx'
 import { obtenerConcordancia } from '../api/rayosXAiApi.js'
 import { de10, mensajeError, porcentaje, progresoCalibracion } from '../analisis.js'
 

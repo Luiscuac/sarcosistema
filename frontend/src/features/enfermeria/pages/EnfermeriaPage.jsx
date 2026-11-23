@@ -11,9 +11,9 @@ import '../../laboratorio/pages/laboratorio.css'
 import './enfermeria.css'
 import RecetasRecibidas from '../components/RecetasRecibidas.jsx'
 import FormularioAdmision from '../components/FormularioAdmision.jsx'
-import ConfirmarAccion from '../../laboratorio/components/ConfirmarAccion.jsx'
-import LaboratorioTopbar from '../../laboratorio/components/LaboratorioTopbar.jsx'
-import { nombreSexo } from '../../laboratorio/utils/catalogos.js'
+import ConfirmarAccion from '../../../shared/ui/ConfirmarAccion.jsx'
+import BarraSuperior from '../../../shared/ui/BarraSuperior.jsx'
+import { nombreSexo } from '../../../shared/utils/personas.js'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
 import { calcularEdad, describirEdad } from '../../../shared/utils/edad.js'
 import {
@@ -295,7 +295,7 @@ export default function EnfermeriaPage({ usuario, logout }) {
   const mostrarDescarte = blocker.state === 'blocked' || descarte
 
   return <main className="lab-page enf-page">
-    <LaboratorioTopbar usuario={usuario} titulo="Enfermería" inicio="/enfermeria" onLogout={salir} />
+    <BarraSuperior usuario={usuario} titulo="Enfermería" inicio="/enfermeria" onLogout={salir} />
     <div className="enf-content">
       <div className="enf-heading"><div><p>ADMISIÓN Y VALORACIÓN INICIAL</p><h1>Registro de enfermería</h1><span>Captura datos referidos y mediciones. Revisa y publica para que el médico pueda consultarlos.</span></div></div>
 

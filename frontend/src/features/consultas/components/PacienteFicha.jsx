@@ -9,7 +9,7 @@ import SolicitudRayosX from '../../rayos_x/compartido/SolicitudRayosX.jsx'
 import ExamenesComplementarios from './ExamenesComplementarios.jsx'
 import RegistrosPublicados from '../../enfermeria/components/RegistrosPublicados.jsx'
 import RecetaMedica from './RecetaMedica.jsx'
-import { nombreSexo } from '../../laboratorio/utils/catalogos.js'
+import { nombreSexo } from '../../../shared/utils/personas.js'
 
 export function IdentidadPaciente({ paciente }) {
   return <div className="med-patient">

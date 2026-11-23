@@ -1,5 +1,5 @@
-import LaboratorioTopbar from '../../laboratorio/components/LaboratorioTopbar.jsx'
-import NavegacionLab from '../../laboratorio/components/NavegacionLab.jsx'
+import BarraSuperior from '../../../shared/ui/BarraSuperior.jsx'
+import NavegacionPagina from '../../../shared/ui/NavegacionPagina.jsx'
 import '../../laboratorio/pages/laboratorio.css'
 import '../../laboratorio/components/formularios.css'
 import '../pages/ecografia.css'
@@ -8,9 +8,9 @@ import '../pages/ecografia.css'
 export default function MarcoEcografia({ usuario, logout, navegacion, clase = '', children }) {
   return <main className="lab-page eco-page">
     <div className="lab-main">
-      <LaboratorioTopbar usuario={usuario} titulo="Ecografía" inicio="/ecografia" onLogout={logout} />
+      <BarraSuperior usuario={usuario} titulo="Ecografía" inicio="/ecografia" onLogout={logout} />
       <section className={`lab-content ${clase}`.trim()}>
-        {navegacion && <NavegacionLab {...navegacion} />}
+        {navegacion && <NavegacionPagina {...navegacion} />}
         {children}
       </section>
     </div>

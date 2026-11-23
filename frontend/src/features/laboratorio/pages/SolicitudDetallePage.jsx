@@ -2,14 +2,15 @@ import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { obtenerSolicitud } from '../api/laboratorioApi.js'
-import LaboratorioTopbar from '../components/LaboratorioTopbar.jsx'
-import NavegacionLab from '../components/NavegacionLab.jsx'
+import BarraSuperior from '../../../shared/ui/BarraSuperior.jsx'
+import NavegacionPagina from '../../../shared/ui/NavegacionPagina.jsx'
 import RecibirMuestra from '../components/RecibirMuestra.jsx'
 import RecorridoEstudio from '../components/solicitudes/RecorridoEstudio.jsx'
 import ProgresoSolicitud from '../components/solicitudes/ProgresoSolicitud.jsx'
 import { agruparPorCategoria, estadoSolicitud } from '../utils/agruparSolicitudes.js'
 import { progresoSolicitud, siguienteAccion } from '../utils/bandeja.js'
-import { ESTADOS_FINALES, nombreMotivoIncidencia, nombreSexo } from '../utils/catalogos.js'
+import { ESTADOS_FINALES, nombreMotivoIncidencia } from '../utils/catalogos.js'
+import { nombreSexo } from '../../../shared/utils/personas.js'
 import { describirEdad } from '../../../shared/utils/edad.js'
 import { formatearFecha } from '../../../shared/utils/formatearFecha.js'
 import './laboratorio.css'
@@ -112,9 +113,9 @@ export default function SolicitudDetallePage({ usuario, logout }) {
 
   return <main className="lab-page">
     <div className="lab-main">
-      <LaboratorioTopbar usuario={usuario} onLogout={logout} />
+      <BarraSuperior usuario={usuario} titulo="Laboratorio" inicio="/laboratorio" onLogout={logout} />
       <section className="lab-content lab-detail-page">
-        <NavegacionLab volverA="/laboratorio" textoVolver="Volver a solicitudes"
+        <NavegacionPagina volverA="/laboratorio" textoVolver="Volver a solicitudes"
           migas={[{ texto: 'Solicitudes', ruta: '/laboratorio' }, { texto: solicitud?.referencia ?? 'Solicitud' }]} />
         {isLoading && <p>Cargando solicitud…</p>}
         {isError && <div role="alert" className="lab-detail-card">

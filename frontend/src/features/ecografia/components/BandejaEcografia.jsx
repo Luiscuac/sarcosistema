@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import LaboratorioTopbar from '../../laboratorio/components/LaboratorioTopbar.jsx'
+import BarraSuperior from '../../../shared/ui/BarraSuperior.jsx'
 import { formatearFecha } from '../../../shared/utils/formatearFecha.js'
 import { estadoEstudioImagen } from '../utils/archivos.js'
 import { VISTAS, filtrarEstudios } from '../bandeja.js'
@@ -16,7 +16,7 @@ export default function BandejaEcografia({ usuario, logout, bandeja, onNueva, cr
   const indicadores = [{ codigo: 'todos', nombre: 'Todos los estudios' }, ...VISTAS]
   const limpiar = () => { setBuscar(''); setTipo('todos'); setEstado('todos') }
 
-  return <main className="lab-page eco-workspace"><LaboratorioTopbar usuario={usuario} titulo="Ecografía" inicio="/ecografia" onLogout={logout} />
+  return <main className="lab-page eco-workspace"><BarraSuperior usuario={usuario} titulo="Ecografía" inicio="/ecografia" onLogout={logout} />
     <section className="lab-content">
       <div className="lab-title-row"><div><p className="lab-eyebrow">SERVICIO DE ECOGRAFÍA</p><h1>Solicitudes de ecografía</h1><p className="lab-intro">De la solicitud al informe: registra los hallazgos, adjunta imágenes y publica el resultado.</p></div><div className="lab-title-actions"><button className="primary-button" type="button" onClick={onNueva}>+ Nueva solicitud</button></div></div>
       {creada && <div className="lab-created-notice" role="status"><span>Solicitud registrada para <strong>{creada.paciente}</strong> · {creada.cantidad} {creada.cantidad === 1 ? 'estudio' : 'estudios'}.</span><button type="button" onClick={onCerrarAviso} aria-label="Cerrar aviso">×</button></div>}
