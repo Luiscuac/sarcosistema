@@ -76,7 +76,9 @@
 .eco-recorrido .lab-step--done > span[aria-hidden] { background: var(--brand); color: #fff; }
 .eco-recorrido .lab-step--current > span[aria-hidden] { background: #285a9e; color: #fff; }
 .eco-avance { max-width: 420px; margin-top: 4px; }
+.eco-registro .eco-seccion { margin-top: 0; }
 .eco-registro .eco-seccion header { margin-bottom: 16px; }
+.eco-acciones-pie button { font: inherit; font-size: 13px; }
 .eco-registro .lab-form-hint { margin: 0 0 14px; }
 .eco-registro textarea { width: 100%; min-height: 84px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 6px; color: var(--ink); font: inherit; font-size: 13px; font-weight: 400; line-height: 1.55; resize: vertical; }
 .eco-registro :is(input, textarea):focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }

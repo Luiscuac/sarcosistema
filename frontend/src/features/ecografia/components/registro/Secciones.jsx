@@ -52,7 +52,7 @@ export function SeccionCierre({ datos, cambiar, deshabilitado }) {
   return <Seccion titulo="Conclusión">
     <div className="lab-form-grid eco-cierre">
       <label>Conclusión del profesional *<textarea rows={4} maxLength={4000} value={datos.conclusion} disabled={deshabilitado} onChange={e => cambiar('conclusion', e.target.value)} placeholder="Conclusión que se incluirá en el informe" /></label>
-      <label>Observaciones adicionales <small>(opcional)</small><textarea rows={4} maxLength={4000} value={datos.observaciones} disabled={deshabilitado} onChange={e => cambiar('observaciones', e.target.value)} /></label>
+      <label><span>Observaciones adicionales <small>(opcional)</small></span><textarea rows={4} maxLength={4000} value={datos.observaciones} disabled={deshabilitado} onChange={e => cambiar('observaciones', e.target.value)} /></label>
     </div>
   </Seccion>
 }
