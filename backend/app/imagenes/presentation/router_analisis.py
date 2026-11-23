@@ -13,6 +13,7 @@ from app.accesos.presentation.dependencies.current_user import usuario_actual
 from app.accesos.presentation.dependencies.role_required import requiere_rol
 from app.config.database import get_db
 from app.config.settings import settings
+from app.imagenes.application.triaje import umbrales_triaje
 from app.imagenes.infrastructure.archivos import leer_archivo_local
 from app.imagenes.infrastructure.persistence.repositorio_asistente import EstudiosRepository
 from app.imagenes.presentation.schemas import AnalisisNuevo, RevisionNueva
@@ -38,8 +39,7 @@ def _prioridad(resultado) -> str | None:
         return None
     try:
         from app.imagenes.application.triaje import nivel_prioridad
-        from app.imagenes.presentation.router_clinico import _umbrales_triaje
-        return nivel_prioridad(indice, *_umbrales_triaje())
+        return nivel_prioridad(indice, *umbrales_triaje())
     except Exception:  # sin archivo de índice preparado no se clasifica
         return None
 
@@ -124,8 +124,7 @@ async def evolucion(estudio_id: int, usuario: Usuario = Depends(usuario_actual),
         raise HTTPException(503, 'Falta el artefacto local de tolerancias de evolución.') from None
     resumen = comparar_evolucion(actual, anteriores, tolerancias)
     from app.imagenes.application.triaje import nivel_prioridad
-    from app.imagenes.presentation.router_clinico import _umbrales_triaje
-    alta, media = _umbrales_triaje()
+    alta, media = umbrales_triaje()
     for p in [resumen['actual'], *resumen['anteriores']]:
         if p:
             p['nivel'] = nivel_prioridad(p['indice'], alta, media)
@@ -151,9 +150,8 @@ async def solicitar(estudio_id: int, datos: AnalisisNuevo, usuario: Usuario = De
 async def concordancia(repo=Depends(get_repository)):
     """Desempeño del asistente en este hospital: solo agregados, sin pacientes ni identificadores."""
     from app.imagenes.application.calibracion import resumir_concordancia
-    from app.imagenes.presentation.router_clinico import _umbrales_triaje
     from app.imagenes.infrastructure.vision.patron_tb import patron_en_uso
-    alta, media = _umbrales_triaje()
+    alta, media = umbrales_triaje()
     patron = patron_en_uso(settings.radiology_tb_ensemble_enabled, settings.radiology_tb_umbral_compatible)
     return resumir_concordancia(await repo.filas_concordancia(), patron) | {
         'patron_tb_actual': patron | {'origen': 'configuración local' if settings.radiology_tb_umbral_compatible is not None

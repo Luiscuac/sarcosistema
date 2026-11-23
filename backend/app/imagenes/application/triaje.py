@@ -56,3 +56,12 @@ class TriarRadiografia:
         contenido = await asyncio.to_thread(self.leer_archivo, archivo)
         visual = await asyncio.to_thread(self.vision.analizar, contenido, proyeccion='frontal_no_especificada')
         return {'experimental': True, 'tipo': 'triaje', **visual}
+
+
+def umbrales_triaje() -> tuple[float, float]:
+    """(alta, media) en uso: la configuración local si existe; si no, los provisionales del artefacto del índice."""
+    from app.config.settings import settings
+    from app.imagenes.infrastructure.vision.indice import cargar_indice
+    provisional = cargar_indice()['umbrales_provisionales']
+    alta, media = settings.radiology_triage_umbral_alta, settings.radiology_triage_umbral_media
+    return (provisional['alta'] if alta is None else alta, provisional['media'] if media is None else media)

@@ -22,7 +22,7 @@ from app.config.database import get_db
 from app.config.settings import settings
 from app.imagenes.domain import radiologia as reglas
 from app.imagenes.domain.errors import EstudioNoEncontrado
-from app.imagenes.application.triaje import nivel_prioridad
+from app.imagenes.application.triaje import nivel_prioridad, umbrales_triaje
 from app.imagenes.infrastructure.archivos import limite_archivo, mime_por_firma
 from app.imagenes.infrastructure.persistence.repositorio_radiologia import ConflictoRadiologia, RepositorioRadiologiaSql
 from app.imagenes.infrastructure.persistence.repositorio_triaje import RepositorioTriajeSql
@@ -90,7 +90,7 @@ async def _con_triaje(repositorio: RepositorioRadiologiaSql, filas: list[dict]) 
     try:
         resumen = await RepositorioTriajeSql(repositorio.db).triaje_por_estudio(torax)
         if resumen:
-            alta, media = _umbrales_triaje()
+            alta, media = umbrales_triaje()
             for fila in filas:
                 r = resumen.get(fila['estudio_id'])
                 if r:
@@ -98,16 +98,6 @@ async def _con_triaje(repositorio: RepositorioRadiologiaSql, filas: list[dict]) 
     except Exception:  # noqa: BLE001 - el triaje es accesorio
         pass
     return filas
-
-
-def _umbrales_triaje() -> tuple[float, float]:
-    from app.imagenes.infrastructure.vision.indice import cargar_indice
-
-    provisional = cargar_indice()['umbrales_provisionales']
-    alta = settings.radiology_triage_umbral_alta
-    media = settings.radiology_triage_umbral_media
-    return (provisional['alta'] if alta is None else alta,
-            provisional['media'] if media is None else media)
 
 
 # ---------- esquemas ----------
