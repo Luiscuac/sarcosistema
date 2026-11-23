@@ -4,7 +4,6 @@ import BarraSuperior from '../../../shared/ui/BarraSuperior.jsx'
 import NuevaSolicitud from '../components/NuevaSolicitud.jsx'
 import ResumenSolicitudes from '../components/ResumenSolicitudes.jsx'
 import SolicitudesPanel from '../components/SolicitudesPanel.jsx'
-import './laboratorio.css'
 
 export default function LaboratorioPage({ usuario, logout }) {
   const [mostrarNuevaSolicitud, setMostrarNuevaSolicitud] = useState(false)

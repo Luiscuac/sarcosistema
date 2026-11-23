@@ -1,5 +1,4 @@
-@import '../components/formularios.css';
-
+/* Base de las pantallas de servicios (antes en Laboratorio): página, títulos, resumen, listas, tablas, estados. */
 .lab-page { min-height: 100vh; background: var(--surface); }
 .lab-main { min-width: 0; }
 .lab-content { max-width: 1360px; margin: 0 auto; padding: 30px 36px 48px; }
@@ -13,14 +12,14 @@
 .lab-summary-card { min-height: 78px; width: 100%; font: inherit; cursor: pointer; transition: border-color .15s ease, background-color .15s ease; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 6px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 6px; background: #fff; text-align: center; }
 .lab-summary-card span { color: var(--muted); font-size: 12px; font-weight: 500; }
 .lab-summary-card strong { color: var(--ink); font-size: 28px; font-weight: 600; line-height: 1; }
-.lab-summary-card small { color: #a33b16; font-size: 11px; }
+.lab-summary-card small { color: var(--danger); font-size: 11px; }
 .lab-list-panel { margin-top: 18px; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
 .lab-list-toolbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 20px 22px 14px; }
 .lab-list-toolbar h2 { margin: 0; font-size: 18px; font-weight: 600; }
 .lab-list-toolbar p { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
 .lab-pending-tag { color: var(--muted); font-size: 10px; text-align: right; }
 .lab-list-tabs { display: flex; gap: 6px; padding: 0 22px 14px; }
-.lab-list-tabs button { padding: 8px 13px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: #53606b; font: inherit; font-size: 13px; cursor: pointer; }
+.lab-list-tabs button { padding: 8px 13px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--label); font: inherit; font-size: 13px; cursor: pointer; }
 .lab-list-tabs button.is-active { border-color: var(--brand); color: var(--brand); font-weight: 600; }
 .lab-search { width: calc(100% - 44px); height: 46px; margin: 0 22px 18px; padding: 0 14px; border: 1px solid var(--line); border-radius: 6px; background: #f9fafb; color: var(--ink); font-size: 14px; }
 .lab-search::placeholder { color: #949da6; }
@@ -33,10 +32,10 @@
 .lab-table-row td:first-child span { margin-top: 4px; }
 .lab-table-row td:first-child small { margin-top: 5px; color: var(--muted); font-size: 12px; }
 .lab-status { display: inline-flex; padding: 6px 9px; border: 1px solid var(--line); border-radius: 6px; font-size: 12px; white-space: nowrap; }
-.lab-status--pendiente_muestra { border-color: #ead8a2; background: #fffaf0; color: #825b08; }
-.lab-status--resultado_en_preparacion { border-color: #c8dafb; background: #f3f7ff; color: #285a9e; }
-.lab-status--publicado { border-color: #b9ddd7; background: #f0f8f6; color: #0f766e; }
-.lab-priority { color: #a33b16; }
+.lab-status--pendiente_muestra { border-color: var(--warning-line); background: var(--warning-soft); color: #825b08; }
+.lab-status--resultado_en_preparacion { border-color: var(--info-line); background: var(--info-soft); color: var(--info); }
+.lab-status--publicado { border-color: var(--brand-line); background: var(--brand-soft); color: var(--brand); }
+.lab-priority { color: var(--danger); }
 .lab-empty { padding: 48px 24px 54px; text-align: center; }
 .lab-empty strong, .lab-empty span { display: block; }
 .lab-empty strong { font-size: 13px; font-weight: 600; }
@@ -63,13 +62,13 @@
 }
 
 /* Tarjetas de indicadores: también filtran la bandeja */
-.lab-summary-card:hover { border-color: #b9ddd7; }
+.lab-summary-card:hover { border-color: var(--brand-line); }
 .lab-summary-card:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
-.lab-summary-card.is-active { border-color: var(--brand); background: #f0f8f6; box-shadow: inset 0 -3px 0 var(--brand); }
+.lab-summary-card.is-active { border-color: var(--brand); background: var(--brand-soft); box-shadow: inset 0 -3px 0 var(--brand); }
 .lab-summary-card.is-active span { color: var(--brand); }
 
 /* Aviso tras crear una solicitud */
-.lab-created-notice { display: flex; align-items: center; gap: 14px; margin-top: 18px; padding: 12px 16px; border: 1px solid #b9ddd7; border-radius: 6px; background: #f0f8f6; color: #0f5f58; font-size: 13px; }
+.lab-created-notice { display: flex; align-items: center; gap: 14px; margin-top: 18px; padding: 12px 16px; border: 1px solid var(--brand-line); border-radius: 6px; background: var(--brand-soft); color: var(--brand-strong); font-size: 13px; }
 .lab-created-notice span { flex: 1; }
 .lab-created-notice a { text-decoration: none; }
 .lab-created-notice > button { border: 0; background: transparent; color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; }
@@ -78,11 +77,11 @@
 
 /* Botones secundarios y chips */
 .lab-secondary-button { min-height: 38px; padding: 0 14px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--brand); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
-.lab-secondary-button:hover { border-color: var(--brand); background: #f7fbfa; }
-.lab-chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 6px 6px 11px; border: 1px solid #b9ddd7; border-radius: 999px; background: #f0f8f6; color: #0f5f58; font-size: 12px; font-weight: 600; }
-.lab-chip button { padding: 2px 8px; border: 0; border-radius: 999px; background: #fff; color: #0f5f58; font: inherit; font-size: 12px; cursor: pointer; }
+.lab-secondary-button:hover { border-color: var(--brand); background: var(--brand-hover-soft); }
+.lab-chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 6px 6px 11px; border: 1px solid var(--brand-line); border-radius: 999px; background: var(--brand-soft); color: var(--brand-strong); font-size: 12px; font-weight: 600; }
+.lab-chip button { padding: 2px 8px; border: 0; border-radius: 999px; background: #fff; color: var(--brand-strong); font: inherit; font-size: 12px; cursor: pointer; }
 .lab-chip button:hover { background: #dff1ed; }
-.lab-field-label { color: #53606b; font-size: 11px; font-weight: 600; }
+.lab-field-label { color: var(--label); font-size: 11px; font-weight: 600; }
 .lab-chip-field { display: grid; gap: 6px; align-content: start; justify-items: start; }
 
 @media (prefers-reduced-motion: reduce) { .lab-summary-card { transition: none; } }

@@ -4,7 +4,6 @@ import BarraSuperior from '../../../shared/ui/BarraSuperior.jsx'
 import { formatearFecha } from '../../../shared/utils/formatearFecha.js'
 import { estadoEstudioImagen } from '../utils/archivos.js'
 import { VISTAS, filtrarEstudios } from '../bandeja.js'
-import '../../laboratorio/pages/laboratorio.css'
 
 export default function BandejaEcografia({ usuario, logout, bandeja, onNueva, creada, onCerrarAviso }) {
   const [estado, setEstado] = useState('pendiente_muestra')

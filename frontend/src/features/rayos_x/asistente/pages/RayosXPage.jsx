@@ -6,7 +6,6 @@ import EstudioDetalle from '../components/EstudioDetalle.jsx'
 import DesempenoAsistente from '../components/DesempenoAsistente.jsx'
 import { listarEstudios } from '../api/rayosXAiApi.js'
 import { mensajeError } from '../analisis.js'
-import '../../../laboratorio/pages/laboratorio.css'
 import './rayos-x.css'
 
 export default function RayosXPage({ usuario, logout }) {

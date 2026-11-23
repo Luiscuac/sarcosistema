@@ -6,7 +6,6 @@ import { esImagenVisible, obtenerImagenVisible } from '../../ecografia/api/ecogr
 import { fecha } from '../utils/paciente.js'
 import { describirEdad } from '../../../shared/utils/edad.js'
 import { partirTextoInforme } from '../../rayos_x/estudio/utils/informe.js'
-import '../../laboratorio/pages/laboratorio.css'
 import '../../laboratorio/pages/informe-solicitud.css'
 import '../../ecografia/pages/informe-imagen.css'
 import '../../ecografia/pages/ecografia.css'

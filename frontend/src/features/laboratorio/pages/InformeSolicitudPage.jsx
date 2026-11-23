@@ -10,7 +10,6 @@ import { nombreSexo } from '../../../shared/utils/personas.js'
 import { agruparInformePorArea, fueraDeRango, resumenParaCopiar } from '../utils/informe.js'
 import { describirEdad } from '../../../shared/utils/edad.js'
 import { formatearFecha } from '../../../shared/utils/formatearFecha.js'
-import './laboratorio.css'
 import './informe-solicitud.css'
 
 function FilaInforme({ fila, columnas }) {

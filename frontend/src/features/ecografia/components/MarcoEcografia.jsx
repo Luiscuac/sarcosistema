@@ -1,7 +1,5 @@
 import BarraSuperior from '../../../shared/ui/BarraSuperior.jsx'
 import NavegacionPagina from '../../../shared/ui/NavegacionPagina.jsx'
-import '../../laboratorio/pages/laboratorio.css'
-import '../../laboratorio/components/formularios.css'
 import '../pages/ecografia.css'
 
 /** Marco común de las pantallas de un estudio: misma barra y navegación que Laboratorio. */

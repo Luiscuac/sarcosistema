@@ -7,7 +7,6 @@ import {
   publicarRegistroEnfermeria,
 } from '../api/enfermeriaApi.js'
 import { FormularioPaciente } from '../../laboratorio/components/nueva-solicitud/PacienteSolicitud.jsx'
-import '../../laboratorio/pages/laboratorio.css'
 import './enfermeria.css'
 import RecetasRecibidas from '../components/RecetasRecibidas.jsx'
 import FormularioAdmision from '../components/FormularioAdmision.jsx'

@@ -6,7 +6,6 @@ import {
 } from '../api/enfermeriaApi.js'
 import BarraSuperior from '../../../shared/ui/BarraSuperior.jsx'
 import ConfirmarAccion from '../../../shared/ui/ConfirmarAccion.jsx'
-import '../../laboratorio/pages/laboratorio.css'
 import { MEDICIONES, TEXTOS, formularioDesdeRegistro, resumenDelFormulario } from '../utils/signosVitales.js'
 import { formatearFecha } from '../../../shared/utils/formatearFecha.js'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'

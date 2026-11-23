@@ -2,7 +2,6 @@ import { useParams } from 'react-router-dom'
 import BarraSuperior from '../../../shared/ui/BarraSuperior.jsx'
 import NavegacionPagina from '../../../shared/ui/NavegacionPagina.jsx'
 import ResultadoEstudio from '../components/ResultadoEstudio.jsx'
-import './laboratorio.css'
 import './resultado-estudio.css'
 
 export default function ResultadoEstudioPage({ usuario, logout }) {

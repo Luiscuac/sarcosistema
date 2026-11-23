@@ -13,7 +13,6 @@ import { ESTADOS_FINALES, nombreMotivoIncidencia } from '../utils/catalogos.js'
 import { nombreSexo } from '../../../shared/utils/personas.js'
 import { describirEdad } from '../../../shared/utils/edad.js'
 import { formatearFecha } from '../../../shared/utils/formatearFecha.js'
-import './laboratorio.css'
 import '../components/solicitudes/solicitudes-panel.css'
 import './solicitud-detalle.css'
 

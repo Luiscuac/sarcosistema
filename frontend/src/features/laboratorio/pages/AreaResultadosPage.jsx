@@ -13,7 +13,6 @@ import { agruparPorSeccion, enfocarSiguienteCampo, motivoPublicacionBloqueada, p
 import { mensajeError } from '../utils/mensajeError.js'
 import { useAvisoCambiosSinGuardar } from '../../../shared/hooks/useAvisoCambiosSinGuardar.js'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
-import './laboratorio.css'
 import './area-resultados.css'
 
 const SIN_RESULTADOS = []

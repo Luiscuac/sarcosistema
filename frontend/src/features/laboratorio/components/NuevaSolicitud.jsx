@@ -11,7 +11,6 @@ import { AREAS_LABORATORIO } from '../utils/catalogos.js'
 import { mensajeError } from '../utils/mensajeError.js'
 import { useValorDiferido } from '../../../shared/hooks/useValorDiferido.js'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
-import './formularios.css'
 
 const PACIENTE_VACIO = {
   nombre_completo: '',

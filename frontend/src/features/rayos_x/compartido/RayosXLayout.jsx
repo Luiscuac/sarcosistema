@@ -1,6 +1,5 @@
 import BarraSuperior from '../../../shared/ui/BarraSuperior.jsx'
 import NavegacionPagina from '../../../shared/ui/NavegacionPagina.jsx'
-import '../../laboratorio/pages/laboratorio.css'
 import './rx-tokens.css'
 
 export const RUTA_RAYOS_X = '/rayos-x/gestion'
