@@ -34,11 +34,11 @@ export function SeccionHallazgos({ organos, evaluaciones, cambiarOrgano, deshabi
 
 export function SeccionAdjuntos({ guardados, nuevos, maximo, onAgregar, onQuitarGuardado, onQuitarNuevo, deshabilitado }) {
   const total = guardados.length + nuevos.length
-  return <Seccion titulo="Imágenes y adjuntos" detalle={`${total} de ${maximo}`}>
+  return <Seccion titulo="Imágenes y adjuntos *" detalle={`${total} de ${maximo}`}>
     <label className="lab-search-label eco-subir">Añadir imágenes o archivos
       <input type="file" multiple accept={ACEPTA} disabled={deshabilitado || total >= maximo} onChange={e => { onAgregar([...e.target.files]); e.target.value = '' }} />
     </label>
-    <p className="lab-form-hint">Puedes elegir varios archivos y añadir más en otra selección. JPG, PNG, PDF o DICOM.</p>
+    <p className="lab-form-hint">Para publicar se necesita al menos una imagen del estudio (JPG, PNG o DICOM). Puedes añadir también PDF y elegir varios archivos a la vez.</p>
     {total > 0 && <ul className="eco-adjuntos">
       {guardados.map(a => <li key={a.id}><span>{a.nombre_original} · {formatearTamano(a.tamano_bytes)}</span><small>Guardado</small>
         <button type="button" className="lab-secondary-button" disabled={deshabilitado} onClick={() => onQuitarGuardado(a.id)}>Quitar</button></li>)}

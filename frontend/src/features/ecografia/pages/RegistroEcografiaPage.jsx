@@ -10,12 +10,11 @@ export default function RegistroEcografiaPage({ usuario, logout }) {
   const { estudioId } = useParams()
   const consulta = useEstudioEcografia(estudioId)
   const estudio = consulta.data
-  if (estudio && !usaPlantilla(estudio)) return <InformeLibreEcografia key={estudioId} estudio={estudio} usuario={usuario} logout={logout} />
-  if (estudio?.estado === 'publicado') return <Navigate to={`/ecografia/estudios/${estudioId}/informe`} replace />
+  if (estudio?.estado === 'publicado' && usaPlantilla(estudio)) return <Navigate to={`/ecografia/estudios/${estudioId}/informe`} replace />
   const navegacion = { volverA: `/ecografia/estudios/${estudioId}`, textoVolver: 'Volver al estudio', migas: migasEstudio(estudio, 'Registro') }
   return <MarcoEcografia usuario={usuario} logout={logout} navegacion={navegacion} clase="lab-area-results-page">
     {consulta.isPending && <p role="status">Cargando estudio…</p>}
     {consulta.isError && <p role="alert">No se pudo cargar el estudio. Vuelve a la bandeja e inténtalo de nuevo.</p>}
-    {estudio && <RegistroHallazgos key={estudioId} estudio={estudio} />}
+    {estudio && (usaPlantilla(estudio) ? <RegistroHallazgos key={estudioId} estudio={estudio} /> : <InformeLibreEcografia key={estudioId} estudio={estudio} />)}
   </MarcoEcografia>
 }

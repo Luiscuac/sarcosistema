@@ -34,9 +34,16 @@ export function pendientes(datos, organos) {
 }
 
 /** Avance del registro para ResumenCaptura (mismo formato que Laboratorio): estructuras + datos obligatorios. */
-export function resumenRegistro(datos, organos) {
-  const faltan = pendientes(datos, organos)
-  const total = organos.length + 2 + (['ECO_DOPPLER', 'ECO_PARTES_BLANDAS'].includes(datos.tipo) ? 1 : 0)
+/** Imagen del estudio (JPG, PNG, DICOM…); un PDF no cuenta como imagen. */
+export const esImagenEco = mime => String(mime || '').startsWith('image/') || mime === 'application/dicom'
+
+/** Cuántos adjuntos son imágenes: guardados ({mime_type}) y nuevos (File: {type}, .dcm sin tipo). */
+export const contarImagenes = (guardados = [], nuevos = []) => guardados.filter(a => esImagenEco(a.mime_type)).length
+  + nuevos.filter(f => esImagenEco(f.type) || /\.(dcm|dicom)$/i.test(f.name || '')).length
+
+export function resumenRegistro(datos, organos, imagenes = 0) {
+  const faltan = [...pendientes(datos, organos), ...(imagenes > 0 ? [] : ['Al menos una imagen'])]
+  const total = organos.length + 3 + (['ECO_DOPPLER', 'ECO_PARTES_BLANDAS'].includes(datos.tipo) ? 1 : 0)
   return { total, completos: total - faltan.length, fueraDeRango: [], faltan }
 }
 

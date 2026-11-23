@@ -15,7 +15,6 @@ export default function InformeEcografiaPage({ usuario, logout }) {
   const { notificar } = useNotificacion()
   const documento = useRef(null)
   const estudio = consulta.data
-  if (estudio && !usaPlantilla(estudio)) return <InformeLibreEcografia key={estudioId} estudio={estudio} usuario={usuario} logout={logout} />
   const publicado = estudio?.estado === 'publicado'
 
   async function imprimir() {
@@ -28,9 +27,10 @@ export default function InformeEcografiaPage({ usuario, logout }) {
   return <MarcoEcografia usuario={usuario} logout={logout} navegacion={navegacion} clase="lab-report-page">
     {consulta.isPending && <p role="status">Cargando informe…</p>}
     {consulta.isError && <p role="alert">No se pudo cargar el informe. Vuelve a la bandeja e inténtalo de nuevo.</p>}
-    {estudio && !estudio.informe && <div className="lab-detail-card"><h2>Todavía no hay informe</h2><p>Registra los hallazgos para generar el informe.</p>
+    {estudio && !usaPlantilla(estudio) && <InformeLibreEcografia key={estudioId} estudio={estudio} />}
+    {estudio && usaPlantilla(estudio) && !estudio.informe && <div className="lab-detail-card"><h2>Todavía no hay informe</h2><p>Registra los hallazgos para generar el informe.</p>
       <Link className="primary-button" to={`/ecografia/estudios/${estudioId}/registro`}>Registrar hallazgos</Link></div>}
-    {estudio?.informe && <>
+    {estudio?.informe && usaPlantilla(estudio) && <>
       <div className="lab-report-controls">
         <p className="eco-informe-estado">{publicado ? 'Informe publicado' : 'Borrador: así se verá al publicarlo.'}</p>
         <div className="eco-informe-acciones">

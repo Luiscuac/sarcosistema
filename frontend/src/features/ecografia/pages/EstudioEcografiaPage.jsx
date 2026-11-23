@@ -2,7 +2,7 @@ import { Link, useParams } from 'react-router-dom'
 import MarcoEcografia, { migasEstudio } from '../components/MarcoEcografia.jsx'
 import RecorridoEco from '../components/RecorridoEco.jsx'
 import { useEstudioEcografia, usaPlantilla } from '../hooks/useEstudioEcografia.js'
-import { accionPrincipalEco, iniciarDatos, resumenRegistro } from '../informe.js'
+import { accionPrincipalEco, contarImagenes, iniciarDatos, resumenRegistro } from '../informe.js'
 import { estadoEstudioImagen } from '../utils/archivos.js'
 import { describirEdad } from '../../../shared/utils/edad.js'
 import { formatearFecha } from '../../../shared/utils/formatearFecha.js'
@@ -34,7 +34,7 @@ export default function EstudioEcografiaPage({ usuario, logout }) {
   const accion = estudio && accionPrincipalEco(estudio)
   const plantilla = estudio && usaPlantilla(estudio)
   const avance = plantilla && estudio.informe && estudio.estado !== 'publicado'
-    ? resumenRegistro(iniciarDatos(estudio), estudio.organos) : null
+    ? resumenRegistro(iniciarDatos(estudio), estudio.organos, contarImagenes(estudio.informe.archivos)) : null
 
   return <MarcoEcografia usuario={usuario} logout={logout} navegacion={navegacion} clase="lab-detail-page">
     {consulta.isPending && <p role="status">Cargando estudio…</p>}

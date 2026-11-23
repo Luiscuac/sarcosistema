@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import LaboratorioTopbar from '../../laboratorio/components/LaboratorioTopbar.jsx'
-import '../../laboratorio/pages/laboratorio.css'
+import ConfirmarAccion from '../../laboratorio/components/ConfirmarAccion.jsx'
 import '../../laboratorio/pages/informe-solicitud.css'
 import { estadoEstudioImagen, formatearTamano } from '../utils/archivos.js'
 import { useRef } from 'react'
-import { Link } from 'react-router-dom'
 import '../pages/informe-imagen.css'
 import * as api from '../api/ecografiaApi.js'
+import { contarImagenes } from '../informe.js'
 
 function ImagenAdjunta({ archivo }) {
   const [url, setUrl] = useState('')
@@ -30,15 +29,15 @@ function ImagenAdjunta({ archivo }) {
 }
 
 const titulo = 'Ecografía'
-const rutaBandeja = '/ecografia'
 
 /** Informe de texto libre: ecografías sin plantilla de órganos o publicadas antes de la plantilla. */
-export default function InformeLibreEcografia({ estudio, usuario, logout }) {
+export default function InformeLibreEcografia({ estudio }) {
   const cache = useQueryClient()
   const [descripcion, setDescripcion] = useState(estudio.informe?.descripcion_texto || '')
   const [archivos, setArchivos] = useState([])
   const [mensaje, setMensaje] = useState('')
   const [enviando, setEnviando] = useState(false)
+  const [confirmar, setConfirmar] = useState(false)
   const entrada = useRef(null)
 
   async function guardar(evento) {
@@ -64,10 +63,12 @@ export default function InformeLibreEcografia({ estudio, usuario, logout }) {
     setMensaje('')
     try {
       await api.publicarInforme(estudio.estudio_id)
+      setConfirmar(false)
       setMensaje('Estudio publicado: ya aparece en el historial del paciente.')
       await cache.invalidateQueries({ queryKey: ['ecografia', 'estudio', estudio.estudio_id] })
       await cache.invalidateQueries({ queryKey: ['ecografia', 'bandeja'] })
     } catch (error) {
+      setConfirmar(false)
       setMensaje(error?.response?.status === 409 ? 'El informe ya estaba publicado o no tiene contenido.' : 'No se pudo publicar. Inténtalo de nuevo.')
     } finally {
       setEnviando(false)
@@ -77,11 +78,8 @@ export default function InformeLibreEcografia({ estudio, usuario, logout }) {
   const publicado = estudio.estado === 'publicado'
   const imagenes = estudio.informe?.archivos?.filter(a => api.esImagenVisible(a.mime_type)) || []
 
-  return <main className="lab-page img-page">
-    <div className="lab-main">
-      <LaboratorioTopbar usuario={usuario} titulo={titulo} inicio={rutaBandeja} onLogout={logout} />
-      <section className="lab-content lab-report-page">
-        <div className="lab-report-controls"><Link className="lab-back-link" to={rutaBandeja}>← Volver a la bandeja de {titulo}</Link><button type="button" className="primary-button" onClick={() => window.print()}>Imprimir o guardar PDF</button></div>
+  return <div className="img-page">
+        <div className="lab-report-controls"><p className="eco-informe-estado">Informe de texto libre{publicado ? ' · publicado' : ' · borrador'}</p><button type="button" className="primary-button" onClick={() => window.print()}>Imprimir o guardar PDF</button></div>
         <form className="lab-report-document img-informe" onSubmit={guardar}>
           <header className="lab-report-header"><div><p className="lab-report-institution">SarcoSistema · Diagnóstico por imágenes</p><h1>Informe de {titulo}</h1></div><strong>{estudio.referencia_estudio}</strong></header>
           <dl className="lab-report-meta">
@@ -102,10 +100,12 @@ export default function InformeLibreEcografia({ estudio, usuario, logout }) {
           </section>
           {publicado && <p className="lab-report-responsible">Informe publicado{estudio.informe?.fecha_hora_publicacion ? ` el ${new Date(estudio.informe.fecha_hora_publicacion).toLocaleString('es-BO')}` : ''}. Disponible en el historial del paciente.</p>}
           <footer className="lab-report-signature img-informe-firma"><div><span /><p>Firma y sello del profesional responsable</p></div><p>Documento generado por SarcoSistema</p></footer>
-          {!publicado && <div className="img-informe-controles"><button type="submit" className="lab-secondary-button" disabled={enviando}>Guardar borrador</button><button type="button" className="primary-button" disabled={enviando || (!descripcion.trim() && !estudio.informe?.archivos?.length && !archivos.length)} onClick={publicar}>Publicar informe</button></div>}
+          {!publicado && <div className="img-informe-controles"><button type="submit" className="lab-secondary-button" disabled={enviando}>Guardar borrador</button><button type="button" className="primary-button" disabled={enviando || archivos.length > 0 || contarImagenes(estudio.informe?.archivos) === 0} onClick={() => setConfirmar(true)}>Publicar informe</button></div>}
+          {!publicado && contarImagenes(estudio.informe?.archivos) === 0 && <p className="lab-form-hint">Para publicar, adjunta y guarda al menos una imagen del estudio (JPG, PNG o DICOM).</p>}
+          {!publicado && archivos.length > 0 && <p className="lab-form-hint">Guarda el borrador para incluir los archivos nuevos antes de publicar.</p>}
           {mensaje && <p className="img-mensaje" role="status">{mensaje}</p>}
         </form>
-      </section>
-    </div>
-  </main>
+        {confirmar && <ConfirmarAccion titulo="Publicar informe de ecografía" textoConfirmar="Publicar informe" textoCancelar="Seguir revisando" pendiente={enviando}
+          onCancelar={() => setConfirmar(false)} onConfirmar={publicar}><p>Se publicará el informe de <strong>{estudio.paciente_nombre}</strong>. El médico podrá consultarlo en la ficha del paciente y ya no se podrá editar.</p></ConfirmarAccion>}
+  </div>
 }

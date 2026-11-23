@@ -1,6 +1,6 @@
 export const VISTAS = [
   { codigo: 'pendiente_muestra', nombre: 'Pendientes', accion: 'Realizar estudio' },
-  { codigo: 'resultado_en_preparacion', nombre: 'En preparación', accion: 'Continuar informe' },
+  { codigo: 'resultado_en_preparacion', nombre: 'En preparación', accion: 'Continuar registro' },
   { codigo: 'publicado', nombre: 'Publicados', accion: 'Ver informe' },
 ]
 

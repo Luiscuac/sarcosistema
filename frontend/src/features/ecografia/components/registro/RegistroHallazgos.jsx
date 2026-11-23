@@ -4,7 +4,7 @@ import { useBlocker, useNavigate } from 'react-router-dom'
 import ResumenCaptura from '../../../laboratorio/components/resultados/ResumenCaptura.jsx'
 import { useNotificacion } from '../../../../shared/notifications/NotificationContext.jsx'
 import * as api from '../../api/ecografiaApi.js'
-import { agregarArchivos, iniciarDatos, motivoBloqueoEco, resumenRegistro } from '../../informe.js'
+import { agregarArchivos, contarImagenes, iniciarDatos, motivoBloqueoEco, resumenRegistro } from '../../informe.js'
 import ConfirmarPublicacionEco from './ConfirmarPublicacionEco.jsx'
 import { SeccionAdjuntos, SeccionCierre, SeccionDatos, SeccionHallazgos } from './Secciones.jsx'
 
@@ -23,7 +23,7 @@ export default function RegistroHallazgos({ estudio }) {
   const [ocupado, setOcupado] = useState(false)
   const [confirmando, setConfirmando] = useState(false)
   const organos = estudio.organos
-  const resumen = resumenRegistro(datos, organos)
+  const resumen = resumenRegistro(datos, organos, contarImagenes(guardados, nuevos))
   const motivoBloqueo = motivoBloqueoEco({ faltan: resumen.faltan, cambio, guardado: Boolean(informe?.datos_ecografia) })
 
   // Aviso del navegador al cerrar o recargar con cambios sin guardar.
@@ -89,7 +89,7 @@ export default function RegistroHallazgos({ estudio }) {
       <SeccionCierre datos={datos} cambiar={cambiar} deshabilitado={ocupado} />
       <footer className="lab-area-result-actions eco-acciones-pie">
         <span className={`eco-estado-guardado${cambio ? ' es-pendiente' : ''}`} role="status">{cambio ? 'Cambios sin guardar' : informe ? 'Borrador guardado' : 'Aún sin guardar'}</span>
-        <button type="submit" disabled={ocupado || (!cambio && informe)}>{ocupado ? 'Guardando…' : 'Guardar borrador'}</button>
+        <button type="submit" disabled={ocupado || (!cambio && Boolean(informe))}>{ocupado ? 'Guardando…' : 'Guardar borrador'}</button>
         <button className="primary-button" type="button" disabled={ocupado || Boolean(motivoBloqueo)} title={motivoBloqueo ?? undefined}
           onClick={() => setConfirmando(true)}>Revisar y publicar</button>
       </footer>
