@@ -10,8 +10,11 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     database_url: str
+    database_verify_tls: bool = False
     jwt_secret_key: str
     debug: bool = False
+    cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:5173"])
+    whisper_enabled: bool = True
     whisper_model_size: str = "small"
     whisper_device: str = "cpu"
     whisper_compute_type: str = "int8"
@@ -35,6 +38,11 @@ class Settings(BaseSettings):
     imagenes_dicom_max_mb: int = 100
     imagenes_max_archivos: int = 10
     imagenes_storage_dir: str = 'storage/imagenes'
+    imagenes_s3_endpoint: str | None = None
+    imagenes_s3_bucket: str | None = None
+    imagenes_s3_region: str = 'us-east-1'
+    imagenes_s3_access_key: str | None = None
+    imagenes_s3_secret_key: str | None = None
 
     @property
     def imagenes_tipos_lista(self) -> tuple[str, ...]:

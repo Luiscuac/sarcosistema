@@ -8,7 +8,7 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from app.config.database import Base
+from app.config.database import Base, connect_args
 from app.config.settings import settings
 
 # Importar aca todos los modulos con modelos para que Alembic los detecte:
@@ -52,7 +52,10 @@ def ejecutar_migraciones(connection):
 
 
 async def run_migrations_online():
-    connectable = create_async_engine(config.get_main_option('sqlalchemy.url') or settings.database_url)
+    connectable = create_async_engine(
+        config.get_main_option('sqlalchemy.url') or settings.database_url,
+        connect_args=connect_args,
+    )
     async with connectable.connect() as connection:
         await connection.run_sync(ejecutar_migraciones)
     await connectable.dispose()

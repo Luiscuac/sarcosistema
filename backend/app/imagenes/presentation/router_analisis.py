@@ -13,8 +13,9 @@ from app.accesos.presentation.dependencies.current_user import usuario_actual
 from app.accesos.presentation.dependencies.role_required import requiere_rol
 from app.config.database import get_db
 from app.config.settings import settings
-from app.imagenes.infrastructure.archivos import leer_archivo_local
+from app.imagenes.infrastructure.archivos import leer_archivo_local, validar_imagen
 from app.imagenes.infrastructure.persistence.repository import EstudiosRepository
+from app.imagenes.infrastructure.storage.almacen_s3 import AlmacenNoDisponible, AlmacenS3
 from app.imagenes.presentation.schemas import AnalisisNuevo, RevisionNueva
 
 BASE = Path(__file__).resolve().parents[3]
@@ -64,9 +65,18 @@ async def archivo(estudio_id: int, archivo_id: int, usuario: Usuario = Depends(u
     if not dato or not dato['archivo'] or dato['archivo']['id'] != archivo_id:
         raise HTTPException(404, 'Archivo no encontrado.')
     try:
-        contenido, mime = leer_archivo_local(raiz_archivos(), dato['archivo'])
-    except ValueError:
-        raise HTTPException(409, 'El archivo local no está disponible o no supera la comprobación de integridad.') from None
+        archivo = dato['archivo']
+        if settings.imagenes_s3_bucket:
+            if archivo['mime_type'] not in ('image/png', 'image/jpeg'):
+                raise ValueError('Formato incompatible.')
+            contenido = await AlmacenS3().leer(archivo['url_archivo'], archivo['tamano_bytes'])
+            contenido, mime = validar_imagen(contenido, archivo)
+        else:
+            contenido, mime = leer_archivo_local(raiz_archivos(), archivo)
+    except (ValueError, FileNotFoundError):
+        raise HTTPException(409, 'El archivo no está disponible o no supera la comprobación de integridad.') from None
+    except AlmacenNoDisponible:
+        raise HTTPException(503, 'No se pudo recuperar la imagen. Intenta nuevamente.') from None
     return Response(contenido, media_type=mime,
                     headers={'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff'})
 

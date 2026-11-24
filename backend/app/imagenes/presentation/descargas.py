@@ -1,14 +1,18 @@
 """Descarga de archivos clinicos: medico (ve su paciente) y radiologo (su trabajo)."""
+from urllib.parse import quote
+
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.accesos.domain.entities import Usuario
 from app.accesos.presentation.dependencies.current_user import usuario_actual
 from app.config.database import get_db
+from app.config.settings import settings
 from app.imagenes.domain.errors import ArchivoNoEncontrado, EstudioNoEncontrado
 from app.imagenes.infrastructure.persistence.repository import RepositorioImagenSql
 from app.imagenes.infrastructure.storage.almacen_local import AlmacenLocal
+from app.imagenes.infrastructure.storage.almacen_s3 import AlmacenNoDisponible, AlmacenS3
 
 # El prefijo /imagenes lo aplica app.imagenes.router (composición única del módulo).
 router = APIRouter(tags=['imagenes'])
@@ -51,9 +55,19 @@ async def descargar_archivo(
         raise HTTPException(status.HTTP_403_FORBIDDEN, 'El estudio no está publicado.')
 
     try:
+        if settings.imagenes_s3_bucket:
+            contenido = await AlmacenS3().leer(archivo.url_archivo, archivo.tamano_bytes)
+            nombre = quote(archivo.nombre_original, safe='')
+            return Response(contenido, media_type=archivo.mime_type, headers={
+                'Content-Disposition': f"attachment; filename*=UTF-8''{nombre}",
+                'Cache-Control': 'no-store',
+                'X-Content-Type-Options': 'nosniff',
+            })
         ruta = almacen.ruta_absoluta(archivo.url_archivo)
     except (FileNotFoundError, ValueError):
         raise HTTPException(status.HTTP_404_NOT_FOUND, 'Archive no disponible.') from None
+    except AlmacenNoDisponible:
+        raise HTTPException(503, 'No se pudo recuperar el adjunto. Intenta nuevamente.') from None
 
     return FileResponse(
         ruta, media_type=archivo.mime_type, filename=archivo.nombre_original,

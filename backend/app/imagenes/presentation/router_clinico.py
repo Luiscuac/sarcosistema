@@ -26,6 +26,7 @@ from app.imagenes.domain.errors import (
 )
 from app.imagenes.infrastructure.persistence.repository import RepositorioImagenSql
 from app.imagenes.infrastructure.storage.almacen_local import AlmacenLocal
+from app.imagenes.infrastructure.storage.almacen_s3 import AlmacenNoDisponible, AlmacenS3
 from app.imagenes.presentation.schemas import (
     ArchivoImagenResponse,
     EstudioDetalleResponse,
@@ -162,7 +163,7 @@ async def guardar_informe(
     if len(archivos) > settings.imagenes_max_archivos:
         raise HTTPException(400, f'Como máximo {settings.imagenes_max_archivos} archivos por estudio.')
     caso = GuardarInforme(
-        repositorio, AlmacenLocal(), settings.imagenes_tipos_lista,
+        repositorio, AlmacenS3() if settings.imagenes_s3_bucket else AlmacenLocal(), settings.imagenes_tipos_lista,
         settings.imagenes_max_mb * 1024 * 1024, settings.imagenes_max_archivos,
     )
     entradas = []
@@ -186,6 +187,8 @@ async def guardar_informe(
         raise HTTPException(status.HTTP_409_CONFLICT, str(error)) from None
     except SolicitudInvalida as error:
         raise HTTPException(422, str(error)) from None
+    except AlmacenNoDisponible:
+        raise HTTPException(503, 'No se pudo guardar el adjunto. Intenta nuevamente.') from None
     return _informe(informe)
 
 

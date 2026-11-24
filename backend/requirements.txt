@@ -13,3 +13,4 @@ python-multipart==0.0.9
 faster-whisper==1.2.1
 # PyAV 19 retiró metadata_errors, usado por faster-whisper 1.2.1.
 av>=15,<17
+boto3>=1.40,<2

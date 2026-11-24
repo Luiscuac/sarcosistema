@@ -1,0 +1,44 @@
+services:
+  - type: web
+    name: sarcosistema-api
+    runtime: docker
+    region: virginia
+    plan: free
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    dockerCommand: sh -c 'python -m alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port "$PORT"'
+    healthCheckPath: /health/db
+    autoDeployTrigger: "off"
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_VERIFY_TLS
+        value: "true"
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: CORS_ORIGINS
+        sync: false
+      - key: DEBUG
+        value: "false"
+      - key: IMAGENES_S3_ENDPOINT
+        sync: false
+      - key: IMAGENES_S3_BUCKET
+        value: sarcosistema-adjuntos
+      - key: IMAGENES_S3_REGION
+        value: us-east-1
+      - key: IMAGENES_S3_ACCESS_KEY
+        sync: false
+      - key: IMAGENES_S3_SECRET_KEY
+        sync: false
+      - key: IMAGENES_MAX_MB
+        value: "5"
+      - key: IMAGENES_DICOM_MAX_MB
+        value: "5"
+      - key: IMAGENES_MAX_ARCHIVOS
+        value: "5"
+      - key: WHISPER_ENABLED
+        value: "false"
+      - key: CLINICAL_EXTRACTOR_ENABLED
+        value: "false"
+      - key: RADIOLOGY_AI_ENABLED
+        value: "false"

@@ -21,7 +21,11 @@ def leer_archivo_local(raiz: Path, archivo: dict) -> tuple[bytes, str]:
             datos = stream.read(MAX_IMAGE_BYTES + 1)
     except OSError:
         raise ValueError('Archivo local no disponible.') from None
-    if (len(datos) != archivo['tamano_bytes'] or len(datos) > MAX_IMAGE_BYTES
+    return validar_imagen(datos, archivo)
+
+
+def validar_imagen(datos: bytes, archivo: dict) -> tuple[bytes, str]:
+    if (not archivo['activo'] or not datos or len(datos) != archivo['tamano_bytes'] or len(datos) > MAX_IMAGE_BYTES
             or hashlib.sha256(datos).hexdigest() != archivo['hash_sha256']):
         raise ValueError('Archivo local con integridad incompatible.')
     mime = 'image/png' if datos.startswith(b'\x89PNG\r\n\x1a\n') else (

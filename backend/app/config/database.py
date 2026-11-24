@@ -1,6 +1,8 @@
 """
 Conexion a PostgreSQL. Equivalente a database.config.ts
 """
+from ssl import create_default_context
+
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
@@ -13,7 +15,10 @@ class Base(DeclarativeBase):
 
 # No activar ``echo``: SQLAlchemy también imprime los parámetros y podría
 # exponer identificadores o datos clínicos en los logs del servidor.
-engine = create_async_engine(settings.database_url, echo=False)
+connect_args = {"ssl": create_default_context()} if settings.database_verify_tls else {}
+engine = create_async_engine(
+    settings.database_url, connect_args=connect_args, pool_pre_ping=True, echo=False,
+)
 SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
 
