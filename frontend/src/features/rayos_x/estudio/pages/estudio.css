@@ -104,8 +104,6 @@
 /* Espacio de trabajo (adquisición e informe): placa fija a la izquierda, formulario y acciones a la derecha */
 .rx-trabajo { max-width: 1600px; }
 .rx-trabajo .rxe-work-visor { top: 12px; }
-.rx-trabajo .rxe-work-visor .rx-visor-lienzo { height: clamp(320px, calc(100vh - 230px), 760px); }
-.rx-trabajo .rxe-work-visor .rx-visor-capa > img:first-child { max-height: clamp(320px, calc(100vh - 230px), 760px); }
 .rx-trabajo .lab-area-study { margin-top: 0; }
 .rx-trabajo .lab-area-study > header { margin-bottom: var(--space-4); }
 .rxe-pie { position: sticky; bottom: 0; z-index: 3; flex-wrap: wrap; align-items: center; padding: var(--space-3) 0; background: var(--surface); }
@@ -120,3 +118,22 @@
 .rx-gestion .lab-detail-grid a { color: var(--brand); font-weight: 600; text-decoration: none; }
 .rx-gestion .lab-detail-grid a:hover { text-decoration: underline; }
 .rx-trabajo .rxe-desplegable > summary h2 { font-size: 17px; }
+
+/* Placa siempre entera: el panel mide el alto libre de la ventana (useAltoDisponible) y todo se reparte dentro */
+.rx-trabajo .rxe-work-visor { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.rx-trabajo .rxe-tira { flex: none; }
+.rx-trabajo .rxe-visor-principal { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+.rx-trabajo .rxe-visor-principal > .rx-visor { display: flex; flex: 1; flex-direction: column; gap: 8px; min-height: 0; }
+.rx-trabajo .rx-visor-barra, .rx-trabajo .rx-visor-ayuda { flex: none; }
+.rx-trabajo .rxe-work-visor .rx-visor-lienzo { flex: 1; height: auto; min-height: 0; }
+.rx-trabajo .rxe-work-visor .rx-visor-capa { display: flex; align-items: center; justify-content: center; height: 100%; }
+.rx-trabajo .rxe-work-visor .rx-visor-capa > img:first-child { max-width: 100%; max-height: 100%; }
+/* Sin imágenes: el panel es la zona para subirlas (primer paso de la adquisición) */
+.rx-trabajo .rxe-visor-vacio { justify-content: center; gap: var(--space-3); padding: var(--space-5); border: 2px dashed var(--line); background: var(--surface-card); color: var(--ink); }
+.rxe-visor-vacio h2 { margin: 0; font-size: 18px; }
+.rxe-visor-vacio > p { margin: 0; color: var(--muted); }
+.rxe-visor-vacio .rxe-drop { min-height: 220px; }
+@media (max-width: 1023px) {
+  .rx-trabajo .rxe-work-visor .rx-visor-lienzo { flex: none; height: 420px; }
+}
+.rx-trabajo .rxe-form-grid :is(input, select, textarea):disabled { background: var(--surface); color: var(--muted); cursor: not-allowed; }

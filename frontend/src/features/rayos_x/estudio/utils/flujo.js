@@ -8,11 +8,10 @@ const resumen = faltan => (total) => ({ total, completos: total - faltan.length,
 
 /** Para completar la adquisición (pendientes_para_completar_adquisicion). */
 export function resumenAdquisicion(form, config = {}, imagenes = 0) {
-  const faltan = []
+  const faltan = imagenes < 1 ? ['Sube al menos una imagen (es el primer paso).'] : []
   if (!form?.proyecciones_realizadas?.length) faltan.push('Registra al menos una proyección realizada.')
   if (config.requiere_lateralidad && !form?.lateralidad_realizada) faltan.push('Indica la lateralidad realizada.')
   if (!form?.fecha_hora_adquisicion) faltan.push('Indica la fecha y hora de adquisición.')
-  if (imagenes < 1) faltan.push('Adjunta al menos una imagen.')
   return resumen(faltan)(config.requiere_lateralidad ? 4 : 3)
 }
 
