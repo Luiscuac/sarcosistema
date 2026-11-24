@@ -25,7 +25,7 @@ function LaminaImagen({ imagen, detalle }) {
 
 /** Documento de lectura e impresión con el mismo formato institucional que el informe de ecografía. */
 export function DocumentoInformeRx({ detalle, incluirImagenes }) {
-  const { estudio, paciente, solicitud, adquisicion, informe, adendas = [] } = detalle
+  const { estudio, paciente, solicitud, adquisicion, informe } = detalle
   const borrador = informe?.estado !== 'publicado'
   const lateralidad = LATERALIDADES[estudio.detalle?.lateralidad]
   const secciones = partirTextoInforme(informe?.texto || '')
@@ -48,7 +48,6 @@ export function DocumentoInformeRx({ detalle, incluirImagenes }) {
     {estudio.detalle?.indicacion_clinica && <p className="eco-hallazgo"><strong>INDICACIÓN CLÍNICA: </strong>{estudio.detalle.indicacion_clinica}</p>}
     {cuerpo.map((sec, i) => <p className="eco-hallazgo" key={`${sec.titulo}-${i}`}>{sec.titulo && <strong>{sec.titulo.replace(/:$/, '')}: </strong>}{sec.lineas.join('\n')}</p>)}
     <section className="eco-conclusion"><h3>CONCLUSIÓN</h3><p>{conclusion ? conclusion.lineas.join('\n') : 'Pendiente de registrar.'}</p></section>
-    {adendas.length > 0 && <section className="eco-conclusion"><h3>ADENDAS</h3>{adendas.map(a => <p key={a.id}><strong>{formatearFecha(a.fecha_hora)} · {a.motivo}: </strong>{a.texto}</p>)}</section>}
     <footer className="lab-report-signature"><div><span /><p>Firma y sello del profesional responsable</p><p>{informe?.responsable_nombre || ''}{informe?.registro_profesional ? ` · Reg. ${informe.registro_profesional}` : ''}</p></div><p>{estudio.referencia_estudio} · {borrador ? 'Borrador' : `Validado el ${fechaCorta(informe?.fecha_hora_publicacion)}`}</p></footer>
     {incluirImagenes && (detalle.imagenes || []).length > 0 && <section className="eco-laminas"><h3>IMÁGENES DEL ESTUDIO</h3><p>{paciente.nombre_completo} · {estudio.referencia_estudio}</p><div className="eco-galeria">{detalle.imagenes.map(imagen => <LaminaImagen key={imagen.id} imagen={imagen} detalle={detalle} />)}</div></section>}
   </article>

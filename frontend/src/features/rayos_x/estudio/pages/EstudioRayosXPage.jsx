@@ -112,8 +112,6 @@ export default function EstudioRayosXPage({ usuario, logout }) {
 
       {detalle.informes_externos?.length > 0 && <section className="lab-detail-card"><h2>Informes externos</h2><ul className="rxe-lista">{detalle.informes_externos.map(x => <li key={x.id}><div>
         <strong>{x.establecimiento}</strong><span>{x.profesional || 'Profesional no informado'} · {x.fecha_informe || formatearFechaHora(x.fecha_carga)}</span></div></li>)}</ul></section>}
-      {detalle.adendas?.length > 0 && <section className="lab-detail-card"><h2>Adendas</h2><ul className="rxe-lista">{detalle.adendas.map(x => <li key={x.id}><div>
-        <strong>{x.motivo}</strong><span>{x.autor_nombre} · {formatearFechaHora(x.fecha_hora)}</span><p>{x.texto}</p></div></li>)}</ul></section>}
 
       <Historial historial={detalle.historial} />
 

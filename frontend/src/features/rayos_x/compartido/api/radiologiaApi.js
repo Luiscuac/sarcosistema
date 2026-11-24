@@ -37,8 +37,6 @@ export const previsualizarInforme = (estudioId, contenido, signal) =>
   datos(api.post(`${base}/estudios/${estudioId}/informe/vista-previa`, { contenido }, { signal }))
 export const guardarBorradorInforme = (estudioId, borrador) => datos(api.put(`${base}/estudios/${estudioId}/informe/borrador`, borrador))
 export const validarInforme = (estudioId, validacion) => datos(api.post(`${base}/estudios/${estudioId}/informe/validar`, validacion))
-export const agregarAdenda = (estudioId, adenda) => datos(api.post(`${base}/estudios/${estudioId}/adendas`, adenda))
-
 export const adjuntarInformeExterno = (estudioId, archivo, campos) => {
   const formulario = new FormData()
   formulario.append('archivo', archivo, archivo.name)

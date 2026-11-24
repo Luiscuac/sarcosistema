@@ -13,7 +13,7 @@
 | Captura por plantilla, "Guardar borrador" explícito, resumen de pendientes, confirmación al publicar, aviso de cambios sin guardar | Mismo patrón, con apartados descriptivos en vez de valores numéricos |
 | Informe imprimible A4 (`informe-solicitud.css`, `window.print()`) | Mismo mecanismo para vista previa, impresión y PDF |
 | `Dialogo`, `ConfirmarAccion`, `NavegacionLab`, `LaboratorioTopbar`, `useAvisoCambiosSinGuardar`, notificaciones | Tal cual |
-| Inmutabilidad de lo publicado (triggers) | El informe validado no se modifica; las correcciones son adendas |
+| Inmutabilidad de lo publicado (triggers) | El informe validado no se modifica; las correcciones se hacen en borrador antes de validar |
 
 No existe Caja ni Facturación en el proyecto: no se integra.
 
@@ -28,7 +28,7 @@ No existe Caja ni Facturación en el proyecto: no se integra.
 | Archivos ligados a cada versión del informe; cada guardado creaba una versión | Imágenes ligadas al estudio y a su proyección; el borrador se edita en su sitio |
 | Informe de texto libre | Informe estructurado por plantilla, con texto final revisable |
 | El rol `rayos_x` redactaba y publicaba | `rayos_x` hace todo el flujo (recibe, adquiere, redacta y valida); el rol `radiologo` se eliminó |
-| Sin correcciones posteriores | Adendas con autor, motivo y fecha |
+| Sin correcciones posteriores | Decisión del servicio (2026-11-23): no hay adendas; se corrige antes de validar |
 | PDF adjunto sin semántica | Informe externo como entidad aparte, siempre rotulado como externo |
 | El rol `rayos_x` podía publicar por la ruta anterior | La ruta anterior solo permite publicar Rayos X a `rayos_x` (rol único del flujo) |
 
@@ -41,7 +41,7 @@ Se conserva sin cambios: ecografía, la asistencia IA del médico (`/imagenes/an
 - `radiologia_adquisicion` (1:1): registro técnico; `parametros` JSONB para kVp, mAs, etc.
 - `radiologia_imagen`: vincula `archivo_imagen` con el estudio y la proyección.
 - `radiologia_informe` (1:1 con `informe_imagen`): contenido estructurado, plantilla usada y control de edición concurrente.
-- `radiologia_adenda`: histórica, protegida por trigger.
+- `radiologia_adenda`: histórica, protegida por trigger. Sin uso desde 2026-11-23 (se quitaron las adendas); la tabla queda vacía.
 - `radiologia_informe_externo`: PDF externo con procedencia.
 - Sin rol `radiologo`: la migración `20261117_0020` reasigna esos usuarios a `rayos_x` y elimina el rol.
 

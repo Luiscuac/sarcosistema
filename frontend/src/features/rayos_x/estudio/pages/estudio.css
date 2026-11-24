@@ -58,8 +58,6 @@
 .rxe-frases button { min-height: 40px; white-space: normal; text-align: left; }
 .rxe-texto-informe { min-height: 120px; padding: var(--rx-espacio-4); border: 1px solid var(--rx-linea); border-radius: var(--rx-radio-s); background: var(--rx-superficie-2); white-space: pre-wrap; line-height: 1.65; overflow-wrap: anywhere; }
 .rxe-previa label { display: grid; gap: var(--rx-espacio-2); margin-top: var(--rx-espacio-3); }
-.rxe-adendas article { margin-top: var(--rx-espacio-3); padding: var(--rx-espacio-3); border-left: 3px solid var(--rx-linea-fuerte); }
-.rxe-adendas header { color: var(--rx-tenue); font-size: var(--rx-texto-xs); }
 .rxe-link-boton { display: inline-block; margin-top: var(--rx-espacio-4); text-decoration: none; }
 .rxe-documento { position: relative; }
 @media (max-width: 1023px) {

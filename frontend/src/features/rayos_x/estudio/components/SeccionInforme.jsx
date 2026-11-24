@@ -17,15 +17,10 @@ function TextoInforme({ texto }) {
   return <div className="rxe-texto-informe">{texto || 'El informe aún no tiene texto.'}</div>
 }
 
-function Adendas({ adendas }) {
-  return adendas.length > 0 && <section className="rxe-adendas"><h3>Adendas</h3>{adendas.map(adenda => <article key={adenda.id}><header>{formatearFechaHora(adenda.fecha_hora)} · {adenda.autor_nombre}</header><strong>{adenda.motivo}</strong><p>{adenda.texto}</p></article>)}</section>
-}
-
 function InformePublicado({ estudioId, detalle }) {
   const informe = detalle.informe
   return <div className="rxe-workspace"><PanelImagenes imagenes={detalle.imagenes || []} /><div className="rxe-work-form rxe-publicado"><p className="rxe-estado">Informe validado. Se muestra en modo de solo lectura.</p><TextoInforme texto={informe.texto} />
     <dl className="rxe-datos"><div><dt>Profesional responsable</dt><dd>{informe.responsable_nombre || 'No informado'}</dd></div><div><dt>Registro profesional</dt><dd>{informe.registro_profesional || 'No informado'}</dd></div><div><dt>Fecha de validación</dt><dd>{informe.fecha_hora_publicacion ? formatearFechaHora(informe.fecha_hora_publicacion) : 'No informada'}</dd></div></dl>
-    <Adendas adendas={detalle.adendas || []} />
     <BotonEnlace className="rxe-link-boton" to={`/rayos-x/gestion/estudios/${estudioId}/impresion`}>Ver informe para imprimir</BotonEnlace>
   </div></div>
 }
@@ -47,7 +42,7 @@ export default function SeccionInforme({ estudioId, detalle }) {
   if (publicado) return <InformePublicado estudioId={estudioId} detalle={detalle} />
   const faltaAdquisicion = ['pendiente_realizacion', 'en_adquisicion'].includes(detalle.estudio.etapa)
   if (faltaAdquisicion) return <div className="lab-detail-card rxe-informe-bloqueado"><strong>Todavía no se puede redactar el informe</strong><p>Primero completa la adquisición: sube las imágenes del estudio y pulsa «Completar adquisición».</p>{detalle.permisos.registrar_adquisicion && <BotonEnlace to={`/rayos-x/gestion/estudios/${estudioId}/adquisicion`}>Ir a la adquisición</BotonEnlace>}</div>
-  if (!detalle.permisos.redactar_informe) return <div className="lab-detail-card"><p className="rxe-estado">Informe en modo de solo lectura.</p><TextoInforme texto={detalle.informe?.texto} /><Adendas adendas={detalle.adendas || []} /></div>
+  if (!detalle.permisos.redactar_informe) return <div className="lab-detail-card"><p className="rxe-estado">Informe en modo de solo lectura.</p><TextoInforme texto={detalle.informe?.texto} /></div>
   const iniciarValidacion = async () => { try { const d = await guardar.mutateAsync(); setDetalleConfirmacion(d); setValidacion(v => ({ ...v, responsable_nombre: d.informe?.responsable_nombre || v.responsable_nombre })); setConfirmando(true) } catch { /* el aviso conserva la edicion */ } }
   const textoConfirmacion = edicion.textoFinal ?? vista ?? detalleConfirmacion?.informe?.texto ?? detalle.informe?.texto ?? ''
   const pendientes = (detalleConfirmacion || detalle).pendientes?.validacion || []

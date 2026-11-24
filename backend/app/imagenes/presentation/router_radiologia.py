@@ -69,7 +69,6 @@ def permisos(rol: str, detalle: dict) -> dict:
         'gestionar_imagenes': tecnico and abierto,
         'redactar_informe': tecnico and estado == 'resultado_en_preparacion',
         'validar': tecnico and estado == 'resultado_en_preparacion',
-        'agregar_adenda': tecnico and estado == 'publicado',
         'adjuntar_externo': tecnico and (abierto or estado == 'publicado'),
         'marcar_no_realizado': tecnico and abierto and etapa != 'borrador',
         'entregar': tecnico and etapa == 'validado',
@@ -168,12 +167,6 @@ class Validacion(Texto):
     registro_profesional: str | None = Field(default=None, max_length=80)
     confirmo: Literal[True]
 
-
-class AdendaNueva(Texto):
-    motivo: str = Field(min_length=3, max_length=500)
-    texto: str = Field(min_length=3, max_length=4000)
-    autor_nombre: str = Field(min_length=3, max_length=200)
-    registro_profesional: str | None = Field(default=None, max_length=80)
 
 
 class Entrega(Texto):
@@ -402,13 +395,6 @@ async def validar_informe(estudio_id: int, datos: Validacion, usuario: Usuario =
                           repositorio: RepositorioRadiologiaSql = Depends(get_repositorio)):
     return await _operar(repositorio.validar(estudio_id, datos.version_edicion, datos.responsable_nombre,
                                              datos.registro_profesional or None, usuario.id), repositorio, estudio_id, usuario)
-
-
-@router.post('/estudios/{estudio_id}/adendas')
-async def agregar_adenda(estudio_id: int, datos: AdendaNueva, usuario: Usuario = Depends(con_rol(TECNICO)),
-                         repositorio: RepositorioRadiologiaSql = Depends(get_repositorio)):
-    return await _operar(repositorio.agregar_adenda(estudio_id, datos.motivo, datos.texto, datos.autor_nombre,
-                                                    datos.registro_profesional or None, usuario.id), repositorio, estudio_id, usuario)
 
 
 @router.post('/estudios/{estudio_id}/entregar')
