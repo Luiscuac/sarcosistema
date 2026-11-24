@@ -2,16 +2,17 @@ import { useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { buscarMedicos, buscarPacientes, crearPaciente, crearSolicitud } from '../api/laboratorioApi.js'
 import { useEstudiosCatalogo } from '../hooks/useEstudiosCatalogo.js'
-import ConfirmarAccion from './ConfirmarAccion.jsx'
-import Dialogo from './Dialogo.jsx'
+import ConfirmarAccion from '../../../shared/ui/ConfirmarAccion.jsx'
+import Dialogo from '../../../shared/ui/Dialogo.jsx'
 import DatosPedido from './nueva-solicitud/DatosPedido.jsx'
 import EstudiosSolicitados from './nueva-solicitud/EstudiosSolicitados.jsx'
 import PacienteSolicitud from './nueva-solicitud/PacienteSolicitud.jsx'
 import { AREAS_LABORATORIO } from '../utils/catalogos.js'
-import { mensajeError } from '../utils/mensajeError.js'
+import { mensajeError } from '../../../shared/utils/mensajeError.js'
 import { useValorDiferido } from '../../../shared/hooks/useValorDiferido.js'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
-import './formularios.css'
+import Boton from '../../../shared/ui/Boton.jsx'
+import { fechaHoy } from '../../../shared/utils/formatearFecha.js'
 
 const PACIENTE_VACIO = {
   nombre_completo: '',
@@ -28,7 +29,7 @@ const PACIENTE_VACIO = {
 // Función, no constante: la fecha de hoy se calcula al abrir el formulario.
 const pedidoInicial = () => ({
   referencia_papel_formulario: '',
-  fecha_solicitud: new Date().toLocaleDateString('en-CA'),
+  fecha_solicitud: fechaHoy(),
   procedencia: 'este_centro',
   establecimiento_solicitante_nombre: '',
   medico_solicitante_nombre: '',
@@ -190,9 +191,9 @@ export default function NuevaSolicitud({ onClose, onCreated }) {
             {pedido.prioridad === 'urgente' && <strong className="lab-priority"> · Urgente</strong>}
           </p>
           <button type="button" onClick={solicitarCierre} disabled={ocupado}>Cancelar</button>
-          <button className="primary-button" type="submit" disabled={ocupado || !catalogo.length}>
+          <Boton type="submit" disabled={ocupado || !catalogo.length}>
             {crearSolicitudMutation.isPending ? 'Registrando…' : 'Registrar solicitud'}
-          </button>
+          </Boton>
         </footer>
       </form>
     </Dialogo>

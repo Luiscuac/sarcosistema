@@ -1,5 +1,6 @@
 import CampoPlantilla from './CampoPlantilla.jsx'
 import { fraseTecnicaDesdeAdquisicion } from '../utils/informe.js'
+import Boton from '../../../../shared/ui/Boton.jsx'
 
 const CLAVES_DATOS = ['tecnica', 'indicacion', 'comparacion']
 const CLAVES_CIERRE = ['limitaciones', 'conclusion', 'recomendaciones']
@@ -13,8 +14,8 @@ export default function FormularioInforme({ detalle, contenido, onChange, disabl
   return <div className="rxe-form-informe">
     <section><h2>Datos del informe</h2>
       {!disabled && <div className="rxe-ayudas-explicitas">
-        <button type="button" className="lab-secondary-button" onClick={() => cambiar('generales', 'tecnica', fraseTecnicaDesdeAdquisicion(detalle))}>Proponer técnica desde la adquisición</button>
-        <button type="button" className="lab-secondary-button" onClick={() => cambiar('generales', 'indicacion', detalle.estudio.detalle?.indicacion_clinica || '')}>Usar indicación de la solicitud</button>
+        <Boton variante="secundario" onClick={() => cambiar('generales', 'tecnica', fraseTecnicaDesdeAdquisicion(detalle))}>Proponer técnica desde la adquisición</Boton>
+        <Boton variante="secundario" onClick={() => cambiar('generales', 'indicacion', detalle.estudio.detalle?.indicacion_clinica || '')}>Usar indicación de la solicitud</Boton>
       </div>}
       {generales.filter(item => CLAVES_DATOS.includes(item.clave)).map(campo)}
     </section>

@@ -1,3 +1,4 @@
+import { fechaHoy } from '../../../../shared/utils/formatearFecha.js'
 function MedicoSolicitante({ datos, onChange, medicosQuery, onSeleccionarMedico }) {
   const deEsteCentro = datos.procedencia === 'este_centro'
   if (deEsteCentro && datos.medico_solicitante_id) {
@@ -31,7 +32,7 @@ export default function DatosPedido({ datos, onChange, medicosQuery, onSeleccion
       <label>Prioridad<select value={datos.prioridad} onChange={(e) => onChange('prioridad', e.target.value)}><option value="sin_prioridad">Programada / sin prioridad</option><option value="urgente">Urgente</option></select></label>
       {datos.procedencia === 'otro_centro' && <label className="lab-full-field">Nombre del otro centro<input required value={datos.establecimiento_solicitante_nombre} onChange={(e) => onChange('establecimiento_solicitante_nombre', e.target.value)} placeholder="Centro que solicitó los estudios" /></label>}
       <MedicoSolicitante datos={datos} onChange={onChange} medicosQuery={medicosQuery} onSeleccionarMedico={onSeleccionarMedico} />
-      <label>Fecha de solicitud<input required type="date" max={new Date().toLocaleDateString('en-CA')} value={datos.fecha_solicitud} onChange={(e) => onChange('fecha_solicitud', e.target.value)} /></label>
+      <label>Fecha de solicitud<input required type="date" max={fechaHoy()} value={datos.fecha_solicitud} onChange={(e) => onChange('fecha_solicitud', e.target.value)} /></label>
       <label>N.º de formulario D-8 (opcional)<input value={datos.referencia_papel_formulario} onChange={(e) => onChange('referencia_papel_formulario', e.target.value)} placeholder="Ej.: 0391521" /></label>
       <label>Diagnóstico principal (opcional)<input value={datos.diagnostico_principal} onChange={(e) => onChange('diagnostico_principal', e.target.value)} /></label>
     </div>

@@ -10,22 +10,26 @@ import ProtectedRoute from '../features/accesos/auth/ProtectedRoute.jsx'
 import ConsultasPage from '../features/consultas/pages/ConsultasPage.jsx'
 import EcografiaPage from '../features/ecografia/pages/EcografiaPage.jsx'
 import InformeEcografiaPage from '../features/ecografia/pages/InformeEcografiaPage.jsx'
+import EstudioEcografiaPage from '../features/ecografia/pages/EstudioEcografiaPage.jsx'
+import RegistroEcografiaPage from '../features/ecografia/pages/RegistroEcografiaPage.jsx'
 import PanelRayosXPage from '../features/rayos_x/gestion/pages/PanelRayosXPage.jsx'
 import NuevaSolicitudRxPage from '../features/rayos_x/gestion/pages/NuevaSolicitudRxPage.jsx'
 import SolicitudRayosXPage from '../features/rayos_x/gestion/pages/SolicitudRayosXPage.jsx'
 import HistorialPacienteRxPage from '../features/rayos_x/gestion/pages/HistorialPacienteRxPage.jsx'
 import EstudioRayosXPage from '../features/rayos_x/estudio/pages/EstudioRayosXPage.jsx'
+import AdquisicionRayosXPage from '../features/rayos_x/estudio/pages/AdquisicionRayosXPage.jsx'
+import InformeRayosXPage from '../features/rayos_x/estudio/pages/InformeRayosXPage.jsx'
 import InformeImpresoRxPage from '../features/rayos_x/estudio/pages/InformeImpresoRxPage.jsx'
 import EnfermeriaPage from '../features/enfermeria/pages/EnfermeriaPage.jsx'
 import EnfermeriaInformePage from '../features/enfermeria/pages/EnfermeriaInformePage.jsx'
 import FarmaciaPage from '../features/enfermeria/pages/FarmaciaPage.jsx'
-import RayosXPage from '../features/rayos_x/pages/RayosXPage.jsx'
+import RayosXPage from '../features/rayos_x/asistente/pages/RayosXPage.jsx'
 // El personal de Rayos X (rayos_x) se encarga de todo el flujo: solicitud, imágenes e informe.
 const ROLES_RAYOS_X = ['rayos_x']
 
-function RedireccionEstudioRx() {
+function RedireccionEstudioEco() {
   const { estudioId } = useParams()
-  return <Navigate to={`/rayos-x/gestion/estudios/${estudioId}?seccion=informe`} replace />
+  return <Navigate to={`/ecografia/estudios/${estudioId}`} replace />
 }
 
 const router = createBrowserRouter(createRoutesFromElements(
@@ -89,32 +93,32 @@ const router = createBrowserRouter(createRoutesFromElements(
             {({ usuario, logout }) => <EcografiaPage usuario={usuario} logout={logout} />}
           </ProtectedRoute>
         } />
-        <Route path="/ecografia/estudios/:estudioId/informe" element={
+        {[
+          ['/ecografia/estudios/:estudioId', EstudioEcografiaPage],
+          ['/ecografia/estudios/:estudioId/registro', RegistroEcografiaPage],
+          ['/ecografia/estudios/:estudioId/informe', InformeEcografiaPage],
+        ].map(([path, Pagina]) => <Route key={path} path={path} element={
           <ProtectedRoute rolesPermitidos={['imagenes']}>
-            {({ usuario, logout }) => <InformeEcografiaPage usuario={usuario} logout={logout} />}
+            {({ usuario, logout }) => <Pagina usuario={usuario} logout={logout} />}
           </ProtectedRoute>
-        } />
+        } />)}
         {[
           ['/rayos-x/gestion', PanelRayosXPage],
           ['/rayos-x/gestion/solicitudes/nueva', NuevaSolicitudRxPage],
           ['/rayos-x/gestion/solicitudes/:solicitudId', SolicitudRayosXPage],
           ['/rayos-x/gestion/pacientes/:pacienteId', HistorialPacienteRxPage],
           ['/rayos-x/gestion/estudios/:estudioId', EstudioRayosXPage],
+          ['/rayos-x/gestion/estudios/:estudioId/adquisicion', AdquisicionRayosXPage],
+          ['/rayos-x/gestion/estudios/:estudioId/informe', InformeRayosXPage],
           ['/rayos-x/gestion/estudios/:estudioId/impresion', InformeImpresoRxPage],
         ].map(([path, Pagina]) => <Route key={path} path={path} element={
           <ProtectedRoute rolesPermitidos={ROLES_RAYOS_X}>
             {({ usuario, logout }) => <Pagina usuario={usuario} logout={logout} />}
           </ProtectedRoute>
         } />)}
-        {/* Ruta anterior del informe de texto libre: ahora vive en el espacio de trabajo del estudio. */}
-        <Route path="/rayos-x/gestion/estudios/:estudioId/informe" element={<RedireccionEstudioRx />} />
         <Route path="/imagenes" element={<Navigate to="/ecografia" replace />} />
         <Route path="/imagenes/rayos-x-informes" element={<Navigate to="/rayos-x/gestion" replace />} />
-        <Route path="/imagenes/estudios/:estudioId/informe" element={
-          <ProtectedRoute rolesPermitidos={['imagenes']}>
-            {({ usuario, logout }) => <InformeEcografiaPage usuario={usuario} logout={logout} />}
-          </ProtectedRoute>
-        } />
+        <Route path="/imagenes/estudios/:estudioId/informe" element={<RedireccionEstudioEco />} />
         <Route path="/imagenes/rayos-x" element={
           <ProtectedRoute rolesPermitidos={['medico']}>
             {({ usuario, logout }) => <RayosXPage usuario={usuario} logout={logout} />}

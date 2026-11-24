@@ -115,6 +115,11 @@ class GuardarInforme:
         }.get(mime, 'bin')
 
 
+def es_imagen_del_estudio(mime: str) -> bool:
+    """Una ecografía publicada debe llevar al menos una imagen; un PDF no cuenta."""
+    return (mime or '').startswith('image/') or mime == 'application/dicom'
+
+
 class PublicarInforme:
     def __init__(self, repositorio):
         self.repositorio = repositorio
@@ -129,5 +134,7 @@ class PublicarInforme:
             raise InformeYaPublicado('El informe ya estaba publicado')
         if estudio.informe.datos_ecografia:
             validar_datos(estudio.informe.datos_ecografia, estudio.tipo_estudio_codigo, publicar=True)
+        if not any(es_imagen_del_estudio(a.mime_type) for a in estudio.informe.archivos or []):
+            raise InformeSinContenido('Adjunta al menos una imagen del estudio (JPG, PNG o DICOM) antes de publicar.')
         informe: InformeImagen = await self.repositorio.publicar_informe(estudio_id, usuario_id)
         return informe

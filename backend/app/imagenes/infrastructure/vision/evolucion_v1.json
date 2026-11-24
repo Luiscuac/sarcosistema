@@ -1,0 +1,52 @@
+{
+ "version": "evolucion-v1",
+ "fecha": "2026-11-21",
+ "validacion_clinica": false,
+ "metodo": "Dos re-tomas simuladas por imagen (rotación ±5°, escala ±5 %, desplazamiento ±3 %, gamma 0,85-1,15) sobre 2672 radiografías externas/validación (Shenzhen, Montgomery, India, TBX11K val), 2 repeticiones. Tolerancia = percentil 95 de la diferencia absoluta entre re-tomas.",
+ "tolerancias": {
+  "indice": 0.1528941730554874,
+  "patron_tb_v1": 0.18521985382986883,
+  "patron_tb_v2": 0.23008811832113515,
+  "categorias": {
+   "Atelectasis": 0.09561270698904988,
+   "Consolidation": 0.1042551882565019,
+   "Infiltration": 0.12084970772266386,
+   "Pneumothorax": 0.1445603743195533,
+   "Edema": 0.02760615274310103,
+   "Emphysema": 0.14018586724996565,
+   "Fibrosis": 0.13581521958112716,
+   "Effusion": 0.08201462924480427,
+   "Pneumonia": 0.04457706906832744,
+   "Pleural_Thickening": 0.13866940736770614,
+   "Cardiomegaly": 0.0918716847896572,
+   "Nodule": 0.10598210394382468,
+   "Mass": 0.1494448892772196,
+   "Hernia": 0.06654692827723901,
+   "Lung Lesion": 0.05944619476795187,
+   "Fracture": 0.09703707993030547,
+   "Lung Opacity": 0.14111183062195773,
+   "Enlarged Cardiomediastinum": 0.09539131447672808
+  }
+ },
+ "metricas": {
+  "indice": {
+   "p50": 0.03743086635086523,
+   "p90": 0.12156650653671032,
+   "p95": 0.1528941730554874
+  },
+  "patron_tb_v1": {
+   "p50": 0.02034524675931421,
+   "p90": 0.12181274717485956,
+   "p95": 0.18521985382986883
+  },
+  "patron_tb_v2": {
+   "p50": 0.04363994533108739,
+   "p90": 0.17774732758338702,
+   "p95": 0.23008811832113515
+  },
+  "cambia_nivel_prioridad_por_retoma": 0.12836826347305388,
+  "cambia_aviso_tb_v2_por_retoma": 0.057073353293413176,
+  "diferencia_mediana_indice_tb_vs_sin_tb": 0.3256622127166221
+ },
+ "limites": "Simulación: no hay pares reales del mismo paciente. Cambios de equipo, proyección (AP/PA) o inspiración pueden mover más los números. Un cambio dentro de la tolerancia no significa \"igual\": el médico compara las imágenes."
+}

@@ -5,11 +5,13 @@ import { useHistorial, usePaginaHistorial, usePaciente } from '../hooks/useConsu
 import { obtenerResultadoPublicadoLaboratorio, obtenerSolicitudesLaboratorio } from '../api/consultasApi.js'
 import { edad, fecha } from '../utils/paciente.js'
 import SolicitudEcografia from '../../ecografia/components/SolicitudEcografia.jsx'
-import SolicitudRayosX from '../../rayos_x/components/SolicitudRayosX.jsx'
+import SolicitudRayosX from '../../rayos_x/compartido/SolicitudRayosX.jsx'
 import ExamenesComplementarios from './ExamenesComplementarios.jsx'
 import RegistrosPublicados from '../../enfermeria/components/RegistrosPublicados.jsx'
 import RecetaMedica from './RecetaMedica.jsx'
-import { nombreSexo } from '../../laboratorio/utils/catalogos.js'
+import { nombreSexo } from '../../../shared/utils/personas.js'
+import { formatearFechaHora } from '../../../shared/utils/formatearFecha.js'
+import NavegacionPagina from '../../../shared/ui/NavegacionPagina.jsx'
 
 export function IdentidadPaciente({ paciente }) {
   return <div className="med-patient">
@@ -68,7 +70,7 @@ function SolicitudLaboratorioItem({ solicitud, pacienteId }) {
     <details className="med-lab-request-details"><summary>Ver estudios solicitados</summary>
       <ul>{solicitud.estudios.map((estudio) => <li key={estudio.estudio_id}><div><strong>{estudio.tipo_estudio_nombre}</strong><span>{estadoEstudio(estudio)}</span></div>
         {estudio.estado === 'publicado' && <ResultadoPublicadoItem estudioId={estudio.estudio_id} />}
-        {estudio.incidencias.map((incidencia, index) => <p key={index}>Constancia: {incidencia.motivo === 'muestra_no_entregada' ? 'Muestra no entregada' : incidencia.motivo === 'toma_rechazada' ? 'Toma rechazada' : 'Toma no realizada'} · {incidencia.descripcion} · {incidencia.responsable} · {new Date(incidencia.fecha_hora).toLocaleString('es-BO')}</p>)}</li>)}</ul>
+        {estudio.incidencias.map((incidencia, index) => <p key={index}>Constancia: {incidencia.motivo === 'muestra_no_entregada' ? 'Muestra no entregada' : incidencia.motivo === 'toma_rechazada' ? 'Toma rechazada' : 'Toma no realizada'} · {incidencia.descripcion} · {incidencia.responsable} · {formatearFechaHora(incidencia.fecha_hora)}</p>)}</li>)}</ul>
     </details>
   </div>
 }
@@ -97,6 +99,7 @@ export default function PacienteFicha({ id, usuario }) {
   if (paciente.isError) return <p role="alert">No se pudo cargar el paciente. Comprueba el acceso y vuelve a intentarlo.</p>
   const esDemo = paciente.data.codigo_paciente === 'PAC-DEMO-CONSULTA-001'
   return <>
+    <NavegacionPagina volverA="/consultas" textoVolver="Volver a pacientes" migas={[{ texto: 'Pacientes', ruta: '/consultas' }, { texto: paciente.data.nombre_completo }]} />
     <div className="med-heading"><div><p className="med-eyebrow">FICHA CLÍNICA</p><h1>{paciente.data.nombre_completo}</h1></div><Link className="primary-button med-button-link" to={`/consultas/pacientes/${id}/nueva`}>+ Nueva consulta</Link></div>
     <IdentidadPaciente paciente={paciente.data} />
     <nav className="med-patient-tabs" role="tablist" aria-label="Secciones de la ficha del paciente">

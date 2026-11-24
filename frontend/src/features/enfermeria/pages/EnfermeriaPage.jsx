@@ -7,27 +7,31 @@ import {
   publicarRegistroEnfermeria,
 } from '../api/enfermeriaApi.js'
 import { FormularioPaciente } from '../../laboratorio/components/nueva-solicitud/PacienteSolicitud.jsx'
-import '../../laboratorio/pages/laboratorio.css'
 import './enfermeria.css'
 import RecetasRecibidas from '../components/RecetasRecibidas.jsx'
 import FormularioAdmision from '../components/FormularioAdmision.jsx'
-import ConfirmarAccion from '../../laboratorio/components/ConfirmarAccion.jsx'
-import LaboratorioTopbar from '../../laboratorio/components/LaboratorioTopbar.jsx'
-import { nombreSexo } from '../../laboratorio/utils/catalogos.js'
+import ConfirmarAccion from '../../../shared/ui/ConfirmarAccion.jsx'
+import BarraSuperior from '../../../shared/ui/BarraSuperior.jsx'
+import { nombreSexo } from '../../../shared/utils/personas.js'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
 import { calcularEdad, describirEdad } from '../../../shared/utils/edad.js'
+import Boton from '../../../shared/ui/Boton.jsx'
+import { mensajeError } from '../../../shared/utils/mensajeError.js'
 import {
   FORMULARIO_VACIO, MEDICIONES, TEXTOS, cuerpoDesdeFormulario, erroresDelFormulario,
   formularioDesdeRegistro, formularioVacio, resumenDelFormulario,
 } from '../utils/signosVitales.js'
+import { formatearFechaHora } from '../../../shared/utils/formatearFecha.js'
+import NavegacionPagina from '../../../shared/ui/NavegacionPagina.jsx'
 
-const fechaHora = (value) => value ? new Date(value).toLocaleString('es-BO') : 'Sin fecha'
+const fechaHora = (value) => value ? formatearFechaHora(value) : 'Sin fecha'
 const etiquetasCampos = {
   ...Object.fromEntries(TEXTOS),
   ...Object.fromEntries(Object.entries(MEDICIONES).map(([campo, { etiqueta }]) => [campo, etiqueta])),
   presion_sistolica: 'Presión sistólica', presion_diastolica: 'Presión diastólica', dolor_escala: 'Dolor',
 }
-function mensajeErrorApi(error, porDefecto) {
+/** Errores de validación con el nombre del campo de signos vitales; lo demás, el mensaje estándar. */
+function mensajeErrorRegistro(error, porDefecto) {
   const detalle = error.response?.data?.detail
   if (Array.isArray(detalle)) return detalle.map((item) => {
     const campo = item.loc?.at(-1)
@@ -35,8 +39,7 @@ function mensajeErrorApi(error, porDefecto) {
     const mensaje = String(item.msg || 'Dato no válido').replace(/^Value error, /, '')
     return `${etiqueta ? `${etiqueta}: ` : ''}${mensaje}`
   }).join(' ')
-  if (typeof detalle === 'string') return detalle
-  return porDefecto
+  return mensajeError(error, porDefecto)
 }
 const edadTexto = (nacimiento) => describirEdad(nacimiento) || 'Edad no registrada'
 const MENSAJE_PUBLICADO = 'Registro publicado. Ya está disponible en la ficha médica del paciente.'
@@ -177,7 +180,7 @@ export default function EnfermeriaPage({ usuario, logout }) {
       setEntrada('')
       notificar('Paciente registrado. Ya puedes completar su admisión.', 'exito')
     } catch (err) {
-      setErrorPaciente(mensajeErrorApi(err, 'No se pudo registrar el paciente. Revisa los datos e inténtalo de nuevo.'))
+      setErrorPaciente(mensajeErrorRegistro(err, 'No se pudo registrar el paciente. Revisa los datos e inténtalo de nuevo.'))
     } finally {
       setOcupado(false)
     }
@@ -265,9 +268,9 @@ export default function EnfermeriaPage({ usuario, logout }) {
     } catch (err) {
       if (guardado) {
         limpiarFormulario()
-        notificar(`Se guardó como borrador, pero no se pudo publicar: ${mensajeErrorApi(err, 'inténtalo desde la lista de registros.')}`, 'error')
+        notificar(`Se guardó como borrador, pero no se pudo publicar: ${mensajeErrorRegistro(err, 'inténtalo desde la lista de registros.')}`, 'error')
       } else {
-        setError(mensajeErrorApi(err, 'No se pudo guardar. Revisa los datos e inténtalo de nuevo.'))
+        setError(mensajeErrorRegistro(err, 'No se pudo guardar. Revisa los datos e inténtalo de nuevo.'))
       }
     } finally {
       await cache.invalidateQueries({ queryKey: ['enfermeria', 'registros', paciente.id] })
@@ -283,7 +286,7 @@ export default function EnfermeriaPage({ usuario, logout }) {
       if (edicion?.id === registro.id) limpiarFormulario()
       notificar(MENSAJE_PUBLICADO, 'exito')
     } catch (err) {
-      notificar(mensajeErrorApi(err, 'No se pudo publicar el registro.'), 'error')
+      notificar(mensajeErrorRegistro(err, 'No se pudo publicar el registro.'), 'error')
     } finally {
       await cache.invalidateQueries({ queryKey: ['enfermeria', 'registros', paciente.id] })
       setOcupado(false); setConfirmacion(null)
@@ -297,8 +300,10 @@ export default function EnfermeriaPage({ usuario, logout }) {
   const mostrarDescarte = blocker.state === 'blocked' || descarte
 
   return <main className="lab-page enf-page">
-    <LaboratorioTopbar usuario={usuario} titulo="Enfermería" inicio="/enfermeria" onLogout={salir} />
+    <BarraSuperior usuario={usuario} titulo="Enfermería" inicio="/enfermeria" onLogout={salir} />
     <div className="enf-content">
+      {paciente && !buscando && <NavegacionPagina onVolver={() => setBuscando(true)} textoVolver="Volver a la búsqueda"
+        migas={[{ texto: 'Enfermería', onClick: () => setBuscando(true) }, { texto: paciente.nombre_completo }]} />}
       <div className="enf-heading"><div><p>ADMISIÓN Y VALORACIÓN INICIAL</p><h1>Registro de enfermería</h1><span>Captura datos referidos y mediciones. Revisa y publica para que el médico pueda consultarlos.</span></div></div>
 
       {paciente && !buscando
@@ -311,7 +316,7 @@ export default function EnfermeriaPage({ usuario, logout }) {
           <div className="enf-panel-heading"><h2>Buscar paciente</h2>
             <div className="enf-search-heading-actions">
               {paciente && <button type="button" className="enf-change-patient" onClick={() => setBuscando(false)}>Volver a {paciente.nombre_completo}</button>}
-              {!nuevoPaciente && <button type="button" className="primary-button" onClick={() => { setNuevoPaciente(true); setErrorPaciente('') }}>+ Registrar paciente nuevo</button>}
+              {!nuevoPaciente && <Boton onClick={() => { setNuevoPaciente(true); setErrorPaciente('') }}>+ Registrar paciente nuevo</Boton>}
             </div>
           </div>
           {nuevoPaciente

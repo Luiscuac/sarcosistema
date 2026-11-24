@@ -1,7 +1,7 @@
 """Concordancia médico–IA y calibración local de umbrales (sin torch ni numpy).
 
-La referencia es la lectura del médico al revisar (`anormal_confirmado`), no un diagnóstico
-confirmado. Con pocos casos no se calcula nada: los umbrales sugeridos nunca se aplican solos.
+La referencia del índice es la lectura del médico al revisar (`anormal_confirmado`), no un diagnóstico
+confirmado; la del patrón TB es la confirmación bacteriológica que registra el médico (`tb_confirmada`). Con pocos casos no se calcula nada: los umbrales sugeridos nunca se aplican solos.
 """
 import math
 
@@ -57,7 +57,35 @@ def calibrar(casos: list[tuple[float, bool]], minimo: int = MIN_CASOS_POR_CLASE)
                               'RADIOLOGY_TRIAGE_UMBRAL_ALTA/MEDIA; no se aplican automáticamente.'}
 
 
-def resumir_concordancia(filas: list[dict]) -> dict:
+def calibrar_tb(casos: list[tuple[float, bool, str]], version: str, umbral_actual: float,
+                minimo: int = MIN_CASOS_POR_CLASE) -> dict:
+    """casos: (valor del patrón TB, TB confirmada por el médico, versión del patrón).
+
+    Solo se calibran casos de la versión en uso: v1 (modelo base) y v2 (ensamble) no son comparables.
+    El corte sugerido mantiene la regla del artefacto (especificidad 90 % frente a lo no TB).
+    """
+    validos = [(float(v), int(c)) for v, c, ver in casos
+               if v is not None and c is not None and ver == version and math.isfinite(float(v))]
+    con_tb = sum(c for _, c in validos)
+    sin_tb = len(validos) - con_tb
+    base = {'version': version, 'umbral_actual': umbral_actual, 'casos': len(validos), 'con_tb': con_tb,
+            'sin_tb': sin_tb, 'minimo_por_clase': minimo,
+            'faltan_con_tb': max(0, minimo - con_tb), 'faltan_sin_tb': max(0, minimo - sin_tb),
+            'otras_versiones': sum(1 for v, c, ver in casos if c is not None and v is not None and ver != version)}
+    if con_tb < minimo or sin_tb < minimo:
+        return base | {'estado': 'insuficiente',
+                       'mensaje': f'Faltan casos con TB confirmada o descartada: se necesitan al menos {minimo} de cada tipo.'}
+    etiquetas = [c for _, c in validos]
+    valores = [v for v, _ in validos]
+    sugerido = umbral_para_especificidad(etiquetas, valores, 0.9)
+    return base | {'estado': 'calibrado', 'auroc_local': auroc(etiquetas, valores),
+                   'operacion_actual': operar(etiquetas, valores, umbral_actual),
+                   'umbral_sugerido': sugerido, 'operacion_sugerida': operar(etiquetas, valores, sugerido),
+                   'mensaje': 'Corte sugerido con casos locales (especificidad 90 %). Revísalo y, si corresponde, '
+                              'configúralo en RADIOLOGY_TB_UMBRAL_COMPATIBLE; se aplica a los análisis nuevos, no solo.'}
+
+
+def resumir_concordancia(filas: list[dict], patron_tb: dict | None = None) -> dict:
     """filas: un análisis cada una (estado, decision de su última revisión, anormal_confirmado, indice,
     discrepancias, omisiones, coincidencias). Solo agregados: sin pacientes ni identificadores."""
     completados = [f for f in filas if f['estado'] == 'completado']
@@ -78,5 +106,9 @@ def resumir_concordancia(filas: list[dict]) -> dict:
         'lecturas_medicas': {'anormal': sum(bool(f['anormal_confirmado']) for f in lecturas),
                              'normal': sum(not f['anormal_confirmado'] for f in lecturas)},
         'calibracion': calibrar([(f.get('indice'), f['anormal_confirmado']) for f in lecturas]),
+        'lecturas_tb': {'confirmada': sum(f.get('tb_confirmada') is True for f in revisados),
+                        'descartada': sum(f.get('tb_confirmada') is False for f in revisados)},
+        'calibracion_tb': calibrar_tb([(f.get('patron_tb'), f.get('tb_confirmada'), f.get('patron_tb_version'))
+                                       for f in revisados], **patron_tb) if patron_tb else None,
         'nota': 'La referencia es la lectura del médico al revisar la propuesta, no un diagnóstico confirmado.',
     }

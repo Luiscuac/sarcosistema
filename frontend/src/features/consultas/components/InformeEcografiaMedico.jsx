@@ -2,14 +2,14 @@ import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { obtenerHistorial, obtenerPaciente } from '../api/consultasApi.js'
-import { esImagenVisible, obtenerImagenVisible } from '../../imagenes/api/imagenesApi.js'
+import { esImagenVisible, obtenerImagenVisible } from '../../ecografia/api/ecografiaApi.js'
 import { fecha } from '../utils/paciente.js'
 import { describirEdad } from '../../../shared/utils/edad.js'
 import { partirTextoInforme } from '../../rayos_x/estudio/utils/informe.js'
-import '../../laboratorio/pages/laboratorio.css'
 import '../../laboratorio/pages/informe-solicitud.css'
-import '../../imagenes/pages/imagenes.css'
+import '../../ecografia/pages/informe-imagen.css'
 import '../../ecografia/pages/ecografia.css'
+import Boton, { BotonEnlace } from '../../../shared/ui/Boton.jsx'
 
 const SALTO = String.fromCharCode(10)
 
@@ -61,7 +61,7 @@ export default function InformeEcografiaMedico() {
   const conclusion = secciones.find(sec => /CONCLUSI/i.test(sec.titulo || ''))
   const cuerpo = secciones.filter(sec => sec !== conclusion)
   return <section className="lab-report-page">
-    <div className="lab-report-controls"><Link className="lab-back-link" to={`/consultas/pacientes/${pacienteId}?seccion=${seccionVolver}`}>← Volver a {rayosX ? 'Rayos X' : 'ecografías'}</Link>{esTorax && <Link className="lab-secondary-button" to={`/imagenes/rayos-x?estudio=${estudioId}`}>Abrir con asistente IA</Link>}<button className="primary-button" type="button" onClick={() => window.print()}>Imprimir o guardar PDF</button></div>
+    <div className="lab-report-controls"><Link className="lab-back-link" to={`/consultas/pacientes/${pacienteId}?seccion=${seccionVolver}`}>← Volver a {rayosX ? 'Rayos X' : 'ecografías'}</Link>{esTorax && <BotonEnlace variante="secundario" to={`/imagenes/rayos-x?estudio=${estudioId}`}>Abrir con asistente IA</BotonEnlace>}<Boton onClick={() => window.print()}>Imprimir o guardar PDF</Boton></div>
     <article className="lab-report-document eco-documento">
       <header className="eco-cabecera"><div><strong>CENTRO DE SALUD INTEGRAL SARCOBAMBA</strong><p>COCHABAMBA · CERCADO</p></div><strong>{rayosX ? 'SERVICIO DE RAYOS X' : 'SERVICIO DE ECOGRAFÍA'}</strong></header>
       <dl className="eco-identidad">

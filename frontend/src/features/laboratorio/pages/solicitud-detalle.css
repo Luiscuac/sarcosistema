@@ -1,7 +1,7 @@
 .lab-detail-page { max-width: 1240px; width: 100%; }
-.lab-back-link { display: inline-block; margin-bottom: 24px; color: #0f766e; text-decoration: none; }
+.lab-back-link { display: inline-block; margin-bottom: 24px; color: var(--brand); text-decoration: none; }
 .lab-back-link:hover { text-decoration: underline; }
-.lab-detail-card { background: #fff; border: 1px solid #e2e5ea; border-radius: 6px; padding: 24px; margin-top: 20px; }
+.lab-detail-card { background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 24px; margin-top: 20px; }
 .lab-detail-card h2 { margin: 0 0 18px; font-size: 20px; }
 .lab-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 32px; margin: 0; }
 .lab-detail-grid dt { color: #617180; font-size: 13px; margin-bottom: 4px; }
@@ -16,9 +16,9 @@
 .lab-detail-group h3 { font-size: 16px; margin-bottom: 12px; }
 .lab-detail-group-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 12px; }
 .lab-detail-group-heading h3 { margin: 0; }
-.lab-request-study .lab-incidence-note { color: #8a4b16; font-size: 12px; max-width: 70ch; }
+.lab-request-study .lab-incidence-note { color: var(--warning); font-size: 12px; max-width: 70ch; }
 .lab-study-link { flex: none; display: inline-block; padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px; color: var(--brand); font-size: 11px; font-weight: 600; text-decoration: none; }
-.lab-study-link:hover { border-color: var(--brand); background: #f7fbfa; }
+.lab-study-link:hover { border-color: var(--brand); background: var(--brand-hover-soft); }
 @media (max-width: 700px) { .lab-detail-grid { grid-template-columns: 1fr; } .lab-detail-heading, .lab-detail-group-heading, .lab-report-access { align-items: flex-start; flex-direction: column; } }
 
 /* Encabezado con avance y acción principal */
@@ -27,17 +27,17 @@
 .lab-request-progress { display: grid; gap: 6px; }
 .lab-request-progress > span { color: var(--muted); font-size: 12px; }
 .lab-study-link.is-primary { border-color: var(--brand); background: var(--brand); color: #fff; }
-.lab-study-link.is-primary:hover { background: #0b625b; }
+.lab-study-link.is-primary:hover { background: var(--brand-hover); }
 
 /* Recorrido del estudio: Muestra -> Resultado -> Publicado */
 .lab-steps { display: flex; flex: none; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .lab-step { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px 5px 6px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: 11px; }
 .lab-request-study .lab-step > span[aria-hidden] { display: inline-grid; place-items: center; width: 18px; height: 18px; margin: 0; border-radius: 50%; background: #eef1f4; font-size: 10px; font-weight: 600; }
-.lab-step--done { border-color: #b9ddd7; color: #0f5f58; }
+.lab-step--done { border-color: var(--brand-line); color: var(--brand-strong); }
 .lab-request-study .lab-step--done > span[aria-hidden] { background: var(--brand); color: #fff; }
-.lab-step--current { border-color: #c8dafb; background: #f3f7ff; color: #285a9e; font-weight: 600; }
-.lab-request-study .lab-step--current > span[aria-hidden] { background: #285a9e; color: #fff; }
-.lab-request-study .lab-steps--closed { display: inline-block; flex: none; margin: 0; padding: 5px 10px; border: 1px solid #ecd2bf; border-radius: 999px; background: #fff7f2; color: #8a4b16; font-size: 11px; font-weight: 600; }
+.lab-step--current { border-color: var(--info-line); background: var(--info-soft); color: var(--info); font-weight: 600; }
+.lab-request-study .lab-step--current > span[aria-hidden] { background: var(--info); color: #fff; }
+.lab-request-study .lab-steps--closed { display: inline-block; flex: none; margin: 0; padding: 5px 10px; border: 1px solid #ecd2bf; border-radius: 999px; background: #fff7f2; color: var(--warning); font-size: 11px; font-weight: 600; }
 
 /* Muestras registradas */
 .lab-simple-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }

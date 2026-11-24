@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { obtenerRegistrosPublicados } from '../api/enfermeriaApi.js'
 import { usePaciente } from '../../consultas/hooks/useConsultas.js'
+import { formatearFechaHora } from '../../../shared/utils/formatearFecha.js'
 
 const campos = [
   ['motivo_consulta', 'Motivo referido'], ['sintomas', 'Síntomas referidos'],
@@ -11,7 +12,7 @@ const campos = [
   ['presion_sistolica', 'Presión sistólica'], ['presion_diastolica', 'Presión diastólica'],
   ['saturacion_oxigeno', 'Saturación de oxígeno (%)'], ['dolor_escala', 'Dolor (0 a 10)'],
 ]
-const fechaHora = (value) => value ? new Date(value).toLocaleString('es-BO') : 'Sin fecha'
+const fechaHora = (value) => value ? formatearFechaHora(value) : 'Sin fecha'
 
 function CamposInforme({ registro, lista, titulo }) {
   const visibles = lista.filter(([campo]) => registro[campo] != null && registro[campo] !== '')

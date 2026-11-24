@@ -309,9 +309,6 @@ class RepositorioRadiologiaSql:
         adquisicion = await self.adquisicion(estudio_id)
         imagenes = await self.imagenes(estudio_id)
         externos = await self.informes_externos(estudio_id)
-        adendas = await self._todos('''SELECT ad.id, ad.motivo, ad.texto, ad.autor_nombre, ad.registro_profesional, ad.fecha_hora
-              FROM public.radiologia_adenda ad JOIN public.informe_imagen i ON i.id = ad.informe_id
-             WHERE i.estudio_id = :e ORDER BY ad.id''', e=estudio_id)
         historial = await self._todos('''
             SELECT h.fecha_hora, 'estado' AS tipo, h.estado_nuevo AS clave, NULL AS descripcion, u.identificador_acceso AS usuario
               FROM public.estudio_estado_historial h LEFT JOIN public.usuario u ON u.id = h.usuario_id
@@ -333,7 +330,6 @@ class RepositorioRadiologiaSql:
             'adquisicion': adquisicion,
             'imagenes': imagenes,
             'informe': informe,
-            'adendas': adendas,
             'informes_externos': externos,
             'historial': historial,
             'pendientes': {
@@ -500,15 +496,6 @@ class RepositorioRadiologiaSql:
             fecha_hora_publicacion = now(), updated_by = :u, updated_at = now() WHERE id = :i'''), {'u': usuario_id, 'i': informe['id']})
         await self._cambiar_estado(estudio_id, 'publicado', usuario_id)
         await self._auditar(usuario_id, 'publicar', estudio_id, f'Informe validado por {responsable}', version=informe['numero_version'])
-
-    async def agregar_adenda(self, estudio_id: int, motivo: str, texto_adenda: str, autor: str, registro: str | None, usuario_id: int) -> None:
-        await self._abierto(estudio_id, ('publicado',))
-        informe = await self._informe_actual(estudio_id)
-        if informe is None or informe['estado'] != 'publicado':
-            raise ConflictoRadiologia('Solo se agregan adendas a informes validados.')
-        await self.db.execute(text('''INSERT INTO public.radiologia_adenda (informe_id, motivo, texto, usuario_id, autor_nombre, registro_profesional)
-            VALUES (:i, :m, :t, :u, :a, :r)'''), {'i': informe['id'], 'm': motivo, 't': texto_adenda, 'u': usuario_id, 'a': autor, 'r': registro})
-        await self._auditar(usuario_id, 'rectificar', estudio_id, f'Adenda agregada por {autor}: {motivo}')
 
     async def entregar(self, estudio_id: int, entregado_a: str, usuario_id: int) -> None:
         await self._abierto(estudio_id, ('publicado',))

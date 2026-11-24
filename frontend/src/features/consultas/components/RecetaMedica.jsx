@@ -3,14 +3,16 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { emitirRecetaMedica } from '../api/consultasApi.js'
 import { obtenerRecetasPublicadas } from '../../enfermeria/api/enfermeriaApi.js'
-import ConfirmarAccion from '../../laboratorio/components/ConfirmarAccion.jsx'
+import ConfirmarAccion from '../../../shared/ui/ConfirmarAccion.jsx'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
-import { fecha, fechaLocalDe } from '../utils/paciente.js'
+import { fecha } from '../utils/paciente.js'
+import Boton from '../../../shared/ui/Boton.jsx'
+import { fechaHoy, formatearFechaHora } from '../../../shared/utils/formatearFecha.js'
 
 const medicamentoVacio = () => ({ nombre_generico: '', forma_concentracion: '', indicaciones: '', cantidad_recetada: '' })
 
 function fechaReceta(receta) {
-  return receta.publicado_en ? new Date(receta.publicado_en).toLocaleString('es-BO') : fecha(receta.fecha)
+  return receta.publicado_en ? formatearFechaHora(receta.publicado_en) : fecha(receta.fecha)
 }
 
 function RecetaResumen({ receta, pacienteId }) {
@@ -107,7 +109,7 @@ export default function RecetaMedica({ paciente, mode = 'lista', recetaId }) {
   }
   function emitir() {
     // Fecha de calendario local: con toISOString() las recetas de la noche quedaban con fecha de mañana.
-    mutation.mutate({ fecha: fechaLocalDe(), diagnostico_principal: diagnostico.trim(),
+    mutation.mutate({ fecha: fechaHoy(), diagnostico_principal: diagnostico.trim(),
       medicamentos: medicamentos.map(m => ({ ...m, cantidad_dispensada: null, valor_unitario: null, valor_total: null })) })
   }
   return <section className="med-panel">
@@ -156,7 +158,7 @@ export default function RecetaMedica({ paciente, mode = 'lista', recetaId }) {
           </div>
           {mutation.isError && <p role="alert" className="med-error">No se pudo emitir la receta. Revisa los datos e inténtalo de nuevo.</p>}
           <div className="med-form-actions">
-            <button className="primary-button" disabled={mutation.isPending}>{mutation.isPending ? 'Emitiendo…' : 'Revisar y emitir…'}</button>
+            <Boton type="submit" disabled={mutation.isPending}>{mutation.isPending ? 'Emitiendo…' : 'Revisar y emitir…'}</Boton>
           </div>
         </form>
       </>

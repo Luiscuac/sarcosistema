@@ -4,17 +4,19 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   obtenerRecetasRecibidasEnfermeria, obtenerRegistrosEnfermeria, publicarRegistroEnfermeria,
 } from '../api/enfermeriaApi.js'
-import LaboratorioTopbar from '../../laboratorio/components/LaboratorioTopbar.jsx'
-import ConfirmarAccion from '../../laboratorio/components/ConfirmarAccion.jsx'
-import '../../laboratorio/pages/laboratorio.css'
+import BarraSuperior from '../../../shared/ui/BarraSuperior.jsx'
+import ConfirmarAccion from '../../../shared/ui/ConfirmarAccion.jsx'
 import { MEDICIONES, TEXTOS, formularioDesdeRegistro, resumenDelFormulario } from '../utils/signosVitales.js'
-import { formatearFecha } from '../../../shared/utils/formatearFecha.js'
+import { formatearFecha, formatearFechaHora } from '../../../shared/utils/formatearFecha.js'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
 import './enfermeria.css'
+import Boton from '../../../shared/ui/Boton.jsx'
+import { mensajeError } from '../../../shared/utils/mensajeError.js'
+import NavegacionPagina from '../../../shared/ui/NavegacionPagina.jsx'
 
-const fechaHora = (value) => value ? new Date(value).toLocaleString('es-BO') : 'Sin fecha'
+const fechaHora = (value) => value ? formatearFechaHora(value) : 'Sin fecha'
 const fechaReceta = (receta) => receta.publicado_en
-  ? new Date(receta.publicado_en).toLocaleString('es-BO')
+  ? formatearFechaHora(receta.publicado_en)
   : formatearFecha(receta.fecha)
 
 function ResumenValores({ lineas }) {
@@ -31,7 +33,7 @@ function CamposInforme({ lineas, titulo }) {
   </section>
 }
 
-function InformeAdmision({ registro, paciente, onVolver, onEditar, onPublicar, ocupado }) {
+function InformeAdmision({ registro, paciente, onEditar, onPublicar, ocupado }) {
   const lineas = resumenDelFormulario(formularioDesdeRegistro(registro))
   const camposMedicion = new Set([...Object.keys(MEDICIONES), 'imc', 'presion', 'dolor_escala'])
   const observaciones = lineas.filter(({ campo }) => TEXTOS.some(([nombre]) => nombre === campo))
@@ -45,7 +47,6 @@ function InformeAdmision({ registro, paciente, onVolver, onEditar, onPublicar, o
         <h2>Admisión y valoración</h2>
         <p>{publicado ? 'Publicado' : 'Borrador guardado'} el {fecha}</p>
       </div>
-      <button type="button" className="enf-history-back" onClick={() => onVolver()}>Volver a registros</button>
     </header>
     <div className="enf-history-report">
       <dl className="enf-report-meta">
@@ -58,13 +59,13 @@ function InformeAdmision({ registro, paciente, onVolver, onEditar, onPublicar, o
       {!lineas.length && <p className="enf-message">Este registro no contiene datos para mostrar.</p>}
       {registro.estado === 'borrador' && <div className="enf-report-actions">
         <button type="button" onClick={() => onEditar(registro)} disabled={ocupado}>Editar borrador</button>
-        <button type="button" className="primary-button" onClick={() => onPublicar(registro)} disabled={ocupado}>Publicar para el médico…</button>
+        <Boton onClick={() => onPublicar(registro)} disabled={ocupado}>Publicar para el médico…</Boton>
       </div>}
     </div>
   </section>
 }
 
-function InformeReceta({ receta, paciente, onVolver }) {
+function InformeReceta({ receta, paciente }) {
   return <section className="enf-panel enf-prescription-report">
     <header className="enf-history-report-header">
       <div>
@@ -72,7 +73,6 @@ function InformeReceta({ receta, paciente, onVolver }) {
         <h2>{receta.numero_receta || `Receta #${receta.id}`}</h2>
         <p>Emitida el {fechaReceta(receta)}</p>
       </div>
-      <button type="button" className="enf-history-back" onClick={() => onVolver()}>Volver a recetas</button>
     </header>
     <div className="enf-history-report">
       <dl className="enf-report-meta">
@@ -140,8 +140,7 @@ export default function EnfermeriaInformePage({ usuario, logout }) {
       await publicarRegistroEnfermeria(registroSeleccionado.id)
       notificar('Registro publicado. Ya está disponible en la ficha médica del paciente.', 'exito')
     } catch (error) {
-      const detalle = error.response?.data?.detail
-      notificar(typeof detalle === 'string' ? detalle : 'No se pudo publicar el registro.', 'error')
+      notificar(mensajeError(error, 'No se pudo publicar el registro.'), 'error')
     } finally {
       await cache.invalidateQueries({ queryKey: ['enfermeria', 'registros', pacienteId] })
       setOcupado(false)
@@ -153,8 +152,10 @@ export default function EnfermeriaInformePage({ usuario, logout }) {
   const error = esReceta ? recetas.isError && !receta : registros.isError && !registro
   const encontrado = esReceta ? receta : registro
   return <main className="lab-page enf-page">
-    <LaboratorioTopbar usuario={usuario} titulo="Enfermería" inicio="/enfermeria" onLogout={logout} />
+    <BarraSuperior usuario={usuario} titulo="Enfermería" inicio="/enfermeria" onLogout={logout} />
     <div className="enf-content">
+      <NavegacionPagina onVolver={() => volver()} textoVolver={esReceta ? 'Volver a recetas' : 'Volver a registros'}
+        migas={[{ texto: 'Enfermería', onClick: () => volver() }, { texto: paciente?.nombre_completo || 'Paciente', onClick: () => volver() }, { texto: esReceta ? 'Receta' : 'Informe de admisión' }]} />
       {cargando
         ? <p role="status" className="enf-message">Cargando informe…</p>
         : error
@@ -162,10 +163,9 @@ export default function EnfermeriaInformePage({ usuario, logout }) {
           : !encontrado
             ? <p role="alert" className="enf-error">No se encontró el informe solicitado.</p>
             : esReceta
-              ? <InformeReceta receta={receta} paciente={paciente} onVolver={volver} />
-            : <InformeAdmision registro={registro} paciente={paciente} onVolver={volver}
+              ? <InformeReceta receta={receta} paciente={paciente} />
+            : <InformeAdmision registro={registro} paciente={paciente}
               onEditar={(item) => volver('admision', item)} onPublicar={() => setConfirmacion(true)} ocupado={ocupado} />}
-      {(error || !cargando && !encontrado) && <button type="button" className="enf-history-back" onClick={() => volver()}>Volver a Enfermería</button>}
     </div>
     {confirmacion && registro && <ConfirmarAccion titulo="Publicar registro de enfermería" textoConfirmar="Publicar para el médico"
       pendiente={ocupado} onCancelar={() => setConfirmacion(false)} onConfirmar={() => publicarBorrador(registro)}>

@@ -31,16 +31,3 @@ export const MOTIVOS_INCIDENCIA = [
 export function nombreMotivoIncidencia(codigo) {
   return MOTIVOS_INCIDENCIA.find((motivo) => motivo.codigo === codigo)?.nombre ?? codigo
 }
-
-export const SEXOS = [
-  { codigo: 'F', nombre: 'Femenino' },
-  { codigo: 'M', nombre: 'Masculino' },
-  { codigo: 'otro', nombre: 'Otro' },
-  { codigo: 'no_especificado', nombre: 'No especificado' },
-]
-
-export function nombreSexo(codigo) {
-  return SEXOS.find((sexo) => sexo.codigo === codigo)?.nombre ?? 'No registrado'
-}
-
-export const TIPOS_DOCUMENTO = ['CI', 'Pasaporte', 'Carnet de extranjero']

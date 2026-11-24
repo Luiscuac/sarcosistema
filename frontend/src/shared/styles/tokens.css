@@ -1,0 +1,46 @@
+/*
+ * Colores y medidas de todo SarcoSistema (una sola fuente).
+ * Usa estas variables en lugar de colores o medidas literales. Rayos X todavía usa sus propios
+ * tokens (--rx-*, features/rayos_x/compartido/rx-tokens.css) hasta su refactor.
+ */
+:root {
+  /* Texto */
+  --ink: #202a34;
+  --muted: #66717d;
+  --label: #53606b;
+
+  /* Superficies y bordes */
+  --surface: #f7f8fa;
+  --surface-card: #fff;
+  --line: #e2e5ea;
+
+  /* Marca y acción */
+  --brand: #0f766e;
+  --brand-hover: #0b625b;
+  --brand-strong: #0f5f58;
+  --brand-soft: #f0f8f6;
+  --brand-hover-soft: #f7fbfa;
+  --brand-line: #b9ddd7;
+
+  /* Estados (acompañar siempre con texto; nunca solo color) */
+  --danger: #a33b16;
+  --danger-strong: #a33627;
+  --danger-text: #b42318;
+  --danger-soft: #fdf1f1;
+  --warning: #8a4b16;
+  --warning-soft: #fffaf0;
+  --warning-line: #ead8a2;
+  --info: #285a9e;
+  --info-soft: #f3f7ff;
+  --info-line: #c8dafb;
+
+  /* Forma y ritmo */
+  --radius: 6px;
+  --radius-pill: 999px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+}

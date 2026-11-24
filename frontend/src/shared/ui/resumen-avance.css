@@ -1,0 +1,6 @@
+/* Resumen de avance de una captura o registro (barra + motivo de bloqueo). */
+.lab-capture-summary { position: sticky; top: 0; z-index: 2; display: grid; gap: 8px; margin-bottom: 4px; padding: 14px 18px; border: 1px solid var(--line); border-radius: 6px; background: #fff; box-shadow: 0 1px 3px rgb(15 23 42 / 6%); }
+.lab-capture-progress { display: grid; grid-template-columns: auto minmax(120px, 1fr); align-items: center; gap: 14px; font-size: 13px; }
+.lab-capture-warning, .lab-capture-blocked { margin: 0; font-size: 12px; line-height: 1.45; }
+.lab-capture-warning { color: var(--warning); }
+.lab-capture-blocked { color: var(--info); }

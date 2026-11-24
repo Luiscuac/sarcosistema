@@ -22,7 +22,10 @@ from app.config.database import get_db
 from app.config.settings import settings
 from app.imagenes.domain import radiologia as reglas
 from app.imagenes.domain.errors import EstudioNoEncontrado
+from app.imagenes.application.triaje import nivel_prioridad, umbrales_triaje
+from app.imagenes.infrastructure.archivos import limite_archivo, mime_por_firma
 from app.imagenes.infrastructure.persistence.repositorio_radiologia import ConflictoRadiologia, RepositorioRadiologiaSql
+from app.imagenes.infrastructure.persistence.repositorio_triaje import RepositorioTriajeSql
 from app.imagenes.infrastructure.storage.almacen_local import AlmacenLocal
 
 router = APIRouter(prefix='/radiologia', tags=['radiologia'])
@@ -66,7 +69,6 @@ def permisos(rol: str, detalle: dict) -> dict:
         'gestionar_imagenes': tecnico and abierto,
         'redactar_informe': tecnico and estado == 'resultado_en_preparacion',
         'validar': tecnico and estado == 'resultado_en_preparacion',
-        'agregar_adenda': tecnico and estado == 'publicado',
         'adjuntar_externo': tecnico and (abierto or estado == 'publicado'),
         'marcar_no_realizado': tecnico and abierto and etapa != 'borrador',
         'entregar': tecnico and etapa == 'validado',
@@ -85,12 +87,9 @@ async def _con_triaje(repositorio: RepositorioRadiologiaSql, filas: list[dict]) 
     if not torax:
         return filas
     try:
-        from app.imagenes.application.triaje import nivel_prioridad
-        from app.imagenes.infrastructure.persistence.repository import RepositorioImagenSql
-        from app.imagenes.presentation.router_clinico import _umbrales_triaje
-        resumen = await RepositorioImagenSql(repositorio.db).triaje_por_estudio(torax)
+        resumen = await RepositorioTriajeSql(repositorio.db).triaje_por_estudio(torax)
         if resumen:
-            alta, media = _umbrales_triaje()
+            alta, media = umbrales_triaje()
             for fila in filas:
                 r = resumen.get(fila['estudio_id'])
                 if r:
@@ -168,12 +167,6 @@ class Validacion(Texto):
     registro_profesional: str | None = Field(default=None, max_length=80)
     confirmo: Literal[True]
 
-
-class AdendaNueva(Texto):
-    motivo: str = Field(min_length=3, max_length=500)
-    texto: str = Field(min_length=3, max_length=4000)
-    autor_nombre: str = Field(min_length=3, max_length=200)
-    registro_profesional: str | None = Field(default=None, max_length=80)
 
 
 class Entrega(Texto):
@@ -312,23 +305,17 @@ async def completar_adquisicion(estudio_id: int, usuario: Usuario = Depends(con_
     return await _operar(repositorio.completar_adquisicion(estudio_id, usuario.id), repositorio, estudio_id, usuario)
 
 
-def _limite(mime: str) -> int:
-    return (settings.imagenes_dicom_max_mb if 'dicom' in mime else settings.imagenes_max_mb) * 1024 * 1024
-
-
 async def _leer_radiografia(archivo: UploadFile) -> dict:
     """Valida por contenido real (firma), no por la extension ni el tipo declarado."""
-    from app.imagenes.infrastructure.archivos import MIMES_RADIOGRAFIA
-    from app.imagenes.infrastructure.vision.preprocesamiento import detectar_formato
     nombre = (archivo.filename or 'imagen')[:200]
-    contenido = await archivo.read(settings.imagenes_dicom_max_mb * 1024 * 1024 + 1)
+    contenido = await archivo.read(limite_archivo('application/dicom') + 1)
     await archivo.close()
     if not contenido:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, f'{nombre}: el archivo llegó vacío.')
-    mime = MIMES_RADIOGRAFIA.get(detectar_formato(contenido))
+    mime = mime_por_firma('', contenido)
     if mime not in MIMES_IMAGEN:
         raise HTTPException(status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, f'{nombre}: solo se admiten imágenes JPG, PNG o DICOM.')
-    if len(contenido) > _limite(mime):
+    if len(contenido) > limite_archivo(mime):
         raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, f'{nombre}: supera el tamaño máximo permitido.')
     return {'nombre_original': nombre, 'mime_type': mime, 'tamano_bytes': len(contenido),
             'hash_sha256': hashlib.sha256(contenido).hexdigest(), 'contenido': contenido}
@@ -358,8 +345,9 @@ async def subir_imagenes(estudio_id: int, archivos: list[UploadFile] = File(...)
         if settings.radiology_ai_enabled and base['fila']['tipo_estudio_codigo'] == 'RX_TORAX':
             # Triaje visual experimental: solo torax; no bloquea la carga ni modifica el informe.
             from types import SimpleNamespace
-            from app.imagenes.infrastructure.persistence.repository import RepositorioImagenSql
-            await RepositorioImagenSql(repositorio.db).encolar_triaje(estudio_id, [SimpleNamespace(**c) for c in creadas])
+            await RepositorioTriajeSql(repositorio.db).encolar_triaje(
+                estudio_id, [SimpleNamespace(**c) for c in creadas],
+            )
 
     return await _operar(operacion(), repositorio, estudio_id, usuario)
 
@@ -407,13 +395,6 @@ async def validar_informe(estudio_id: int, datos: Validacion, usuario: Usuario =
                           repositorio: RepositorioRadiologiaSql = Depends(get_repositorio)):
     return await _operar(repositorio.validar(estudio_id, datos.version_edicion, datos.responsable_nombre,
                                              datos.registro_profesional or None, usuario.id), repositorio, estudio_id, usuario)
-
-
-@router.post('/estudios/{estudio_id}/adendas')
-async def agregar_adenda(estudio_id: int, datos: AdendaNueva, usuario: Usuario = Depends(con_rol(TECNICO)),
-                         repositorio: RepositorioRadiologiaSql = Depends(get_repositorio)):
-    return await _operar(repositorio.agregar_adenda(estudio_id, datos.motivo, datos.texto, datos.autor_nombre,
-                                                    datos.registro_profesional or None, usuario.id), repositorio, estudio_id, usuario)
 
 
 @router.post('/estudios/{estudio_id}/entregar')

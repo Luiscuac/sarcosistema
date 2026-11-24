@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
-import Dialogo from '../../../laboratorio/components/Dialogo.jsx'
-import VisorRadiografia from '../../components/VisorRadiografia.jsx'
-import { obtenerVistaImagen } from '../../api/radiologiaApi.js'
+import Dialogo from '../../../../shared/ui/Dialogo.jsx'
+import VisorRadiografia from '../../asistente/components/VisorRadiografia.jsx'
+import { obtenerVistaImagen } from '../../compartido/api/radiologiaApi.js'
 import { tamanoLegible } from '../utils/informe.js'
+import Boton from '../../../../shared/ui/Boton.jsx'
+import { formatearFechaHora } from '../../../../shared/utils/formatearFecha.js'
 
 // Devuelve la URL de la vista, null mientras carga y false si falló la carga.
 export function useVistaImagen(archivoId) {
@@ -27,11 +29,11 @@ function Miniatura({ imagen, proyecciones, editable, ocupado, onAsignar, onRetir
     <button type="button" className="rxe-miniatura-imagen" onClick={() => onAbrir(imagen)} disabled={!url}>
       {url ? <img src={url} alt={`Vista de ${imagen.nombre_original}`} /> : <span role={url === false ? 'alert' : undefined}>{url === false ? 'No se pudo cargar la vista.' : 'Cargando vista…'}</span>}
     </button>
-    <div><strong>{imagen.nombre_original}</strong><small>{tamanoLegible(imagen.tamano_bytes)} · {new Date(imagen.fecha_carga).toLocaleString('es-BO')}</small></div>
+    <div><strong>{imagen.nombre_original}</strong><small>{tamanoLegible(imagen.tamano_bytes)} · {formatearFechaHora(imagen.fecha_carga)}</small></div>
     <label>Proyección<select value={imagen.proyeccion_codigo || ''} disabled={!editable || ocupado} onChange={e => onAsignar(imagen.id, e.target.value || null)}>
       <option value="">Sin asignar</option>{proyecciones.map(p => <option key={p.codigo} value={p.codigo}>{p.nombre}</option>)}
     </select></label>
-    {editable && <button type="button" className="lab-secondary-button" onClick={() => onRetirar(imagen)}>Retirar</button>}
+    {editable && <Boton variante="secundario" onClick={() => onRetirar(imagen)}>Retirar</Boton>}
   </article>
 }
 
@@ -54,7 +56,7 @@ export default function GaleriaImagenes({ imagenes, proyecciones, editable, ocup
       <div className="lab-dialog-body lab-confirm-body"><p>La imagen quedará retirada con trazabilidad; el archivo no se borrará.</p>
         <label className="lab-search-label">Motivo *<textarea required value={motivo} onChange={e => setMotivo(e.target.value)} /></label>
         {!motivo.trim() && <p className="lab-form-hint">Escribe el motivo para continuar.</p>}</div>
-      <footer className="lab-dialog-footer"><button type="button" className="lab-secondary-button" disabled={ocupado} onClick={() => { setRetirar(null); setMotivo('') }}>Volver</button><button type="button" className="lab-incidence-submit" disabled={ocupado || !motivo.trim()} onClick={() => onRetirar(retirar.id, motivo, () => { setRetirar(null); setMotivo('') })}>{ocupado ? 'Procesando...' : 'Retirar imagen'}</button></footer>
+      <footer className="lab-dialog-footer"><Boton variante="secundario" disabled={ocupado} onClick={() => { setRetirar(null); setMotivo('') }}>Volver</Boton><button type="button" className="lab-incidence-submit" disabled={ocupado || !motivo.trim()} onClick={() => onRetirar(retirar.id, motivo, () => { setRetirar(null); setMotivo('') })}>{ocupado ? 'Procesando...' : 'Retirar imagen'}</button></footer>
     </Dialogo>}
   </>
 }

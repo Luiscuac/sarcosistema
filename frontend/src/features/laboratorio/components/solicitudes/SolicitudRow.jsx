@@ -3,6 +3,7 @@ import ProgresoSolicitud from './ProgresoSolicitud.jsx'
 import { estadoSolicitud } from '../../utils/agruparSolicitudes.js'
 import { esperaProlongada, progresoSolicitud, siguienteAccion, tiempoTranscurrido } from '../../utils/bandeja.js'
 import './solicitudes-panel.css'
+import { formatearFechaHora } from '../../../../shared/utils/formatearFecha.js'
 
 function claseEstado(estudios) {
   if (progresoSolicitud(estudios).completa) return 'publicado'
@@ -21,7 +22,7 @@ export default function SolicitudRow({ solicitud, ahora }) {
       <td>
         <strong>{solicitud.paciente_nombre}</strong>
         <span>{solicitud.referencia}</span>
-        <small className={demorada ? 'lab-wait is-long' : 'lab-wait'} title={new Date(solicitud.fecha_solicitud).toLocaleString('es-BO')}>
+        <small className={demorada ? 'lab-wait is-long' : 'lab-wait'} title={formatearFechaHora(solicitud.fecha_solicitud)}>
           {demorada && <span aria-hidden="true">⚠ </span>}Solicitada {tiempoTranscurrido(solicitud.fecha_solicitud, ahora)}
           {demorada && <span className="sr-only"> (espera prolongada)</span>}
         </small>

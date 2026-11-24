@@ -1,18 +1,19 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { recibirMuestraSolicitud, registrarIncidenciasSolicitud } from '../api/laboratorioApi.js'
-import ConfirmarAccion from './ConfirmarAccion.jsx'
-import Dialogo from './Dialogo.jsx'
+import ConfirmarAccion from '../../../shared/ui/ConfirmarAccion.jsx'
+import Dialogo from '../../../shared/ui/Dialogo.jsx'
 import { useResponsableRecordado } from '../hooks/useResponsableRecordado.js'
 import { areasParaMuestra } from '../utils/areasMuestra.js'
 import { MOTIVOS_INCIDENCIA, nombreArea, nombreMotivoIncidencia } from '../utils/catalogos.js'
-import { mensajeError } from '../utils/mensajeError.js'
+import { mensajeError } from '../../../shared/utils/mensajeError.js'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
 import './muestras/RecibirMuestra.css'
+import { fechaHoy } from '../../../shared/utils/formatearFecha.js'
 
 const TIPOS_MUESTRA = ['Sangre', 'Orina', 'Heces']
 
-const fechaDeHoy = () => new Date().toLocaleDateString('en-CA')
+const fechaDeHoy = () => fechaHoy()
 const horaActual = () => new Date().toTimeString().slice(0, 5)
 
 export default function RecibirMuestra({ solicitud, usuario, onClose, onReceived }) {

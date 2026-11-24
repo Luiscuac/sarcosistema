@@ -27,6 +27,8 @@ class Settings(BaseSettings):
     radiology_vision_min_free_mib: int = Field(default=4096,ge=2048)
     # Mapas de calor solo en pulmones si la segmentación local está preparada (scripts.preparar_segmentacion_pulmonar).
     radiology_lung_mask_enabled: bool = True
+    radiology_tb_ensemble_enabled: bool = True
+    radiology_tb_umbral_compatible: float | None = Field(default=None, gt=0, lt=1)
     radiology_score_threshold: float = Field(default=0.5,ge=0,le=1)
     # Umbrales del nivel de triaje (alta/media). Vacíos = provisionales del artefacto del índice;
     # deben calibrarse con casos validados del propio hospital.

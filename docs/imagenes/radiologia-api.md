@@ -1,6 +1,6 @@
 # API de radiología convencional (contrato)
 
-Prefijo: `/imagenes/radiologia`. Todas las rutas exigen JWT Bearer. Cliente frontend: `frontend/src/features/rayos_x/api/radiologiaApi.js`.
+Prefijo: `/imagenes/radiologia`. Todas las rutas exigen JWT Bearer. Cliente frontend: `frontend/src/features/rayos_x/compartido/api/radiologiaApi.js`.
 
 Roles: **T** = `rayos_x` (a cargo de todo el flujo: recepción, adquisición, informe y validación), **M** = `medico` (solicitante). El rol `radiologo` fue eliminado (migración `20261117_0020`).
 Solo **R** redacta y valida informes. **T** nunca valida.
@@ -70,13 +70,12 @@ Cuando faltan requisitos, 409 devuelve `{"detail": {"mensaje": "...", "pendiente
   "imagenes": [{"id": 5, "archivo_id": 44, "nombre_original": "rodilla_ap.png", "mime_type": "image/png", "tamano_bytes": 120000,
                 "hash_sha256": "...", "fecha_carga": "...", "proyeccion_codigo": "AP"}],
   "informe": null,
-  "adendas": [{"id": 1, "motivo": "...", "texto": "...", "autor_nombre": "...", "registro_profesional": null, "fecha_hora": "..."}],
   "informes_externos": [{"id": 2, "nombre_original": "informe.pdf", "mime_type": "application/pdf", "tamano_bytes": 90000,
                          "establecimiento": "Centro externo", "profesional": null, "fecha_informe": "2026-11-10", "observaciones": null, "fecha_carga": "..."}],
   "historial": [{"fecha_hora": "...", "tipo": "estado", "descripcion": "Pendiente de realización", "usuario": "tecnico1"}],
   "pendientes": {"adquisicion": ["Adjunta al menos una imagen."], "validacion": ["Redacta la conclusión o impresión diagnóstica."]},
   "permisos": {"registrar_adquisicion": true, "gestionar_imagenes": true, "redactar_informe": false, "validar": false,
-               "agregar_adenda": false, "adjuntar_externo": true, "marcar_no_realizado": true, "entregar": false}
+               "adjuntar_externo": true, "marcar_no_realizado": true, "entregar": false}
 }
 ```
 
@@ -129,7 +128,6 @@ Cuando faltan requisitos, 409 devuelve `{"detail": {"mensaje": "...", "pendiente
 | `POST /estudios/{estudio_id}/informe/vista-previa` | R | `{contenido}` | `{texto}` (composición oficial, sin guardar) |
 | `PUT /estudios/{estudio_id}/informe/borrador` | R | `{contenido, texto_final: str \| null, version_edicion: int \| null}` | `EstudioDetalle` (409 si otro guardó antes) |
 | `POST /estudios/{estudio_id}/informe/validar` | R | `{version_edicion, responsable_nombre, registro_profesional?, confirmo: true}` | `EstudioDetalle` (409 con `pendientes`) |
-| `POST /estudios/{estudio_id}/adendas` | R | `{motivo, texto, autor_nombre, registro_profesional?}` (solo informe validado) | `EstudioDetalle` |
 | `POST /estudios/{estudio_id}/informes-externos` | T, R | multipart: `archivo` (PDF), `establecimiento`, `profesional?`, `fecha_informe?` (AAAA-MM-DD), `observaciones?` | `EstudioDetalle` |
 | `POST /estudios/{estudio_id}/informes-externos/{externo_id}/retirar` | T, R | `{motivo}` | `EstudioDetalle` |
 | `GET /informes-externos/{externo_id}/archivo` | T, R; M si está validado | | PDF |
@@ -160,5 +158,5 @@ Binarios de imágenes (rutas existentes, con autorización reforzada): `GET /ima
 - Las proyecciones **solicitadas** no se copian a las **realizadas**: el técnico marca lo que realmente adquirió (se puede ofrecer un botón "Usar las solicitadas").
 - Imágenes y adquisición se editan mientras el informe no esté validado. Retirar una imagen exige motivo y no la borra.
 - El informe se guarda con un botón explícito "Guardar borrador" (como Laboratorio); avisar de cambios sin guardar con `useAvisoCambiosSinGuardar`.
-- Al validar se muestra un resumen y una confirmación explícita; después el informe es inmutable y solo admite adendas.
+- Al validar se muestra un resumen y una confirmación explícita; después el informe es inmutable. Las correcciones se hacen en borrador, antes de validar (decisión del servicio, 2026-11-23: sin adendas).
 - Un informe externo se muestra siempre rotulado como "Informe externo" con su establecimiento; nunca como informe del sistema.

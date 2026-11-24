@@ -3,14 +3,15 @@ import { useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import { obtenerInformeSolicitud } from '../api/laboratorioApi.js'
 import { obtenerInformeLaboratorio } from '../../consultas/api/consultasApi.js'
-import LaboratorioTopbar from '../components/LaboratorioTopbar.jsx'
-import NavegacionLab from '../components/NavegacionLab.jsx'
-import { nombreArea, nombreMotivoIncidencia, nombreSexo } from '../utils/catalogos.js'
+import BarraSuperior from '../../../shared/ui/BarraSuperior.jsx'
+import NavegacionPagina from '../../../shared/ui/NavegacionPagina.jsx'
+import { nombreArea, nombreMotivoIncidencia } from '../utils/catalogos.js'
+import { nombreSexo } from '../../../shared/utils/personas.js'
 import { agruparInformePorArea, fueraDeRango, resumenParaCopiar } from '../utils/informe.js'
 import { describirEdad } from '../../../shared/utils/edad.js'
-import { formatearFecha } from '../../../shared/utils/formatearFecha.js'
-import './laboratorio.css'
+import { formatearFecha, formatearFechaHora } from '../../../shared/utils/formatearFecha.js'
 import './informe-solicitud.css'
+import Boton from '../../../shared/ui/Boton.jsx'
 
 function FilaInforme({ fila, columnas }) {
   if (fila.tipo === 'estudio') return <tr className="lab-report-row-study"><th scope="rowgroup" colSpan={columnas}>{fila.nombre}</th></tr>
@@ -66,7 +67,7 @@ function ResumenCopiable({ informe }) {
   return <section className="lab-report-copy" aria-labelledby="lab-report-copy-title">
     <div className="lab-report-copy-head">
       <h2 id="lab-report-copy-title">Resumen para la nota clínica</h2>
-      <button className="lab-secondary-button" type="button" onClick={copiar}>{estado === 'copiado' ? 'Copiado ✓' : 'Copiar'}</button>
+      <Boton variante="secundario" onClick={copiar}>{estado === 'copiado' ? 'Copiado ✓' : 'Copiar'}</Boton>
     </div>
     <textarea ref={campo} readOnly value={texto} rows={Math.min(8, texto.split('\n').length + 1)} onFocus={(evento) => evento.target.select()} />
     {estado === 'manual' && <p role="status" className="lab-report-copy-hint">No se pudo copiar automáticamente: el texto quedó seleccionado, usa Ctrl + C.</p>}
@@ -101,12 +102,12 @@ function Informe({ informe }) {
       <ul>{informe.estudios_no_realizados.map((estudio) => <li key={estudio.referencia}>
         <strong>{estudio.nombre}</strong> ({nombreArea(estudio.categoria)}): {nombreMotivoIncidencia(estudio.motivo)}
         {estudio.descripcion && <> — {estudio.descripcion}</>}
-        <span> · {estudio.responsable}, {new Date(estudio.fecha_hora).toLocaleString('es-BO')}</span>
+        <span> · {estudio.responsable}, {formatearFechaHora(estudio.fecha_hora)}</span>
       </li>)}</ul>
     </section>}
     <footer className="lab-report-signature">
       <div>
-        <p>Emitido el {new Date().toLocaleString('es-BO')} · SarcoSistema</p>
+        <p>Emitido el {formatearFechaHora(new Date())} · SarcoSistema</p>
       </div>
       <div className="lab-report-sign-line"><span /><p>Firma y sello</p></div>
     </footer>
@@ -124,12 +125,12 @@ export default function InformeSolicitudPage({ usuario, logout, modoMedico = fal
     <div className="lab-report-controls">
       {modoMedico
         ? <Link className="lab-back-link" to={`/consultas/pacientes/${pacienteId}`}>← Volver a la ficha</Link>
-        : <NavegacionLab volverA={`/laboratorio/solicitudes/${solicitudId}`} textoVolver="Volver a la solicitud" migas={[
+        : <NavegacionPagina volverA={`/laboratorio/solicitudes/${solicitudId}`} textoVolver="Volver a la solicitud" migas={[
           { texto: 'Solicitudes', ruta: '/laboratorio' },
           { texto: informe?.referencia ?? 'Solicitud', ruta: `/laboratorio/solicitudes/${solicitudId}` },
           { texto: 'Informe' },
         ]} />}
-      {informe && <button className="primary-button" type="button" onClick={() => window.print()}>Imprimir o guardar PDF</button>}
+      {informe && <Boton onClick={() => window.print()}>Imprimir o guardar PDF</Boton>}
     </div>
     {isLoading && <p>Cargando informe…</p>}
     {isError && <p role="alert" className="lab-report-error">{error?.response?.status === 409
@@ -142,7 +143,7 @@ export default function InformeSolicitudPage({ usuario, logout, modoMedico = fal
   if (modoMedico) return <section className="lab-report-page">{contenido}</section>
   return <main className="lab-page">
     <div className="lab-main">
-      <LaboratorioTopbar usuario={usuario} onLogout={logout} />
+      <BarraSuperior usuario={usuario} titulo="Laboratorio" inicio="/laboratorio" onLogout={logout} />
       <section className="lab-content lab-report-page">{contenido}</section>
     </div>
   </main>
