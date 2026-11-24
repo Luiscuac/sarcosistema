@@ -1,10 +1,7 @@
 import CampoMedicion, { pasarAlSiguiente } from './CampoMedicion.jsx'
 import { GRUPOS, TEXTOS, avisoDeCampo, calcularImc } from '../utils/signosVitales.js'
-<<<<<<< HEAD
 import AsistenteAdmision from './AsistenteAdmision.jsx'
-=======
 import Boton from '../../../shared/ui/Boton.jsx'
->>>>>>> main
 
 function EscalaDolor({ valor, deshabilitado, onCambiar }) {
   const aviso = avisoDeCampo('dolor_escala', valor)

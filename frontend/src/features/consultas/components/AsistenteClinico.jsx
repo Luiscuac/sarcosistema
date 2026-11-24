@@ -240,11 +240,13 @@ export default function AsistenteClinico({ pacienteId, valores, onAplicar, onDes
     {original && <details className="med-original-transcript"><summary>Ver transcripción original</summary><p className="med-transcript">{original}</p></details>}
     {propuesta?.advertencias.map((aviso, i) => <p key={i} role="status" className="med-ai-warning">{aviso}</p>)}
     {propuesta?.bloqueada && <p role="alert" className="med-error">Autocompletado bloqueado: revisa a qué paciente corresponde el dictado. No se modificó la ficha.</p>}
-    {items.map((item, indice) => item.estado === 'pendiente' && <PropuestaCampo
-      key={`${propuesta?.propuesta_id}-${item.campo}`} item={item} etiqueta={etiquetas[item.campo] || item.campo}
-      valorActual={valores[item.campo]} bloqueada={propuesta?.bloqueada}
-      onCambiarValor={valor => setItems(actual => actual.map((s, i) => i === indice ? { ...s, valor } : s))}
-      onAceptar={() => resolver(indice, true)} onRechazar={() => resolver(indice, false)} />)}
+    {items.some(item => item.estado === 'pendiente') && <div className="enf-ai-proposals">
+      {items.map((item, indice) => item.estado === 'pendiente' && <PropuestaCampo
+        key={`${propuesta?.propuesta_id}-${item.campo}`} item={item} etiqueta={etiquetas[item.campo] || item.campo}
+        valorActual={valores[item.campo]} bloqueada={propuesta?.bloqueada}
+        onCambiarValor={valor => setItems(actual => actual.map((s, i) => i === indice ? { ...s, valor } : s))}
+        onAceptar={() => resolver(indice, true)} onRechazar={() => resolver(indice, false)} />)}
+    </div>}
     {pendientes && <button type="button" onClick={descartarPendientes}>Rechazar todas las pendientes</button>}
     {aceptadas.length > 0 && <details className="med-assistant-history"><summary>Deshacer un campo aplicado</summary>
       <div className="med-assistant-history-list">{aceptadas.map(({ item, indice }) => <div key={`${propuesta?.propuesta_id}-${item.campo}`}>

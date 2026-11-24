@@ -3,11 +3,9 @@ import api from '../../../shared/api/httpClient.js'
 export const buscarPacientes = async buscar => (await api.get('/imagenes/ecografia/pacientes', { params: { buscar } })).data
 export const obtenerCatalogo = async () => (await api.get('/imagenes/ecografia/catalogo')).data
 export const crearSolicitud = async datos => (await api.post('/imagenes/ecografia/solicitudes', datos)).data
-<<<<<<< HEAD
 export const extraerHallazgosEcografia = async (estudioId, transcripcion, signal) =>
   (await api.post(`/imagenes/estudios/${estudioId}/extraer-ecografia`, { transcripcion },
     { signal, timeout: 200000 })).data
-=======
 
 export const listarBandeja = async () => (await api.get('/imagenes/bandeja')).data
 export const obtenerEstudio = async id => (await api.get(`/imagenes/estudios/${id}`)).data
@@ -31,4 +29,3 @@ export const esImagenVisible = mime => mime.startsWith('image/') || mime === 'ap
 export const obtenerImagenVisible = async archivo => (archivo.mime_type === 'application/dicom'
   ? (await api.get(`/imagenes/archivos/${archivo.id}/vista`, { responseType: 'blob' })).data
   : obtenerArchivoImagen(archivo.id))
->>>>>>> main

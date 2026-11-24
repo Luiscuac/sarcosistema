@@ -11,6 +11,7 @@ class Settings(BaseSettings):
 
     database_url: str
     jwt_secret_key: str
+    cors_origins: str = "http://localhost:5173"
     debug: bool = False
     whisper_model_size: str = "small"
     whisper_device: str = "cpu"
@@ -47,6 +48,10 @@ class Settings(BaseSettings):
     @property
     def imagenes_tipos_lista(self) -> tuple[str, ...]:
         return tuple(t.strip() for t in self.imagenes_tipos_permitidos.split(',') if t.strip())
+
+    @property
+    def cors_origins_lista(self) -> tuple[str, ...]:
+        return tuple(origen.strip() for origen in self.cors_origins.split(',') if origen.strip())
 
 
 settings = Settings()
