@@ -4,7 +4,7 @@
 .lab-selected-patient span { margin-top: 4px; color: var(--muted); font-size: 11px; }
 .lab-selected-patient button, .lab-inline-actions > button:not(.primary-button) { padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--ink); font-size: 11px; }
 .lab-patient-option { display: flex; width: 100%; flex-direction: column; gap: 4px; margin-top: 7px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; background: #fff; text-align: left; }
-.lab-patient-option:hover { border-color: var(--brand); background: #f7fbfa; }
+.lab-patient-option:hover { border-color: var(--brand); background: var(--brand-hover-soft); }
 .lab-patient-option strong { color: var(--ink); font-size: 12px; }
 .lab-patient-option span { color: var(--muted); font-size: 10px; }
 .lab-text-button { margin-top: 12px; padding: 0; border: 0; background: transparent; color: var(--brand); font-size: 11px; font-weight: 600; }

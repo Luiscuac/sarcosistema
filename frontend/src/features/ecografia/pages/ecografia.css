@@ -1,6 +1,6 @@
 .eco-solicitud fieldset { margin: 22px 0; padding: 18px; border: 1px solid var(--line); border-radius: 6px; min-width: 0; }
 .eco-solicitud legend { padding: 0 8px; font-size: 13px; font-weight: 600; color: var(--brand); }
-.eco-solicitud label { display: grid; gap: 8px; margin-bottom: 14px; font-size: 12px; font-weight: 600; color: #53606b; }
+.eco-solicitud label { display: grid; gap: 8px; margin-bottom: 14px; font-size: 12px; font-weight: 600; color: var(--label); }
 .eco-solicitud input:not([type="checkbox"]) { width: 100%; min-width: 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; font: inherit; font-size: 13px; color: var(--ink); background: #fff; }
 .eco-solicitud input:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 .eco-organos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 22px; }
@@ -45,7 +45,7 @@
 .eco-result-count { color: var(--muted); font-size: 12px; white-space: nowrap; }
 .eco-list-tabs { flex-wrap: wrap; }
 .eco-list-filters { display: flex; align-items: end; flex-wrap: wrap; gap: 14px; padding: 0 22px 20px; }
-.eco-list-filters label { display: grid; gap: 7px; color: #53606b; font-size: 11px; font-weight: 600; }
+.eco-list-filters label { display: grid; gap: 7px; color: var(--label); font-size: 11px; font-weight: 600; }
 .eco-list-filters label:first-child { flex: 1; min-width: 220px; }
 .eco-list-filters input, .eco-list-filters select { min-height: 42px; width: 100%; padding: 9px 12px; border: 1px solid var(--line); border-radius: 6px; background: #f9fafb; color: var(--ink); font: inherit; font-size: 13px; }
 .eco-worklist td { font-size: 13px; }
@@ -54,7 +54,7 @@
 .eco-worklist td:last-child { text-align: right; }
 .eco-worklist a { display: inline-flex; align-items: center; gap: 12px; white-space: nowrap; text-decoration: none; }
 .eco-worklist tbody tr:hover { background: #fafcfb; }
-.eco-urgent { display: inline-block; margin-top: 7px; color: #a33b16; font-size: 11px; font-weight: 600; }
+.eco-urgent { display: inline-block; margin-top: 7px; color: var(--danger); font-size: 11px; font-weight: 600; }
 .eco-list-footer { padding: 16px 22px; color: var(--muted); font-size: 11px; }
 .eco-workspace .lab-empty .lab-secondary-button { margin-top: 18px; }
 .eco-modal-intro { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 18px; }
@@ -74,7 +74,7 @@
 /* Flujo del estudio (detalle → registro → informe) con los patrones de Laboratorio */
 .eco-recorrido .lab-step > span[aria-hidden] { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: #eef1f4; font-size: 10px; font-weight: 600; }
 .eco-recorrido .lab-step--done > span[aria-hidden] { background: var(--brand); color: #fff; }
-.eco-recorrido .lab-step--current > span[aria-hidden] { background: #285a9e; color: #fff; }
+.eco-recorrido .lab-step--current > span[aria-hidden] { background: var(--info); color: #fff; }
 .eco-avance { max-width: 420px; margin-top: 4px; }
 .eco-registro .eco-seccion { margin-top: 0; }
 .eco-registro .eco-seccion header { margin-bottom: 16px; }
@@ -91,10 +91,10 @@
 .eco-adjuntos li { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 12px; }
 .eco-adjuntos li small { color: var(--muted); font-size: 11px; }
 .eco-adjuntos li small.es-nuevo { color: #8a5a00; }
-.eco-acciones-pie { position: sticky; bottom: 0; z-index: 2; align-items: center; padding: 14px 0; background: var(--surface, #f7f8fa); }
+.eco-acciones-pie { position: sticky; bottom: 0; z-index: 2; align-items: center; padding: 14px 0; background: var(--surface, var(--surface)); }
 .eco-estado-guardado { margin-right: auto; color: var(--muted); font-size: 12px; }
 .eco-estado-guardado.es-pendiente { color: #8a5a00; font-weight: 600; }
-.eco-previa { padding-top: 8px; padding-bottom: 8px; background: #f7f8fa; }
+.eco-previa { padding-top: 8px; padding-bottom: 8px; background: var(--surface); }
 .eco-previa .eco-documento { margin: 16px 0; background: #fff; }
 .eco-informe-estado { margin: 0; color: var(--muted); font-size: 13px; }
 .eco-informe-acciones { display: flex; flex-wrap: wrap; gap: 10px; }

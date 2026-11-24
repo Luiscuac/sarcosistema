@@ -7,7 +7,6 @@
 .lab-eyebrow { margin: 0 0 9px; color: var(--brand); font-size: 10px; font-weight: 600; letter-spacing: .09em; }
 .lab-title-row h1 { margin: 0; padding-left: 12px; border-left: 3px solid var(--brand); font-size: 22px; font-weight: 600; line-height: 1.25; }
 .lab-intro { margin: 10px 0 0 15px; color: var(--muted); font-size: 12px; }
-.lab-view-label { padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--muted); font-size: 11px; white-space: nowrap; }
 .lab-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
 .lab-summary-card { min-height: 78px; width: 100%; font: inherit; cursor: pointer; transition: border-color .15s ease, background-color .15s ease; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 6px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 6px; background: #fff; text-align: center; }
 .lab-summary-card span { color: var(--muted); font-size: 12px; font-weight: 500; }
@@ -52,7 +51,6 @@
   .lab-title-row { display: block; }
   .lab-title-actions { justify-items: start; margin: 18px 0 0 15px; }
   .lab-title-row h1 { font-size: 20px; }
-  .lab-view-label { display: inline-block; margin-top: 16px; }
   .lab-summary { gap: 10px; }
   .lab-summary-card { min-height: 82px; padding: 10px; }
   .lab-list-toolbar { display: block; }
@@ -73,8 +71,6 @@
 .lab-created-notice a { text-decoration: none; }
 .lab-created-notice > button { border: 0; background: transparent; color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; }
 
-
-
 /* Botones secundarios y chips */
 .lab-secondary-button { min-height: 38px; padding: 0 14px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--brand); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
 .lab-secondary-button:hover { border-color: var(--brand); background: var(--brand-hover-soft); }
@@ -85,4 +81,3 @@
 .lab-chip-field { display: grid; gap: 6px; align-content: start; justify-items: start; }
 
 @media (prefers-reduced-motion: reduce) { .lab-summary-card { transition: none; } }
-

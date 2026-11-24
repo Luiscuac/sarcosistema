@@ -37,7 +37,7 @@
 @media (max-width: 700px) { .rx-avisos li { grid-template-columns: 1fr; } }
 
 /* ===== Asistente de IA: pantalla del estudio (rediseño) ===== */
-.rx-ia { --ia-tinta: #17252b; --ia-tenue: #56646c; --ia-linea: #dde3e6; --ia-marca: var(--brand, #0f766e); --ia-marca-suave: #e6f2f0;
+.rx-ia { --ia-tinta: #17252b; --ia-tenue: #56646c; --ia-linea: #dde3e6; --ia-marca: var(--brand, var(--brand)); --ia-marca-suave: #e6f2f0;
   --ia-alta: #a6351c; --ia-alta-suave: #fbe9e4; --ia-media: #855600; --ia-media-suave: #fcf1dc; --ia-baja: #2c6a6d; --ia-baja-suave: #e5f1f1;
   display: grid; gap: 16px; color: var(--ia-tinta); font-size: 14px; line-height: 1.5; }
 .rx-ia-cabecera { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
@@ -160,7 +160,7 @@
 .rx-visor-grupo .rx-visor-btn { border: 0; }
 .rx-visor-barra > .rx-visor-btn, .rx-visor-ajustes > summary { border-color: rgba(255,255,255,.14); }
 .rx-visor-btn:hover { background: rgba(255,255,255,.08); }
-.rx-visor-btn[aria-pressed="true"] { background: #e6f2f0; color: #0f766e; }
+.rx-visor-btn[aria-pressed="true"] { background: #e6f2f0; color: var(--brand); }
 .rx-visor-btn:focus-visible, .rx-visor-barra select:focus-visible, .rx-visor-barra input:focus-visible { outline: 2px solid #5fb3ab; outline-offset: 2px; }
 .rx-visor-ajustes { position: relative; }
 .rx-visor-ajustes > summary::-webkit-details-marker { display: none; }
