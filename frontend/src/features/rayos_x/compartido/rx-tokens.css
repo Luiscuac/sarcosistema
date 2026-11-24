@@ -1,21 +1,23 @@
 /*
- * Tokens de diseño del módulo de Rayos X (contrato compartido).
+ * Tokens de Rayos X. Superficies, texto, marca, radios y espacios apuntan a los del sistema
+ * (shared/styles/tokens.css) para verse como Laboratorio; solo el visor oscuro (negatoscopio)
+ * y los niveles de prioridad de la IA son propios de Rayos X.
  * Se aplican a la vista del médico (.rx-page) y a la bandeja de imágenes (.img-page).
  * Usa estas variables en lugar de colores literales. No agregues fuentes externas: el sistema funciona sin internet.
  */
 .rx-page, .img-page {
   /* Superficies */
-  --rx-fondo: #f3f5f6;
-  --rx-superficie: #ffffff;
-  --rx-superficie-2: #f7f9f9;
-  --rx-linea: #dde3e6;
+  --rx-fondo: var(--surface);
+  --rx-superficie: var(--surface-card);
+  --rx-superficie-2: var(--surface);
+  --rx-linea: var(--line);
   --rx-linea-fuerte: #c3cdd1;
   /* Texto (contraste ≥ 4.5:1 sobre blanco) */
-  --rx-tinta: #17252b;
-  --rx-tenue: #56646c;
+  --rx-tinta: var(--ink);
+  --rx-tenue: var(--muted);
   /* Marca y acción */
-  --rx-marca: var(--brand, #0f766e);
-  --rx-marca-suave: #e6f2f0;
+  --rx-marca: var(--brand);
+  --rx-marca-suave: var(--brand-soft);
   /* Negatoscopio: entorno oscuro del visor */
   --rx-negatoscopio: #121b1f;
   --rx-negatoscopio-borde: #26343a;
@@ -33,14 +35,14 @@
   --rx-neutro: #5b6670;
   --rx-neutro-suave: #eef1f2;
   /* Forma y ritmo */
-  --rx-radio-s: 4px;
-  --rx-radio-m: 8px;
-  --rx-espacio-1: 4px;
-  --rx-espacio-2: 8px;
-  --rx-espacio-3: 12px;
-  --rx-espacio-4: 16px;
-  --rx-espacio-5: 24px;
-  --rx-espacio-6: 32px;
+  --rx-radio-s: var(--radius);
+  --rx-radio-m: var(--radius);
+  --rx-espacio-1: var(--space-1);
+  --rx-espacio-2: var(--space-2);
+  --rx-espacio-3: var(--space-3);
+  --rx-espacio-4: var(--space-4);
+  --rx-espacio-5: var(--space-5);
+  --rx-espacio-6: var(--space-6);
   /* Tipografía: Inter (ya instalada) con escala 12/13/15/18/24 */
   --rx-texto-xs: 12px;
   --rx-texto-s: 13px;

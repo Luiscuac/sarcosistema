@@ -5,9 +5,10 @@ import RayosXLayout from '../../compartido/RayosXLayout.jsx'
 import '../gestion.css'
 import { BotonEnlace } from '../../../../shared/ui/Boton.jsx'
 import { mensajeError } from '../../../../shared/utils/mensajeError.js'
+import { formatearFechaHora } from '../../../../shared/utils/formatearFecha.js'
 
 const LATERALIDAD = { derecha: 'Derecha', izquierda: 'Izquierda', bilateral: 'Bilateral' }
-const fecha = (dato) => dato && !Number.isNaN(new Date(dato).getTime()) ? new Date(dato).toLocaleString('es-BO', { dateStyle: 'long', timeStyle: 'short' }) : 'Fecha no registrada'
+const fecha = dato => formatearFechaHora(dato, 'Fecha no registrada')
 
 export default function HistorialPacienteRxPage({ usuario, logout }) {
   const { pacienteId } = useParams()

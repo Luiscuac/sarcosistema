@@ -17,6 +17,8 @@ import NuevaSolicitudRxPage from '../features/rayos_x/gestion/pages/NuevaSolicit
 import SolicitudRayosXPage from '../features/rayos_x/gestion/pages/SolicitudRayosXPage.jsx'
 import HistorialPacienteRxPage from '../features/rayos_x/gestion/pages/HistorialPacienteRxPage.jsx'
 import EstudioRayosXPage from '../features/rayos_x/estudio/pages/EstudioRayosXPage.jsx'
+import AdquisicionRayosXPage from '../features/rayos_x/estudio/pages/AdquisicionRayosXPage.jsx'
+import InformeRayosXPage from '../features/rayos_x/estudio/pages/InformeRayosXPage.jsx'
 import InformeImpresoRxPage from '../features/rayos_x/estudio/pages/InformeImpresoRxPage.jsx'
 import EnfermeriaPage from '../features/enfermeria/pages/EnfermeriaPage.jsx'
 import EnfermeriaInformePage from '../features/enfermeria/pages/EnfermeriaInformePage.jsx'
@@ -28,11 +30,6 @@ const ROLES_RAYOS_X = ['rayos_x']
 function RedireccionEstudioEco() {
   const { estudioId } = useParams()
   return <Navigate to={`/ecografia/estudios/${estudioId}`} replace />
-}
-
-function RedireccionEstudioRx() {
-  const { estudioId } = useParams()
-  return <Navigate to={`/rayos-x/gestion/estudios/${estudioId}?seccion=informe`} replace />
 }
 
 const router = createBrowserRouter(createRoutesFromElements(
@@ -111,14 +108,14 @@ const router = createBrowserRouter(createRoutesFromElements(
           ['/rayos-x/gestion/solicitudes/:solicitudId', SolicitudRayosXPage],
           ['/rayos-x/gestion/pacientes/:pacienteId', HistorialPacienteRxPage],
           ['/rayos-x/gestion/estudios/:estudioId', EstudioRayosXPage],
+          ['/rayos-x/gestion/estudios/:estudioId/adquisicion', AdquisicionRayosXPage],
+          ['/rayos-x/gestion/estudios/:estudioId/informe', InformeRayosXPage],
           ['/rayos-x/gestion/estudios/:estudioId/impresion', InformeImpresoRxPage],
         ].map(([path, Pagina]) => <Route key={path} path={path} element={
           <ProtectedRoute rolesPermitidos={ROLES_RAYOS_X}>
             {({ usuario, logout }) => <Pagina usuario={usuario} logout={logout} />}
           </ProtectedRoute>
         } />)}
-        {/* Ruta anterior del informe de texto libre: ahora vive en el espacio de trabajo del estudio. */}
-        <Route path="/rayos-x/gestion/estudios/:estudioId/informe" element={<RedireccionEstudioRx />} />
         <Route path="/imagenes" element={<Navigate to="/ecografia" replace />} />
         <Route path="/imagenes/rayos-x-informes" element={<Navigate to="/rayos-x/gestion" replace />} />
         <Route path="/imagenes/estudios/:estudioId/informe" element={<RedireccionEstudioEco />} />

@@ -9,6 +9,7 @@ import '../gestion.css'
 import { avisoPatronTb } from '../../asistente/analisis.js'
 import { BotonEnlace } from '../../../../shared/ui/Boton.jsx'
 import { mensajeError } from '../../../../shared/utils/mensajeError.js'
+import { formatearFechaHora } from '../../../../shared/utils/formatearFecha.js'
 
 const ACTUALIZACION_MS = 45_000
 const ETAPAS = [
@@ -29,11 +30,6 @@ function categoriaVisible(codigo) {
   return CATEGORIAS[codigo] ?? codigo.replaceAll('_', ' ').replace(/^./, (letra) => letra.toLocaleUpperCase())
 }
 
-function fechaVisible(fecha) {
-  if (!fecha) return 'Fecha no registrada'
-  const valor = new Date(fecha)
-  return Number.isNaN(valor.getTime()) ? 'Fecha no registrada' : valor.toLocaleString('es-BO', { dateStyle: 'medium', timeStyle: 'short' })
-}
 
 // Siguiente paso del estudio según su etapa (mismo patrón que la bandeja de Laboratorio).
 const SIGUIENTE_PASO = {
@@ -55,7 +51,7 @@ function FilaEstudio({ solicitud, estudio }) {
       <span>{[LATERALIDAD[estudio.lateralidad], `${imagenes} ${imagenes === 1 ? 'imagen' : 'imágenes'}`].filter(Boolean).join(' · ')}</span>
       {urgente && <em className="rxg-urgente">Urgente</em>}
     </td>
-    <td className="rxg-celda-medico"><span>{solicitud.medico_solicitante || 'No registrado'}</span><small>{fechaVisible(solicitud.fecha_solicitud)}</small></td>
+    <td className="rxg-celda-medico"><span>{solicitud.medico_solicitante || 'No registrado'}</span><small>{formatearFechaHora(solicitud.fecha_solicitud, 'Fecha no registrada')}</small></td>
     <td><div className="rxg-insignias"><span className={`rxg-etapa rxg-etapa--${estudio.etapa}`}>{estudio.etapa_texto}</span>{estudio.triaje && <span className={`rxg-triaje rxg-triaje--${estudio.triaje.nivel ?? 'neutro'}`}>IA: {estudio.triaje.nivel ?? 'sin nivel'}</span>}{(() => { const tb = avisoPatronTb(estudio.triaje?.patron_tb, estudio.triaje?.nivel); return tb && <span className="rxg-triaje rxg-triaje--tb" title={`${tb.titulo}. ${tb.texto} Señal experimental; si no aparece, no descarta TB.`}>{tb.corto}</span> })()}</div></td>
     <td className="lab-row-action"><Link className="lab-next-action" to={`/rayos-x/gestion/estudios/${estudio.estudio_id}`}>{SIGUIENTE_PASO[estudio.etapa] ?? 'Abrir estudio'}</Link></td>
   </tr>

@@ -4,6 +4,9 @@ import ConfirmarAccion from '../../../../shared/ui/ConfirmarAccion.jsx'
 import { useNotificacion } from '../../../../shared/notifications/NotificationContext.jsx'
 import { adjuntarInformeExterno, asignarProyeccion, completarAdquisicion, descargarInformeExterno, guardarAdquisicion, pendientesDeError, retirarImagen, retirarInformeExterno, subirImagenes } from '../../compartido/api/radiologiaApi.js'
 import GaleriaImagenes from './GaleriaImagenes.jsx'
+import PanelImagenes from './PanelImagenes.jsx'
+import ResumenAvance from '../../../../shared/ui/ResumenAvance.jsx'
+import { resumenAdquisicion } from '../utils/flujo.js'
 import { parametrosANumeros, tamanoLegible, validarArchivoImagen } from '../utils/informe.js'
 import Boton from '../../../../shared/ui/Boton.jsx'
 import { mensajeError } from '../../../../shared/utils/mensajeError.js'
@@ -48,7 +51,7 @@ function InformesExternos({ estudioId, informes, editable, actualizar }) {
     if (pestana) pestana.opener = null
     try { const blob = await descargarInformeExterno(externo.id); const url = URL.createObjectURL(blob); if (pestana) pestana.location = url; else window.open(url, '_blank', 'noopener,noreferrer'); setTimeout(() => URL.revokeObjectURL(url), 60000) } catch (e) { pestana?.close(); notificar(mensajeError(e), 'error') }
   }
-  return <details className="rxe-bloque rxe-desplegable" open={abierto} onToggle={e => setAbierto(e.currentTarget.open)}>
+  return <details className="lab-area-study rxe-desplegable" open={abierto} onToggle={e => setAbierto(e.currentTarget.open)}>
     <summary><h2>Informes externos</h2><span>{informes.length ? `${informes.length} adjunto${informes.length === 1 ? '' : 's'}` : 'Opcional'}</span></summary>
     {editable && <form className="rxe-form-grid" onSubmit={e => { e.preventDefault(); adjuntar.mutate() }}>
       <label>PDF *<input type="file" accept="application/pdf,.pdf" required onChange={e => setArchivo(e.target.files[0] || null)} /></label>
@@ -97,27 +100,39 @@ export default function SeccionAdquisicion({ estudioId, detalle }) {
   const ocupado = guardar.isPending || completar.isPending || subir.isPending || asignar.isPending || retirar.isPending
   const proyecciones = detalle.config?.proyecciones || []
   const alternar = codigo => setForm(f => ({ ...f, proyecciones_realizadas: f.proyecciones_realizadas.includes(codigo) ? f.proyecciones_realizadas.filter(x => x !== codigo) : [...f.proyecciones_realizadas, codigo] }))
-  return <div className="rxe-seccion">
-    <section className="rxe-bloque"><h2>Registro técnico</h2>{!editableRegistro && <p className="rxe-estado">Registro en modo de solo lectura.</p>}
-      <form className="rxe-form-grid" onSubmit={e => { e.preventDefault(); guardar.mutate() }}>
-        <fieldset className="rxe-span"><legend>Proyecciones realizadas</legend>{proyecciones.map(p => <label className="rxe-check" key={p.codigo}><input type="checkbox" checked={form.proyecciones_realizadas.includes(p.codigo)} disabled={!editableRegistro || ocupado} onChange={() => alternar(p.codigo)} />{p.nombre}</label>)}
-          {editableRegistro && <Boton variante="secundario" onClick={() => setForm({ ...form, proyecciones_realizadas: [...(detalle.estudio.detalle?.proyecciones_solicitadas || [])] })}>Usar las solicitadas</Boton>}</fieldset>
-        {detalle.config?.requiere_lateralidad && <label>Lateralidad realizada<select value={form.lateralidad_realizada || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, lateralidad_realizada: e.target.value })}><option value="">Seleccionar</option><option value="derecha">Derecha</option><option value="izquierda">Izquierda</option>{detalle.config.permite_bilateral && <option value="bilateral">Bilateral</option>}</select></label>}
-        <label>Posición del paciente<select value={form.posicion_paciente || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, posicion_paciente: e.target.value })}><option value="">Seleccionar</option>{Object.entries(POSICIONES).map(([x, nombre]) => <option key={x} value={x}>{nombre}</option>)}</select></label>
-        <label>Fecha y hora<input type="datetime-local" value={form.fecha_hora_adquisicion || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, fecha_hora_adquisicion: e.target.value })} /></label>
-        <label>Operador<input value={form.operador_nombre || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, operador_nombre: e.target.value })} /></label>
-        <label>Calidad<select value={form.calidad || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, calidad: e.target.value })}><option value="">Seleccionar</option><option value="adecuada">Adecuada</option><option value="limitada">Limitada</option><option value="no_diagnostica">No diagnóstica</option></select></label>
-        <label className="rxe-span">Observaciones<textarea value={form.observaciones || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, observaciones: e.target.value })} /></label>
-        {editableRegistro && <div className="rxe-acciones rxe-span"><Boton variante="secundario" type="submit" disabled={ocupado}>Guardar registro</Boton></div>}
-      </form>
-    </section>
-    <section className="rxe-bloque"><h2>Imágenes</h2>{editableImagenes && <ZonaCarga proyecciones={proyecciones} disabled={ocupado} onSubir={(archivos, proys, fin) => subir.mutate({ archivos, proyecciones: proys, fin })} />}
-      <GaleriaImagenes imagenes={detalle.imagenes || []} proyecciones={proyecciones} editable={editableImagenes} ocupado={ocupado} onAsignar={(id, codigo) => asignar.mutate({ id, codigo })} onRetirar={(id, motivo, fin) => motivo.trim() && retirar.mutate({ id, motivo: motivo.trim(), fin })} />
-    </section>
-    {editableRegistro && <section className="rxe-bloque rxe-cierre"><div><h2>Completar adquisición</h2><p>Cuando el registro técnico esté guardado y las imágenes subidas, completa la adquisición para pasar al informe.</p></div>
-      <Boton disabled={ocupado} onClick={() => { setPendientes(detalle.pendientes?.adquisicion || []); if (!(detalle.pendientes?.adquisicion || []).length) completar.mutate() }}>Completar adquisición</Boton>
-      {pendientes.length > 0 && <div className="rxe-pendientes" role="alert"><strong>Pendientes antes de completar:</strong><ul>{pendientes.map(p => <li key={p}>{p}</li>)}</ul><Boton disabled={ocupado} onClick={() => completar.mutate()}>Comprobar y completar</Boton></div>}
-    </section>}
-    <InformesExternos estudioId={estudioId} informes={detalle.informes_externos || []} editable={Boolean(detalle.permisos.adjuntar_externo)} actualizar={actualizar} />
+  const resumen = resumenAdquisicion(form, detalle.config || {}, (detalle.imagenes || []).length)
+  const motivo = pendientes.length ? pendientes.join(' ') : resumen.faltan.length ? `Para completar falta: ${resumen.faltan.join(' ')}` : null
+  const [confirmar, setConfirmar] = useState(false)
+  return <div className="rxe-workspace">
+    <PanelImagenes imagenes={detalle.imagenes || []} />
+    <div className="rxe-work-form">
+      {editableRegistro && <ResumenAvance resumen={resumen} motivoBloqueo={motivo} />}
+      <section className="lab-area-study"><header><h2>Registro técnico</h2>{!editableRegistro && <small>Solo lectura</small>}</header>
+        <form id="rx-registro" className="rxe-form-grid" onSubmit={e => { e.preventDefault(); guardar.mutate() }}>
+          <fieldset className="rxe-span"><legend>Proyecciones realizadas *</legend>{proyecciones.map(p => <label className="rxe-check" key={p.codigo}><input type="checkbox" checked={form.proyecciones_realizadas.includes(p.codigo)} disabled={!editableRegistro || ocupado} onChange={() => alternar(p.codigo)} />{p.nombre}</label>)}
+            {editableRegistro && <Boton variante="secundario" onClick={() => setForm({ ...form, proyecciones_realizadas: [...(detalle.estudio.detalle?.proyecciones_solicitadas || [])] })}>Usar las solicitadas</Boton>}</fieldset>
+          {detalle.config?.requiere_lateralidad && <label>Lateralidad realizada *<select value={form.lateralidad_realizada || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, lateralidad_realizada: e.target.value })}><option value="">Seleccionar</option><option value="derecha">Derecha</option><option value="izquierda">Izquierda</option>{detalle.config.permite_bilateral && <option value="bilateral">Bilateral</option>}</select></label>}
+          <label>Posición del paciente<select value={form.posicion_paciente || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, posicion_paciente: e.target.value })}><option value="">Seleccionar</option>{Object.entries(POSICIONES).map(([x, nombre]) => <option key={x} value={x}>{nombre}</option>)}</select></label>
+          <label>Fecha y hora *<input type="datetime-local" value={form.fecha_hora_adquisicion || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, fecha_hora_adquisicion: e.target.value })} /></label>
+          <label>Operador<input value={form.operador_nombre || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, operador_nombre: e.target.value })} /></label>
+          <label>Calidad<select value={form.calidad || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, calidad: e.target.value })}><option value="">Seleccionar</option><option value="adecuada">Adecuada</option><option value="limitada">Limitada</option><option value="no_diagnostica">No diagnóstica</option></select></label>
+          <label className="rxe-span">Observaciones<textarea value={form.observaciones || ''} disabled={!editableRegistro || ocupado} onChange={e => setForm({ ...form, observaciones: e.target.value })} /></label>
+        </form>
+      </section>
+      <section className="lab-area-study"><header><h2>Imágenes *</h2><small>{(detalle.imagenes || []).length} en el estudio</small></header>
+        {editableImagenes && <ZonaCarga proyecciones={proyecciones} disabled={ocupado} onSubir={(archivos, proys, fin) => subir.mutate({ archivos, proyecciones: proys, fin })} />}
+        <GaleriaImagenes imagenes={detalle.imagenes || []} proyecciones={proyecciones} editable={editableImagenes} ocupado={ocupado} onAsignar={(id, codigo) => asignar.mutate({ id, codigo })} onRetirar={(id, motivo, fin) => motivo.trim() && retirar.mutate({ id, motivo: motivo.trim(), fin })} />
+      </section>
+      <InformesExternos estudioId={estudioId} informes={detalle.informes_externos || []} editable={Boolean(detalle.permisos.adjuntar_externo)} actualizar={actualizar} />
+      {editableRegistro && <footer className="lab-area-result-actions rxe-pie">
+        <span className="lab-form-hint">Guarda el registro antes de salir. Al completar, el estudio pasa al informe.</span>
+        <Boton variante="secundario" type="submit" form="rx-registro" disabled={ocupado}>{guardar.isPending ? 'Guardando…' : 'Guardar registro'}</Boton>
+        <Boton disabled={ocupado || resumen.faltan.length > 0} title={motivo ?? undefined} onClick={() => setConfirmar(true)}>Completar adquisición</Boton>
+      </footer>}
+    </div>
+    {confirmar && <ConfirmarAccion titulo="Completar adquisición" textoConfirmar="Completar adquisición" textoCancelar="Seguir revisando" pendiente={completar.isPending}
+      onCancelar={() => setConfirmar(false)} onConfirmar={() => completar.mutate(undefined, { onSettled: () => setConfirmar(false) })}>
+      <p>Se guardará el registro técnico y el estudio pasará a <strong>pendiente de informe</strong> con {(detalle.imagenes || []).length} {(detalle.imagenes || []).length === 1 ? 'imagen' : 'imágenes'}.</p>
+    </ConfirmarAccion>}
   </div>
 }

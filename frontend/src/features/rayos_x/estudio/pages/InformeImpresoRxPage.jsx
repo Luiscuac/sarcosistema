@@ -57,7 +57,7 @@ export function DocumentoInformeRx({ detalle, incluirImagenes }) {
 export default function InformeImpresoRxPage({ usuario, logout }) {
   const { estudioId } = useParams(); const [incluir, setIncluir] = useState(false)
   const { data: detalle, isLoading, isError, error } = useQuery({ queryKey: ['radiologia', 'estudio', estudioId], queryFn: ({ signal }) => obtenerEstudio(estudioId, signal) })
-  const navegacion = { volverA: `/rayos-x/gestion/estudios/${estudioId}?seccion=informe`, textoVolver: 'Volver al estudio', migas: [{ texto: 'Rayos X', ruta: '/rayos-x/gestion' }, { texto: detalle?.estudio?.referencia_estudio || 'Estudio', ruta: `/rayos-x/gestion/estudios/${estudioId}` }, { texto: 'Informe impreso' }] }
+  const navegacion = { volverA: `/rayos-x/gestion/estudios/${estudioId}`, textoVolver: 'Volver al estudio', migas: [{ texto: 'Rayos X', ruta: '/rayos-x/gestion' }, { texto: detalle?.estudio?.referencia_estudio || 'Estudio', ruta: `/rayos-x/gestion/estudios/${estudioId}` }, { texto: 'Informe impreso' }] }
   return <RayosXLayout usuario={usuario} logout={logout} navegacion={navegacion}><div className="lab-report-controls rxe-controles-impresión"><label><input type="checkbox" checked={incluir} onChange={e => setIncluir(e.target.checked)} /> Incluir imágenes como anexo</label><Boton disabled={!detalle} onClick={() => window.print()}>Imprimir o guardar PDF</Boton></div>
     {isLoading && <p>Cargando informe...</p>}{isError && <p role="alert" className="lab-report-error">{mensajeError(error, 'No se pudo cargar el informe.')}</p>}{detalle && <DocumentoInformeRx detalle={detalle} incluirImagenes={incluir} />}</RayosXLayout>
 }

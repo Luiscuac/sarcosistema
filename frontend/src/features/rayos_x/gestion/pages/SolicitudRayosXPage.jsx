@@ -5,10 +5,11 @@ import RayosXLayout from '../../compartido/RayosXLayout.jsx'
 import '../gestion.css'
 import { BotonEnlace } from '../../../../shared/ui/Boton.jsx'
 import { mensajeError } from '../../../../shared/utils/mensajeError.js'
+import { formatearFechaHora } from '../../../../shared/utils/formatearFecha.js'
 
 const LATERALIDAD = { derecha: 'Derecha', izquierda: 'Izquierda', bilateral: 'Bilateral' }
 const valor = (dato) => dato || 'No registrado'
-const fecha = (dato) => dato && !Number.isNaN(new Date(dato).getTime()) ? new Date(dato).toLocaleString('es-BO', { dateStyle: 'long', timeStyle: 'short' }) : 'No registrada'
+const fecha = dato => formatearFechaHora(dato, 'No registrada')
 
 export default function SolicitudRayosXPage({ usuario, logout }) {
   const { solicitudId } = useParams()

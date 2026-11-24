@@ -5,8 +5,6 @@ const base = '/imagenes/radiologia'
 const datos = async promesa => (await promesa).data
 
 export const obtenerCatalogo = (todos = false) => datos(api.get(`${base}/catalogo`, { params: todos ? { todos: true } : {} }))
-export const cambiarEstudioCatalogo = (tipoEstudioId, cambios) => datos(api.patch(`${base}/catalogo/estudios/${tipoEstudioId}`, cambios))
-
 export const buscarPacientes = (termino, signal) => datos(api.get(`${base}/pacientes`, { params: { termino }, signal }))
 export const crearPaciente = paciente => datos(api.post(`${base}/pacientes`, paciente))
 export const buscarMedicos = (termino, signal) => datos(api.get(`${base}/medicos`, { params: { termino }, signal }))
@@ -55,6 +53,5 @@ export const entregarEstudio = (estudioId, entregadoA) => datos(api.post(`${base
 
 // Binarios de imagen (rutas existentes). `vista` devuelve PNG de 8 bits y sirve también para DICOM.
 export const obtenerVistaImagen = (archivoId, signal) => datos(api.get(`/imagenes/archivos/${archivoId}/vista`, { responseType: 'blob', signal }))
-export const obtenerArchivoOriginal = (archivoId, signal) => datos(api.get(`/imagenes/archivos/${archivoId}`, { responseType: 'blob', signal }))
 
 export const pendientesDeError = error => error?.response?.data?.detail?.pendientes || []
