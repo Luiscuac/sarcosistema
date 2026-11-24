@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.pool import NullPool
 
 from app.config.settings import settings
-from app.imagenes.infrastructure.persistence.repository import EstudiosRepository
+from app.imagenes.infrastructure.persistence.repositorio_asistente import EstudiosRepository
 
 
 @pytest.fixture

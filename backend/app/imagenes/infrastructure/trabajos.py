@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.imagenes.application.analizar_estudio import AnalizarEstudio, validar_snapshot
 from app.imagenes.domain.vision import ErrorVision, VisionConfig
 from app.imagenes.infrastructure.archivos import leer_archivo_local
-from app.imagenes.infrastructure.persistence.repository import EstudiosRepository
+from app.imagenes.infrastructure.persistence.repositorio_asistente import EstudiosRepository
 
 
 async def ejecutar_triaje(trabajo, sesiones, triador, repositorio=EstudiosRepository, vigente=None, liderazgo=None):
@@ -171,7 +171,9 @@ def construir_gestor():
     raices = raices_archivos()
     vision = AnalizadorTorax(VisionConfig(base/'.models/radiologia',
         min_free_bytes=settings.radiology_vision_min_free_mib*1024**2,
-        mascara_pulmonar=settings.radiology_lung_mask_enabled))
+        mascara_pulmonar=settings.radiology_lung_mask_enabled,
+        ensamble_tb=settings.radiology_tb_ensemble_enabled,
+        umbral_tb=settings.radiology_tb_umbral_compatible))
     rag = ServicioRag(base/'.models/rag-torax',base/'.datasets/rag-torax',SessionLocal)
     leer = lambda archivo: leer_archivo_local(raices,archivo)[0]  # noqa: E731
     analizador = AnalizarEstudio(vision,rag,leer,settings.radiology_score_threshold)

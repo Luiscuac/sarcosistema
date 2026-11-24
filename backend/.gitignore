@@ -9,3 +9,4 @@ venv/
 .datasets/
 .radiologia-resultados/
 .storage/
+.venv-gpu/

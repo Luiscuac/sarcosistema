@@ -6,7 +6,8 @@ import pytest
 
 from app.imagenes.application.use_cases.solicitar_ecografia import SolicitarEcografia
 from app.imagenes.application.use_cases.trabajar_estudio import GuardarInforme, PublicarInforme
-from app.imagenes.domain.entities import InformeImagen, SolicitudEcografia
+from datetime import datetime, timezone
+from app.imagenes.domain.entities import ArchivoImagen, InformeImagen, SolicitudEcografia
 from app.imagenes.domain.errors import (
     ArchivoVacio,
     EstudioNoEncontrado,
@@ -185,8 +186,13 @@ async def test_no_se_sobreescribe_un_informe_ya_publicado():
 
 # ---------- publicacion ----------
 
-def _con_informe(repo, estado='borrador'):
-    repo.informe = InformeImagen(1, 3, 1, 'texto', estado, None, None, ())
+def _archivo(mime):
+    return ArchivoImagen(1, 'eco.png', mime, 10, 'a' * 64, datetime.now(timezone.utc), 'x')
+
+
+def _con_informe(repo, estado='borrador', archivos=None):
+    archivos = (_archivo('image/png'),) if archivos is None else archivos
+    repo.informe = InformeImagen(1, 3, 1, 'texto', estado, None, None, archivos)
     repo.publicado = estado == 'publicado'
     return repo
 
@@ -195,6 +201,15 @@ async def test_publicar_devuelve_el_informe_publicado():
     repo = _con_informe(RepositorioEspia())
     informe = await PublicarInforme(repo).ejecutar(3, 7)
     assert informe.estado == 'publicado'
+
+
+async def test_publicar_exige_al_menos_una_imagen_del_estudio():
+    for archivos in ((), (_archivo('application/pdf'),)):
+        repo = _con_informe(RepositorioEspia(), archivos=archivos)
+        with pytest.raises(InformeSinContenido, match='al menos una imagen'):
+            await PublicarInforme(repo).ejecutar(3, 7)
+    repo = _con_informe(RepositorioEspia(), archivos=(_archivo('application/dicom'),))
+    assert (await PublicarInforme(repo).ejecutar(3, 7)).estado == 'publicado'
 
 
 async def test_publicar_sin_informe_previo_se_rechaza():

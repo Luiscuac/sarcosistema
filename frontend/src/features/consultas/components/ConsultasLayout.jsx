@@ -18,7 +18,7 @@ export default function ConsultasLayout({ usuario, logout, children, area = 'con
       <button className="med-signout" type="button" onClick={logout}>Cerrar sesión</button>
     </aside>
     <div className="med-main">
-      <header className="med-topbar"><span>{rayosX ? 'ESTUDIOS RADIOLÓGICOS' : 'CONSULTA EXTERNA'}</span><div><span className="med-session">● Sesión activa</span><strong>{usuario.identificador_acceso}</strong></div></header>
+      <header className="med-topbar"><span>{rayosX ? 'ESTUDIOS RADIOLÓGICOS' : 'CONSULTA EXTERNA'}</span><div><strong>{usuario.identificador_acceso}</strong></div></header>
       <section className="med-content">{children}</section>
     </div>
   </main>

@@ -1,5 +1,6 @@
 import CampoMedicion, { pasarAlSiguiente } from './CampoMedicion.jsx'
 import { GRUPOS, TEXTOS, avisoDeCampo, calcularImc } from '../utils/signosVitales.js'
+import Boton from '../../../shared/ui/Boton.jsx'
 
 function EscalaDolor({ valor, deshabilitado, onCambiar }) {
   const aviso = avisoDeCampo('dolor_escala', valor)
@@ -44,7 +45,7 @@ export default function FormularioAdmision({ form, edad, editando, ocupado, erro
     <div className="enf-actions">
       {editando && <button type="button" onClick={onCancelarEdicion} disabled={ocupado}>Cancelar edición</button>}
       <button type="submit" disabled={ocupado || hayErrores}>{ocupado ? 'Guardando…' : editando ? 'Guardar cambios' : 'Guardar borrador'}</button>
-      <button type="button" className="primary-button" disabled={ocupado || hayErrores} onClick={() => onGuardar(true)}>Guardar y publicar…</button>
+      <Boton disabled={ocupado || hayErrores} onClick={() => onGuardar(true)}>Guardar y publicar…</Boton>
     </div>
   </form>
 }

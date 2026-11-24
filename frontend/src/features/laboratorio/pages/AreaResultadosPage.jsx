@@ -2,19 +2,19 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { guardarBorradorArea, obtenerExamen, obtenerSolicitud, publicarResultadosArea } from '../api/laboratorioApi.js'
-import LaboratorioTopbar from '../components/LaboratorioTopbar.jsx'
-import NavegacionLab from '../components/NavegacionLab.jsx'
+import BarraSuperior from '../../../shared/ui/BarraSuperior.jsx'
+import NavegacionPagina from '../../../shared/ui/NavegacionPagina.jsx'
 import CampoResultado from '../components/resultados/CampoResultado.jsx'
 import ConfirmarPublicacion from '../components/resultados/ConfirmarPublicacion.jsx'
-import ResumenCaptura from '../components/resultados/ResumenCaptura.jsx'
+import ResumenAvance from '../../../shared/ui/ResumenAvance.jsx'
 import { useResponsableRecordado } from '../hooks/useResponsableRecordado.js'
 import { agruparPorCategoria } from '../utils/agruparSolicitudes.js'
 import { agruparPorSeccion, enfocarSiguienteCampo, motivoPublicacionBloqueada, parametrosVisibles, resumenCaptura } from '../utils/captura.js'
-import { mensajeError } from '../utils/mensajeError.js'
+import { mensajeError } from '../../../shared/utils/mensajeError.js'
 import { useAvisoCambiosSinGuardar } from '../../../shared/hooks/useAvisoCambiosSinGuardar.js'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
-import './laboratorio.css'
 import './area-resultados.css'
+import Boton from '../../../shared/ui/Boton.jsx'
 
 const SIN_RESULTADOS = []
 
@@ -122,9 +122,9 @@ export default function AreaResultadosPage({ usuario, logout }) {
 
   return <main className="lab-page">
     <div className="lab-main">
-      <LaboratorioTopbar usuario={usuario} onLogout={logout} />
+      <BarraSuperior usuario={usuario} titulo="Laboratorio" inicio="/laboratorio" onLogout={logout} />
       <section className="lab-content lab-area-results-page">
-        <NavegacionLab volverA={`/laboratorio/solicitudes/${solicitudId}`} textoVolver="Volver a la solicitud" migas={[
+        <NavegacionPagina volverA={`/laboratorio/solicitudes/${solicitudId}`} textoVolver="Volver a la solicitud" migas={[
           { texto: 'Solicitudes', ruta: '/laboratorio' },
           { texto: solicitud?.referencia ?? 'Solicitud', ruta: `/laboratorio/solicitudes/${solicitudId}` },
           { texto: area?.nombre ?? 'Resultados' },
@@ -151,7 +151,7 @@ export default function AreaResultadosPage({ usuario, logout }) {
           {todoPublicado && <p className="lab-area-published" role="status">Todos los resultados de esta área están publicados. Se muestran en modo lectura.</p>}
           {resultados.length > 0 && <form className="lab-area-result-form" onKeyDown={enfocarSiguienteCampo}
             onSubmit={(evento) => { evento.preventDefault(); guardar.mutate() }}>
-            {!todoPublicado && <ResumenCaptura resumen={resumen} motivoBloqueo={motivoBloqueo} />}
+            {!todoPublicado && <ResumenAvance resumen={resumen} motivoBloqueo={motivoBloqueo} />}
             {resultados.map((resultado) => <section className="lab-area-study" key={resultado.estudio_id}>
               <header>
                 <h2>{resultado.tipo_estudio_nombre}</h2>
@@ -179,8 +179,8 @@ export default function AreaResultadosPage({ usuario, logout }) {
             {!todoPublicado && <footer className="lab-area-result-actions">
               <span className="lab-form-hint">Consejo: pulsa Enter para pasar al siguiente campo.</span>
               <button type="submit" disabled={ocupado || responsable.trim().length < 2 || !hayCambios}>{guardar.isPending ? 'Guardando…' : 'Guardar borrador'}</button>
-              <button className="primary-button" type="button" disabled={ocupado || Boolean(motivoBloqueo)} title={motivoBloqueo ?? undefined}
-                onClick={() => setConfirmando(true)}>Revisar y publicar</button>
+              <Boton disabled={ocupado || Boolean(motivoBloqueo)} title={motivoBloqueo ?? undefined}
+                onClick={() => setConfirmando(true)}>Revisar y publicar</Boton>
             </footer>}
           </form>}
         </>}

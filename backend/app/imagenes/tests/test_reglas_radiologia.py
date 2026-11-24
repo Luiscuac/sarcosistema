@@ -105,7 +105,7 @@ def test_validar_exige_conclusion_hallazgo_e_imagenes():
 @pytest.mark.parametrize('rol,estado,etapa,esperados', [
     ('rayos_x', 'pendiente_muestra', 'pendiente_realizacion', {'registrar_adquisicion', 'gestionar_imagenes', 'adjuntar_externo', 'marcar_no_realizado'}),
     ('rayos_x', 'resultado_en_preparacion', 'borrador', {'registrar_adquisicion', 'gestionar_imagenes', 'adjuntar_externo', 'redactar_informe', 'validar'}),
-    ('rayos_x', 'publicado', 'validado', {'adjuntar_externo', 'entregar', 'agregar_adenda'}),
+    ('rayos_x', 'publicado', 'validado', {'adjuntar_externo', 'entregar'}),
     ('medico', 'publicado', 'validado', set()),
     ('rayos_x', 'no_realizado', 'no_realizado', set()),
 ])

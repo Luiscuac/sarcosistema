@@ -18,7 +18,7 @@ from app.consultas.infrastructure.ia.ollama import OllamaExtractor
 from app.config.settings import settings
 from app.imagenes.application.use_cases.solicitar_ecografia import SolicitarEcografia
 from app.imagenes.domain.errors import SolicitudInvalida
-from app.imagenes.infrastructure.persistence.repository import RepositorioImagenSql
+from app.imagenes.infrastructure.persistence.repositorio_ecografia import RepositorioImagenSql
 from app.imagenes.presentation.schemas import (
     EstudioPublicadoResponse,
     SolicitudEcografiaRequest,

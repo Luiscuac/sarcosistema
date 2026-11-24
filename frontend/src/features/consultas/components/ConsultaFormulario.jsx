@@ -16,9 +16,12 @@ import { transportarConsultaDemo } from '../../ia/transporter/api/agenteLocalApi
 import { obtenerRegistrosPublicados } from '../../enfermeria/api/enfermeriaApi.js'
 import CampoMedicion, { pasarAlSiguiente } from '../../enfermeria/components/CampoMedicion.jsx'
 import { MEDICIONES, erroresDelFormulario } from '../../enfermeria/utils/signosVitales.js'
-import ConfirmarAccion from '../../laboratorio/components/ConfirmarAccion.jsx'
+import ConfirmarAccion from '../../../shared/ui/ConfirmarAccion.jsx'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
 import { calcularEdad } from '../../../shared/utils/edad.js'
+import Boton from '../../../shared/ui/Boton.jsx'
+import { mensajeError } from '../../../shared/utils/mensajeError.js'
+import NavegacionPagina from '../../../shared/ui/NavegacionPagina.jsx'
 
 // Signos vitales: la presión se escribe en un campo ("120/80") en lugar de dos.
 const CAMPOS_VITALES = ['peso_kg', 'talla_cm', 'temperatura_c', 'frecuencia_cardiaca', 'frecuencia_respiratoria', 'presion', 'saturacion_oxigeno']
@@ -77,8 +80,7 @@ function FormularioPaciente({ id, usuario }) {
   }, onError: (err) => {
     envio.current = false
     setConfirmarFinal(false)
-    const detalle = err.response?.data?.detail
-    setError(typeof detalle === 'string' ? detalle : 'No se pudo guardar la consulta. Revisa los datos e inténtalo de nuevo.')
+    setError(mensajeError(err, 'No se pudo guardar la consulta. Revisa los datos e inténtalo de nuevo.'))
   } })
 
   const reemplazarForm = useCallback((nuevo) => {
@@ -255,6 +257,8 @@ function FormularioPaciente({ id, usuario }) {
   const camposConDatos = Object.keys(etiquetas).filter((campo) => tieneValor(form[campo])).length
 
   return <>
+    <NavegacionPagina volverA={`/consultas/pacientes/${id}`} textoVolver="Volver a la ficha"
+      migas={[{ texto: 'Pacientes', ruta: '/consultas' }, { texto: paciente.data.nombre_completo, ruta: `/consultas/pacientes/${id}` }, { texto: 'Nueva consulta' }]} />
     <div className="med-heading"><div><p className="med-eyebrow">CONSULTA EXTERNA · SOAP</p><h1>Nueva consulta</h1></div></div>
     <IdentidadPaciente paciente={paciente.data} />
     <AdmisionEnfermeria consulta={admisiones} transferencia={transferencia} onUsar={() => usarEnfermeria(admisiones.data[0], true)} />
@@ -294,7 +298,7 @@ function FormularioPaciente({ id, usuario }) {
         <button type="button" onClick={() => setSeccionActiva(actual => Math.min(grupos.length - 1, actual + 1))} disabled={seccionActiva === grupos.length - 1}>Siguiente sección</button>
         <span className="med-form-spacer" />
         <button type="button" onClick={() => navegar(`/consultas/pacientes/${id}`)}>Volver a ficha</button>
-        <button className="primary-button" type="submit" disabled={mutation.isPending || transportando || estadoIA.bloqueado}>{mutation.isPending ? 'Guardando…' : 'Finalizar y guardar consulta…'}</button>
+        <Boton type="submit" disabled={mutation.isPending || transportando || estadoIA.bloqueado}>{mutation.isPending ? 'Guardando…' : 'Finalizar y guardar consulta…'}</Boton>
       </div>
       <details className="med-experimental">
         <summary>Herramientas experimentales</summary>

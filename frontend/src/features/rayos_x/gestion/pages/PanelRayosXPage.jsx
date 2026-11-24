@@ -1,11 +1,15 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { listarEstudios, mensajeErrorApi } from '../../api/radiologiaApi.js'
-import RayosXLayout from '../../components/RayosXLayout.jsx'
+import { listarEstudios } from '../../compartido/api/radiologiaApi.js'
+import RayosXLayout from '../../compartido/RayosXLayout.jsx'
 import { agruparPorSolicitud, contarIndicadores, filtrarYOrdenarEstudios, INDICADORES_RX } from '../utils/bandejaRx.js'
 import '../../../laboratorio/components/solicitudes/solicitudes-panel.css'
 import '../gestion.css'
+import { avisoPatronTb } from '../../asistente/analisis.js'
+import { BotonEnlace } from '../../../../shared/ui/Boton.jsx'
+import { mensajeError } from '../../../../shared/utils/mensajeError.js'
+import { formatearFechaHora } from '../../../../shared/utils/formatearFecha.js'
 
 const ACTUALIZACION_MS = 45_000
 const ETAPAS = [
@@ -26,11 +30,6 @@ function categoriaVisible(codigo) {
   return CATEGORIAS[codigo] ?? codigo.replaceAll('_', ' ').replace(/^./, (letra) => letra.toLocaleUpperCase())
 }
 
-function fechaVisible(fecha) {
-  if (!fecha) return 'Fecha no registrada'
-  const valor = new Date(fecha)
-  return Number.isNaN(valor.getTime()) ? 'Fecha no registrada' : valor.toLocaleString('es-BO', { dateStyle: 'medium', timeStyle: 'short' })
-}
 
 // Siguiente paso del estudio según su etapa (mismo patrón que la bandeja de Laboratorio).
 const SIGUIENTE_PASO = {
@@ -52,8 +51,8 @@ function FilaEstudio({ solicitud, estudio }) {
       <span>{[LATERALIDAD[estudio.lateralidad], `${imagenes} ${imagenes === 1 ? 'imagen' : 'imágenes'}`].filter(Boolean).join(' · ')}</span>
       {urgente && <em className="rxg-urgente">Urgente</em>}
     </td>
-    <td className="rxg-celda-medico"><span>{solicitud.medico_solicitante || 'No registrado'}</span><small>{fechaVisible(solicitud.fecha_solicitud)}</small></td>
-    <td><div className="rxg-insignias"><span className={`rxg-etapa rxg-etapa--${estudio.etapa}`}>{estudio.etapa_texto}</span>{estudio.triaje && <span className={`rxg-triaje rxg-triaje--${estudio.triaje.nivel ?? 'neutro'}`}>IA: {estudio.triaje.nivel ?? 'sin nivel'}</span>}</div></td>
+    <td className="rxg-celda-medico"><span>{solicitud.medico_solicitante || 'No registrado'}</span><small>{formatearFechaHora(solicitud.fecha_solicitud, 'Fecha no registrada')}</small></td>
+    <td><div className="rxg-insignias"><span className={`rxg-etapa rxg-etapa--${estudio.etapa}`}>{estudio.etapa_texto}</span>{estudio.triaje && <span className={`rxg-triaje rxg-triaje--${estudio.triaje.nivel ?? 'neutro'}`}>IA: {estudio.triaje.nivel ?? 'sin nivel'}</span>}{(() => { const tb = avisoPatronTb(estudio.triaje?.patron_tb, estudio.triaje?.nivel); return tb && <span className="rxg-triaje rxg-triaje--tb" title={`${tb.titulo}. ${tb.texto} Señal experimental; si no aparece, no descarta TB.`}>{tb.corto}</span> })()}</div></td>
     <td className="lab-row-action"><Link className="lab-next-action" to={`/rayos-x/gestion/estudios/${estudio.estudio_id}`}>{SIGUIENTE_PASO[estudio.etapa] ?? 'Abrir estudio'}</Link></td>
   </tr>
 }
@@ -94,7 +93,7 @@ export default function PanelRayosXPage({ usuario, logout }) {
   return <RayosXLayout usuario={usuario} logout={logout}>
     <div className="lab-title-row">
       <div><p className="lab-eyebrow">RAYOS X</p><h1>Estudios de Rayos X</h1></div>
-      {usuario?.rol === 'rayos_x' && <div className="lab-title-actions"><Link className="primary-button" to="/rayos-x/gestion/solicitudes/nueva">Nueva solicitud</Link></div>}
+      {usuario?.rol === 'rayos_x' && <div className="lab-title-actions"><BotonEnlace to="/rayos-x/gestion/solicitudes/nueva">Nueva solicitud</BotonEnlace></div>}
     </div>
 
     <div className="lab-summary rxg-resumen" aria-label="Indicadores de Rayos X">{INDICADORES_RX.map((item) => {
@@ -113,7 +112,7 @@ export default function PanelRayosXPage({ usuario, logout }) {
         <label>Etapa<select value={etapa} onChange={(e) => setEtapa(e.target.value)}><option value="">Todas</option>{ETAPAS.map(([codigo, nombre]) => <option key={codigo} value={codigo}>{nombre}</option>)}</select></label>
       </div>
       {consulta.isLoading && <div className="rxg-estado"><strong>Cargando estudios...</strong><span>La bandeja estará disponible en un momento.</span></div>}
-      {consulta.isError && <div className="rxg-estado" role="alert"><strong>No se pudo cargar la bandeja.</strong><span>{mensajeErrorApi(consulta.error, 'Comprueba la conexión e intenta nuevamente.')}</span></div>}
+      {consulta.isError && <div className="rxg-estado" role="alert"><strong>No se pudo cargar la bandeja.</strong><span>{mensajeError(consulta.error, 'Comprueba la conexión e intenta nuevamente.')}</span></div>}
       {consulta.isSuccess && solicitudes.length === 0 && <div className="rxg-estado"><strong>{!listaBaseVacia && hayFiltros ? 'No hay estudios con esos filtros.' : vista === 'activos' ? 'No hay estudios en curso.' : 'Todavía no hay estudios finalizados.'}</strong><span>{!listaBaseVacia && hayFiltros ? 'Prueba otra búsqueda o quita los filtros activos.' : vista === 'activos' ? usuario?.rol === 'rayos_x' ? 'Registra una nueva solicitud para iniciar el recorrido.' : 'Los estudios aparecerán cuando el personal técnico complete la adquisición.' : 'Los estudios aparecerán aquí cuando concluyan su recorrido.'}</span></div>}
       {consulta.isSuccess && solicitudes.length > 0 && <TablaEstudios solicitudes={solicitudes} />}
     </section>

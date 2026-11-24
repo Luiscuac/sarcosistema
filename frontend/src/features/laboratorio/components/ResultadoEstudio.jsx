@@ -3,13 +3,14 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { guardarBorrador, obtenerExamen, publicarResultado } from '../api/laboratorioApi.js'
 import CampoResultado from './resultados/CampoResultado.jsx'
 import ConfirmarPublicacion from './resultados/ConfirmarPublicacion.jsx'
-import ResumenCaptura from './resultados/ResumenCaptura.jsx'
+import ResumenAvance from '../../../shared/ui/ResumenAvance.jsx'
 import { useResponsableRecordado } from '../hooks/useResponsableRecordado.js'
 import { agruparPorSeccion, enfocarSiguienteCampo, motivoPublicacionBloqueada, parametrosVisibles, resumenCaptura } from '../utils/captura.js'
-import { mensajeError } from '../utils/mensajeError.js'
+import { mensajeError } from '../../../shared/utils/mensajeError.js'
 import { useAvisoCambiosSinGuardar } from '../../../shared/hooks/useAvisoCambiosSinGuardar.js'
 import { useNotificacion } from '../../../shared/notifications/NotificationContext.jsx'
 import './resultados/ResultadoEstudio.css'
+import Boton from '../../../shared/ui/Boton.jsx'
 
 export default function ResultadoEstudio({ estudioId, usuario }) {
   const queryClient = useQueryClient()
@@ -91,7 +92,7 @@ export default function ResultadoEstudio({ estudioId, usuario }) {
           {soloLectura && <p role="status" className="lab-result-status">Resultado publicado. Se muestra en modo lectura.</p>}
           {esperandoMuestra && <p className="lab-result-note">Primero registra la muestra de este estudio desde la solicitud.</p>}
           {!data.plantilla_configurada && <p className="lab-result-note">Este estudio todavía no tiene campos de resultado configurados.</p>}
-          {editable && <ResumenCaptura resumen={resumen} motivoBloqueo={motivoBloqueo} />}
+          {editable && <ResumenAvance resumen={resumen} motivoBloqueo={motivoBloqueo} />}
           {data.plantilla_configurada && !esperandoMuestra && <>
             {agruparPorSeccion(parametros).map(([seccion, grupo]) => <section className="lab-result-group" key={seccion}>
               <h3>{seccion}</h3>
@@ -120,8 +121,8 @@ export default function ResultadoEstudio({ estudioId, usuario }) {
         </div>
         {editable && <footer className="lab-result-sheet-footer">
           <button type="submit" disabled={ocupado || responsable.trim().length < 2 || !hayCambios}>{guardar.isPending ? 'Guardando…' : 'Guardar borrador'}</button>
-          <button className="primary-button" type="button" disabled={ocupado || Boolean(motivoBloqueo)} title={motivoBloqueo ?? undefined}
-            onClick={() => setConfirmando(true)}>Revisar y publicar</button>
+          <Boton disabled={ocupado || Boolean(motivoBloqueo)} title={motivoBloqueo ?? undefined}
+            onClick={() => setConfirmando(true)}>Revisar y publicar</Boton>
         </footer>}
       </form>}
       {confirmando && <ConfirmarPublicacion estudios={[{ ...data, parametros }]} valores={valores} responsable={responsable.trim()}

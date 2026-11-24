@@ -234,8 +234,8 @@ async def test_caso_5_borrador_retomado_validacion_y_permisos(rx):
         assert r.status_code == 403
         r = await c.post(f'{url}/informe/validar', headers=h[rol], json={'version_edicion': 1, 'responsable_nombre': 'Alguien', 'confirmo': True})
         assert r.status_code == 403
-    heredado = await c.post(f'/imagenes/estudios/{estudio_id}/informes/publicar?modalidad=rayos_x', headers=h['medico'])
-    assert heredado.status_code == 403  # tampoco por la ruta anterior
+    retirado = await c.post(f'/imagenes/estudios/{estudio_id}/informes/publicar?modalidad=rayos_x', headers=h['rayos_x'])
+    assert retirado.status_code == 422  # el modo heredado ya no forma parte de la ruta de Ecografía
 
     incompleto = await informar(rx, estudio_id, {'generales': {}, 'apartados': {'campos_pulmonares': 'Opacidad basal derecha.'}}, validar=False)
     assert incompleto['estudio']['etapa'] == 'borrador' and incompleto['informe']['version_edicion'] == 1
@@ -251,17 +251,11 @@ async def test_caso_5_borrador_retomado_validacion_y_permisos(rx):
     guardado = await c.put(f'{url}/informe/borrador', headers=h['rayos_x'], json={'contenido': contenido, 'texto_final': None, 'version_edicion': 1})
     assert guardado.json()['informe']['version_edicion'] == 2
     validado = await c.post(f'{url}/informe/validar', headers=h['rayos_x'], json={'version_edicion': 2, 'responsable_nombre': 'Dra. FICTICIA', 'confirmo': True})
-    assert validado.status_code == 200 and validado.json()['permisos']['agregar_adenda']
+    assert validado.status_code == 200 and validado.json()['permisos']['entregar']
 
-    # Validado = inmutable: ni borrador, ni imagenes, ni adquisicion; solo adendas.
+    # Validado = inmutable: ni borrador, ni imagenes, ni adquisicion (las correcciones se hacen antes de validar).
     assert (await c.put(f'{url}/informe/borrador', headers=h['rayos_x'], json={'contenido': contenido, 'texto_final': None, 'version_edicion': 2})).status_code == 409
     assert (await c.post(f'{url}/imagenes', files=[('archivos', ('n.png', png(99), 'image/png'))], headers=h['rayos_x'])).status_code == 409
-    adenda = await c.post(f'{url}/adendas', headers=h['rayos_x'], json={'motivo': 'Aclaración', 'texto': 'Se sugiere control en 4 semanas.', 'autor_nombre': 'Dra. FICTICIA'})
-    assert adenda.status_code == 200 and adenda.json()['adendas'][0]['texto'].startswith('Se sugiere')
-    assert adenda.json()['informe']['texto'] == validado.json()['informe']['texto']
-    with pytest.raises(Exception, match='históricas'):
-        async with rx['db'].begin_nested():
-            await rx['db'].execute(text("UPDATE radiologia_adenda SET texto='otro'"))
 
     entregado = await c.post(f'{url}/entregar', headers=h['rayos_x'], json={'entregado_a': 'Paciente'})
     assert entregado.json()['estudio']['etapa'] == 'entregado'

@@ -1,18 +1,14 @@
-"""Triaje visual automático: resumen, cola (médico primero), bandeja priorizada y subida."""
+"""Triaje visual automático: resumen, cola y prioridad del trabajo médico."""
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
 from types import SimpleNamespace
 
 import pytest
 
-from app.accesos.domain.entities import Usuario
-from app.accesos.presentation.dependencies.current_user import usuario_actual
 from app.imagenes.application.triaje import nivel_prioridad, resumir_triaje
-from app.imagenes.domain.entities import ArchivoImagen, EstudioImagenDetalle, EstudioImagenPendiente, InformeImagen
-from app.imagenes.infrastructure.persistence.repository import EstudiosRepository, RepositorioImagenSql
+from app.imagenes.infrastructure.persistence.repositorio_asistente import EstudiosRepository
+from app.imagenes.infrastructure.persistence.repositorio_triaje import RepositorioTriajeSql
 from app.imagenes.infrastructure.trabajos import ejecutar_trabajo
 from app.imagenes.tests.test_estudios_imagenes import estudio_fixture  # noqa: F401  (fixture PostgreSQL)
-from app.main import app
 
 
 def test_resumen_toma_el_indice_maximo_y_estado_en_proceso():
@@ -24,7 +20,7 @@ def test_resumen_toma_el_indice_maximo_y_estado_en_proceso():
     ]
     r = resumir_triaje(filas)
     assert r[1] == {'estado': 'completado', 'indice': 0.7, 'calidad': 'revisar',
-                    'contribuciones': [{'name': 'B', 'aporte': 2}], 'radiografias': 2}
+                    'contribuciones': [{'name': 'B', 'aporte': 2}], 'radiografias': 2, 'patron_tb': None}
     assert r[2]['estado'] == 'en_proceso' and r[3]['estado'] == 'error'
 
 
@@ -69,9 +65,9 @@ async def test_triaje_sanea_errores_y_guarda_resultado():
 
 
 @pytest.mark.asyncio
-async def test_cola_postgres_medico_primero_luego_triaje_y_bandeja(estudio_fixture):  # noqa: F811
+async def test_cola_postgres_medico_primero_luego_triaje(estudio_fixture):  # noqa: F811
     db, usuario, estudio, informe, archivo = estudio_fixture
-    clinico = RepositorioImagenSql(db)
+    clinico = RepositorioTriajeSql(db)
     entidad = SimpleNamespace(id=archivo, mime_type='image/png', hash_sha256='a' * 64)
     pdf = SimpleNamespace(id=archivo, mime_type='application/pdf', hash_sha256='b' * 64)
     assert await clinico.encolar_triaje(estudio, [entidad, pdf]) == 1
@@ -94,68 +90,3 @@ async def test_cola_postgres_medico_primero_luego_triaje_y_bandeja(estudio_fixtu
     resumen = (await clinico.triaje_por_estudio([estudio]))[estudio]
     assert resumen['estado'] == 'completado' and resumen['indice'] == pytest.approx(0.83)
     assert resumen['contribuciones'][0]['name'] == 'Nodule'
-
-
-def _pendiente(estudio_id, prioridad='sin_prioridad'):
-    return EstudioImagenPendiente(estudio_id=estudio_id, referencia_estudio=f'RX-{estudio_id}', referencia_solicitud='S',
-                                  paciente_id=1, paciente_nombre='Paciente ficticio', tipo_estudio_nombre='Radiografía de tórax PA',
-                                  prioridad=prioridad, estado='pendiente', fecha_solicitud=datetime.now(timezone.utc))
-
-
-@pytest.mark.asyncio
-async def test_bandeja_rayos_x_expone_triaje_con_nivel(client):
-    from app.imagenes.presentation.router_clinico import get_repositorio
-
-    class Repo:
-        async def listar_bandeja(self):
-            return [_pendiente(1), _pendiente(2)]
-
-        async def triaje_por_estudio(self, ids):
-            assert ids == [1, 2]
-            return {1: {'estado': 'completado', 'indice': 0.99, 'calidad': 'ok', 'contribuciones': [], 'radiografias': 1}}
-    app.dependency_overrides[usuario_actual] = lambda: Usuario(9, 'ficticio', 'rayos_x', True)
-    app.dependency_overrides[get_repositorio] = lambda: Repo()
-    try:
-        r = await client.get('/imagenes/bandeja?modalidad=rayos_x')
-        assert r.status_code == 200
-        filas = {f['estudio_id']: f for f in r.json()}
-        assert filas[1]['triaje']['nivel'] == 'alta' and filas[1]['triaje']['indice'] == 0.99
-        assert filas[2]['triaje'] is None
-    finally:
-        app.dependency_overrides.clear()
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize('habilitada,esperado', [(True, 1), (False, 0)])
-async def test_subida_rayos_x_encola_triaje_solo_si_la_ia_esta_habilitada(client, tmp_path, monkeypatch, habilitada, esperado):
-    from app.config.settings import settings
-    from app.imagenes.infrastructure.storage.almacen_local import AlmacenLocal
-    from app.imagenes.presentation import router_clinico
-    monkeypatch.setattr(settings, 'radiology_ai_enabled', habilitada)
-    monkeypatch.setattr(router_clinico, 'AlmacenLocal', lambda: AlmacenLocal(str(tmp_path)))
-    encolados = []
-
-    class Repo:
-        async def obtener_estudio(self, estudio_id):
-            return EstudioImagenDetalle(estudio_id, 'RX-1', 'S', 'Paciente ficticio', 'Radiografía de tórax PA',
-                                        'pendiente', datetime.now(timezone.utc), None)
-
-        async def guardar_informe(self, estudio_id, texto, archivos, usuario_id):
-            entidades = tuple(ArchivoImagen(i + 1, a['nombre_original'], a['mime_type'], a['tamano_bytes'],
-                                            a['hash_sha256'], datetime.now(timezone.utc), a['url_archivo'])
-                              for i, a in enumerate(archivos))
-            return InformeImagen(1, estudio_id, 1, texto, 'borrador', None, None, entidades), True
-
-        async def encolar_triaje(self, estudio_id, archivos):
-            encolados.append([a.mime_type for a in archivos])
-    app.dependency_overrides[usuario_actual] = lambda: Usuario(9, 'ficticio', 'rayos_x', True)
-    app.dependency_overrides[router_clinico.get_repositorio] = lambda: Repo()
-    dicom = b'\x00' * 128 + b'DICM' + b'fixture'
-    try:
-        r = await client.post('/imagenes/estudios/1/informes?modalidad=rayos_x',
-                              files={'archivos': ('torax.dcm', dicom, 'application/octet-stream')})
-        assert r.status_code == 200, r.text
-        assert r.json()['archivos'][0]['mime_type'] == 'application/dicom'  # firma, no el tipo del navegador
-        assert len(encolados) == esperado
-    finally:
-        app.dependency_overrides.clear()

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { usePacientes } from '../hooks/useConsultas.js'
 import { edad } from '../utils/paciente.js'
-import { nombreSexo } from '../../laboratorio/utils/catalogos.js'
+import { nombreSexo } from '../../../shared/utils/personas.js'
 
 export default function BusquedaPacientes() {
   const [entrada, setEntrada] = useState('')

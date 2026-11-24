@@ -1,9 +1,9 @@
-import { formatearFecha } from '../../../shared/utils/formatearFecha.js'
+import { formatearFecha, formatearFechaHora } from '../../../shared/utils/formatearFecha.js'
 import '../pages/enfermeria.css'
 
 export default function RecetaFicha({ receta, paciente, estado = 'Emitida' }) {
   const fechaEmision = receta.publicado_en
-    ? new Date(receta.publicado_en).toLocaleString('es-BO')
+    ? formatearFechaHora(receta.publicado_en)
     : formatearFecha(receta.fecha)
   const prescriptor = receta.prescriptor || receta.registrado_por || 'No indicado'
   return <article className="enf-panel enf-prescription-card">

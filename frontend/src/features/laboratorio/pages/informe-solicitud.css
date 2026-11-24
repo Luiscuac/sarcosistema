@@ -14,36 +14,29 @@
 .lab-report-study-title { display: flex; justify-content: space-between; gap: 20px; padding-bottom: 9px; border-bottom: 1px solid var(--line); }
 .lab-report-study-title span, .lab-report-study-title small { color: #617180; font-size: 11px; }
 .lab-report-study-title h2 { margin: 4px 0 0; font-size: 17px; }
-.lab-report-section h3 { margin: 17px 0 9px; font-size: 12px; font-weight: 600; }
-.lab-report-section table { width: 100%; border-collapse: collapse; text-align: left; font-size: 12px; }
-.lab-report-section th, .lab-report-section td { padding: 8px 10px; border: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
-.lab-report-section thead th { background: #f7f8fa; color: #53606b; font-size: 11px; font-weight: 600; }
-.lab-report-section tbody th { font-weight: 400; width: 38%; }
-.lab-report-section tbody td:nth-child(2) { font-weight: 600; }
 .lab-report-observation, .lab-report-responsible, .lab-report-empty { font-size: 12px; line-height: 1.5; }
 .lab-report-observation { margin: 14px 0 0; }
-.lab-report-responsible { margin: 14px 0 0; color: #53606b; }
+.lab-report-responsible { margin: 14px 0 0; color: var(--label); }
 .lab-report-not-performed { margin-top: 32px; padding-top: 20px; border-top: 2px solid #26323c; break-inside: avoid-page; }
 .lab-report-not-performed h2 { margin: 0; font-size: 17px; }
 .lab-report-not-performed > p { margin: 6px 0 14px; color: #617180; font-size: 12px; }
 .lab-report-not-performed table { width: 100%; border-collapse: collapse; text-align: left; font-size: 11px; }
 .lab-report-not-performed th, .lab-report-not-performed td { padding: 8px 10px; border: 1px solid var(--line); vertical-align: top; }
-.lab-report-not-performed thead th { background: #f7f8fa; color: #53606b; }
+.lab-report-not-performed thead th { background: var(--surface); color: var(--label); }
 .lab-report-not-performed tbody th { width: 24%; font-weight: 600; }
 .lab-report-not-performed tbody th span { display: block; margin-bottom: 3px; color: #617180; font-size: 10px; font-weight: 400; }
-@media (max-width: 700px) { .lab-report-document { padding: 22px 16px; } .lab-report-meta { grid-template-columns: 1fr; } .lab-report-header { flex-direction: column; } .lab-report-section { overflow-x: auto; } .lab-report-section table { min-width: 560px; } }
+@media (max-width: 700px) { .lab-report-document { padding: 22px 16px; } .lab-report-meta { grid-template-columns: 1fr; } .lab-report-header { flex-direction: column; } }
 @media print {
   @page { size: A4; margin: 15mm; }
   body, .lab-page, .lab-main, .lab-content, .med-page, .med-main, .med-content { display: block !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important; background: #fff !important; }
   .lab-topbar, .med-topbar, .med-sidebar, .lab-report-controls { display: none !important; }
   .lab-report-document { padding: 0; border: 0; border-radius: 0; }
   .lab-report-study { break-inside: auto; }
-  .lab-report-study-title, .lab-report-section h3, .lab-report-section tr { break-inside: avoid; }
-  .lab-report-section thead { display: table-header-group; }
+  .lab-report-study-title { break-inside: avoid; }
 }
 
 .lab-report-legend { margin: -14px 0 8px; color: #617180; font-size: 11px; }
-.lab-report-legend strong, .lab-report-section tr.is-out-of-range td:nth-child(2) { color: #b42318; }
+.lab-report-legend strong { color: var(--danger-text); }
 .lab-report-signature { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin-top: 56px; break-inside: avoid; }
 .lab-report-signature > div { width: 260px; text-align: center; }
 .lab-report-signature > div span { display: block; border-top: 1px solid #26323c; }
@@ -51,7 +44,7 @@
 @media print {
   @page { @bottom-right { content: "Página " counter(page) " de " counter(pages); font-size: 9pt; color: #617180; } }
   /* Se conserva el rojo al imprimir o guardar PDF (los navegadores quitan colores por defecto). */
-  .lab-report-legend strong, .lab-report-section tr.is-out-of-range td:nth-child(2) { color: #b42318 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .lab-report-legend strong, .lab-report-section tr.is-out-of-range td:nth-child(2) { color: var(--danger-text) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
 
 /* Informe de laboratorio compacto: pensado para archivo en historial y lectura del médico.
@@ -73,11 +66,11 @@
 .lab-report-area thead th:first-child { width: 40%; }
 .lab-report-area tbody th { font-weight: 400; }
 .lab-report-area tbody td:nth-child(2) { font-weight: 600; }
-.lab-report-area td:nth-child(n+3) { color: #53606b; }
-.lab-report-area tr.lab-report-row-study th { padding-top: 6px; font-weight: 600; background: #f7f8fa; }
+.lab-report-area td:nth-child(n+3) { color: var(--label); }
+.lab-report-area tr.lab-report-row-study th { padding-top: 6px; font-weight: 600; background: var(--surface); }
 .lab-report-area tr.lab-report-row-section th { padding-left: 14px; color: #617180; font-size: 10.5px; font-style: italic; }
 .lab-report-area tr.is-indented th { padding-left: 14px; }
-.lab-report-area tr.is-out-of-range td:nth-child(2) { color: #b42318; }
+.lab-report-area tr.is-out-of-range td:nth-child(2) { color: var(--danger-text); }
 .is-compact .lab-report-empty { color: #617180; font-style: italic; }
 .is-compact .lab-report-observation { margin: 4px 0 0; font-size: 11px; }
 .is-compact .lab-report-area .lab-report-responsible { margin: 3px 0 0; color: #617180; font-size: 10.5px; text-align: right; }
@@ -104,8 +97,8 @@
   .lab-report-area tr, .lab-report-area caption { break-inside: avoid; }
   .lab-report-area caption { break-after: avoid; }
   .lab-report-area tr.lab-report-row-study, .lab-report-area tr.lab-report-row-section { break-after: avoid; }
-  .lab-report-area tr.lab-report-row-study th { background: #f7f8fa !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .lab-report-area tr.is-out-of-range td:nth-child(2) { color: #b42318 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .lab-report-area tr.lab-report-row-study th { background: var(--surface) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .lab-report-area tr.is-out-of-range td:nth-child(2) { color: var(--danger-text) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
 
 /* Resumen en texto plano para copiar a la nota SOAP (solo pantalla). */
@@ -113,5 +106,5 @@
 .lab-report-copy-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 8px; }
 .lab-report-copy h2 { margin: 0; font-size: 14px; }
 .lab-report-copy-head p, .lab-report-copy-hint { margin: 2px 0 0; color: #617180; font-size: 11px; }
-.lab-report-copy textarea { display: block; width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; background: #f7f8fa; color: #26323c; font: 12px/1.5 ui-monospace, Consolas, monospace; resize: vertical; }
+.lab-report-copy textarea { display: block; width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: #26323c; font: 12px/1.5 ui-monospace, Consolas, monospace; resize: vertical; }
 @media print { .lab-report-copy { display: none !important; } }

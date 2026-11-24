@@ -1,7 +1,8 @@
 import { describirEdad } from '../../../../shared/utils/edad.js'
-import { formatearFecha } from '../../../../shared/utils/formatearFecha.js'
-import { nombreSexo, SEXOS, TIPOS_DOCUMENTO } from '../../utils/catalogos.js'
+import { fechaHoy, formatearFecha } from '../../../../shared/utils/formatearFecha.js'
+import { nombreSexo, SEXOS, TIPOS_DOCUMENTO } from '../../../../shared/utils/personas.js'
 import './PacienteSolicitud.css'
+import Boton from '../../../../shared/ui/Boton.jsx'
 
 function detallePaciente(paciente) {
   return [
@@ -18,7 +19,7 @@ export function FormularioPaciente({ datos, pendiente, onChange, onCancelar, onG
     <div className="lab-form-grid">
       <label className="lab-full-field">Nombre completo<input required minLength="2" autoFocus value={datos.nombre_completo} onChange={(e) => onChange('nombre_completo', e.target.value)} /></label>
       <label>Fecha de nacimiento
-        <input required type="date" max={new Date().toLocaleDateString('en-CA')} value={datos.fecha_nacimiento} onChange={(e) => onChange('fecha_nacimiento', e.target.value)} />
+        <input required type="date" max={fechaHoy()} value={datos.fecha_nacimiento} onChange={(e) => onChange('fecha_nacimiento', e.target.value)} />
         {datos.fecha_nacimiento && <small>{describirEdad(datos.fecha_nacimiento)}</small>}
       </label>
       <label>Sexo registrado<select value={datos.sexo} onChange={(e) => onChange('sexo', e.target.value)}>
@@ -37,7 +38,7 @@ export function FormularioPaciente({ datos, pendiente, onChange, onCancelar, onG
     </div>
     <div className="lab-inline-actions">
       <button type="button" onClick={onCancelar}>Volver a buscar</button>
-      <button className="primary-button" type="button" disabled={pendiente} onClick={onGuardar}>{pendiente ? 'Guardando…' : 'Guardar paciente'}</button>
+      <Boton disabled={pendiente} onClick={onGuardar}>{pendiente ? 'Guardando…' : 'Guardar paciente'}</Boton>
     </div>
   </div>
 }

@@ -57,21 +57,6 @@ class InformeImagenResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class ContribucionTriaje(BaseModel):
-    name: str
-    aporte: float
-
-
-class TriajeResumen(BaseModel):
-    """Prioridad visual experimental para ordenar la bandeja; no es diagnóstico."""
-    estado: str
-    indice: float | None = None
-    nivel: str | None = None
-    calidad: str | None = None
-    contribuciones: list[ContribucionTriaje] = []
-    radiografias: int = 0
-
-
 class EstudioPendienteResponse(BaseModel):
     estudio_id: int
     referencia_estudio: str
@@ -82,7 +67,6 @@ class EstudioPendienteResponse(BaseModel):
     prioridad: str
     estado: str
     fecha_solicitud: datetime
-    triaje: TriajeResumen | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -144,6 +128,8 @@ class RevisionNueva(BaseModel):
     correccion: str | None = Field(default=None,max_length=4000)
     # Lectura del médico (opcional): ¿la radiografía es anormal? Alimenta la calibración local.
     anormal_confirmado: bool | None = None
+    # TB con confirmación bacteriológica según el médico (opcional): calibra el aviso de patrón TB.
+    tb_confirmada: bool | None = None
 
     @model_validator(mode='after')
     def datos_obligatorios(self):

@@ -21,6 +21,7 @@ Para médicos y personal de Rayos X. El asistente **ordena, señala y avisa**; n
 | **Urgente** | Prioridad clínica marcada por el médico. Siempre va primero. |
 | **Revisar primero · 87** | Índice pulmonar alto. Conviene informarlo antes. |
 | **Prioridad media / baja** | Índice intermedio o bajo. **Un valor bajo no descarta enfermedad.** |
+| **Patrón TB** (insignia morada) | Solo junto a prioridad media o alta: el patrón se parece a tuberculosis. Señal experimental; no cambia el orden y su ausencia no descarta TB. |
 | **revisar calidad** | La imagen tiene avisos: baja resolución, contraste, lateral, otra región, etc. |
 | **IA analizando…** | En cola local; la bandeja se actualiza sola. |
 
@@ -33,6 +34,15 @@ El selector **Ordenar** alterna entre *Prioridad* (urgentes primero, luego índi
   - Brillo, contraste e invertir.
 - **Mapa de calor** (apagado por defecto): muestra **dónde se apoyó el modelo**, no dónde está una lesión. El recuadro amarillo marca la zona más activa.
 - **Índice de prioridad pulmonar (0–100)** con *Qué lo eleva*, las categorías que más pesan. Sirve para ordenar; no es una probabilidad ni un diagnóstico de tuberculosis.
+- **Patrón compatible con tuberculosis** (recuadro morado, solo con prioridad media o alta): señal experimental entrenada con TBX11K. Con el ensamble de 7 modelos (v2), en hospitales externos detectó entre 48 % y 82 % de las TB y apareció en 5–26 % de radiografías sanas. Si aparece, considerar baciloscopía o GeneXpert; si no aparece, **no descarta TB**. Detalle en `2026-11-20-deteccion-tb.md`.
+- **Comparado con la radiografía anterior** (recuadro azul, solo si el paciente tiene otra radiografía de tórax con informe publicado):
+  - dice si hay **más señales**, **menos señales** o **sin cambio claro** que en la placa anterior;
+  - avisa si el patrón de TB **aparece**, **sigue** o **desaparece** (que desaparezca no descarta TB);
+  - lista hasta 3 categorías que cambiaron (por ejemplo, "Consolidación: sube (40 → 85)");
+  - "Ver radiografías anteriores" muestra hasta 5 placas previas con su prioridad.
+  Un cambio solo se señala si supera lo que se mueven los números **por repetir la toma** (paciente algo girado,
+  otra distancia u otro brillo), medido en `2026-11-21-evolucion-paciente.md`. Usa el triaje automático ya
+  guardado: no vuelve a ejecutar modelos. Compara las señales del asistente, no la enfermedad: el médico compara las imágenes.
 - **Calidad de la imagen:** avisos que conviene revisar antes de confiar en el análisis.
 - **Hallazgos del modelo:** las 3 categorías principales y el desplegable con las **18**. Los *scores* son normalizados: 0,5 es el punto técnico del modelo, no un porcentaje de certeza.
 - **Comparación con el informe:**
@@ -63,10 +73,26 @@ RADIOLOGY_TRIAGE_UMBRAL_MEDIA=0.xxx
 
 y reinicia el backend. Hasta entonces se usan umbrales provisionales fijados con datos de otro hospital (Shenzhen). Esos umbrales **no se transfieren** entre hospitales.
 
+### Aviso de tuberculosis
+
+Al revisar un análisis, el médico puede indicar **Tuberculosis: confirmada / descartada** (opcional). Solo debe
+marcarlo cuando haya **baciloscopía, GeneXpert o cultivo**; si aún no hay resultado, deja "Sin resultado todavía" y
+puede registrar una revisión nueva cuando llegue.
+
+Con al menos **20 casos con TB confirmada y 20 con TB descartada** de la misma versión del aviso, el panel calcula el
+AUC local y sugiere un corte (especificidad 90 %). Tampoco se aplica solo:
+
+```
+RADIOLOGY_TB_UMBRAL_COMPATIBLE=0.xxx
+```
+
+Se aplica a los **análisis nuevos** tras reiniciar el backend. Si cambia la versión del aviso (v1 sin ensamble, v2 con
+ensamble), los casos de la otra versión no se mezclan en la calibración.
+
 ## 5. Lo que el asistente NO hace
 
 - No diagnostica, no publica, no corrige el informe y no envía datos fuera del equipo.
-- No cubre todas las patologías. El modelo no tiene una categoría de tuberculosis; el índice es un indicador de anormalidad pulmonar.
+- No cubre todas las patologías ni diagnostica tuberculosis: el aviso de patrón TB es experimental, solo avisa y nunca descarta; la confirmación es bacteriológica.
 - Rinde algo peor en mujeres que en hombres (AUC 0,75 frente a 0,82 en la evaluación externa): hay que tenerlo presente.
 - Los mapas de calor no localizan lesiones de forma fiable (ver la evaluación).
 

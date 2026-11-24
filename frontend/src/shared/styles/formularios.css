@@ -1,0 +1,29 @@
+.lab-form-section { padding: 22px 0; border-bottom: 1px solid var(--line); }
+.lab-form-section h3 { margin: 0 0 14px; font-size: 14px; font-weight: 600; }
+.lab-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.lab-form-grid label, .lab-search-label { display: grid; gap: 6px; color: var(--label); font-size: 11px; font-weight: 600; }
+.lab-form-grid input, .lab-form-grid select, .lab-search-label input { width: 100%; min-height: 38px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--ink); font: inherit; font-size: 12px; }
+.lab-full-field { grid-column: 1 / -1; }
+.lab-checkbox-label { display: flex !important; align-items: center; gap: 8px !important; }
+.lab-checkbox-label input { width: auto; min-height: auto; accent-color: var(--brand); }
+.lab-form-hint, .lab-form-error { margin: 10px 0 0; font-size: 11px; line-height: 1.5; }
+.lab-form-hint { color: var(--muted); }
+.lab-form-error { color: var(--danger); }
+
+@media (max-width: 640px) {
+  .lab-form-grid { grid-template-columns: 1fr; }
+}
+
+.lab-confirm-study { margin-top: 14px; }
+.lab-confirm-study h3 { margin: 0 0 8px; font-size: 13px; }
+.lab-confirm-study table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.lab-confirm-study th, .lab-confirm-study td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: left; font-weight: 400; }
+.lab-confirm-study td:nth-child(2) { font-weight: 600; }
+.lab-confirm-study td:last-child { color: var(--danger-text); font-weight: 600; text-align: right; white-space: nowrap; }
+.lab-confirm-study tr.is-out-of-range { background: var(--danger-soft); }
+.lab-confirm-study tr.is-out-of-range td:nth-child(2) { color: var(--danger-text); }
+
+/* Estudios seleccionados en la nueva solicitud */
+.lab-selected-studies { display: grid; gap: 8px; padding: 12px; border: 1px dashed var(--line); border-radius: 6px; background: #fafbfc; }
+.lab-selected-studies ul { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.lab-form-grid label small { color: var(--muted); font-weight: 400; }

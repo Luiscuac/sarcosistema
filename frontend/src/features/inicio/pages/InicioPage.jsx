@@ -1,6 +1,7 @@
 import { Navigate } from 'react-router-dom'
 import { redireccionDesdeInicio } from '../../accesos/auth/destinos.js'
 import './inicio.css'
+import Boton from '../../../shared/ui/Boton.jsx'
 
 export default function InicioPage({ usuario, logout }) {
   // Cada rol entra directamente a su área de trabajo.
@@ -14,7 +15,7 @@ export default function InicioPage({ usuario, logout }) {
         <p>Sesión iniciada como <strong>{usuario.identificador_acceso}</strong>.</p>
         <p>Tu rol: <strong>{usuario.rol}</strong>.</p>
         <p>El módulo para este rol todavía no está disponible en el piloto.</p>
-        <button className="primary-button" onClick={logout}>Cerrar sesión</button>
+        <Boton type="submit" onClick={logout}>Cerrar sesión</Boton>
       </section>
     </main>
   )

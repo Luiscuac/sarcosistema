@@ -246,7 +246,7 @@ async def test_ruta_de_consulta_no_captura_el_catalogo(client, medico_sesion, re
 
 @pytest.mark.asyncio
 async def test_radiologo_ve_su_bandeja(client, radiologo_sesion, repositorio_imagen):
-    bandeja = await client.get('/imagenes/bandeja')
+    bandeja = await client.get('/imagenes/bandeja?modalidad=ecografia')
     assert bandeja.status_code == 200
     assert bandeja.json()[0]['tipo_estudio_nombre'] == 'Ecografia abdominal'
     assert bandeja.json()[0]['referencia_solicitud'] == 'IMG-260101-ABC'

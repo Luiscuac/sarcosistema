@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef } from 'react'
 import { insertarFrase } from '../utils/informe.js'
+import Boton from '../../../../shared/ui/Boton.jsx'
 
 export default function CampoPlantilla({ campo, valor, onChange, disabled = false, destacado = false }) {
   const ayudaId = useId()
@@ -20,8 +21,8 @@ export default function CampoPlantilla({ campo, valor, onChange, disabled = fals
     </div> : <textarea ref={area} id={`rxe-${campo.clave}`} rows={3} maxLength={4000} {...comunes} />}
     {campo.ayuda && <small id={ayudaId}>{campo.ayuda}</small>}
     {!disabled && campo.frases?.length > 0 && <div className="rxe-frases" aria-label={`Frases para ${campo.titulo}`}>
-      {campo.frases.map(frase => <button key={frase} type="button" className="lab-secondary-button"
-        onClick={() => onChange(insertarFrase(valor, frase))}>Insertar: {frase}</button>)}
+      {campo.frases.map(frase => <Boton variante="secundario" key={frase} type="button"
+        onClick={() => onChange(insertarFrase(valor, frase))}>Insertar: {frase}</Boton>)}
     </div>}
   </div>
 }

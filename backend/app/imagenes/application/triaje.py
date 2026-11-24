@@ -11,12 +11,14 @@ ACTIVOS = ('en_cola', 'procesando')
 
 
 def resumir_triaje(filas: list[dict]) -> dict[int, dict]:
-    """filas: estudio_id, estado, indice, calidad, contribuciones (una por radiografía)."""
+    """filas: estudio_id, estado, indice, calidad, contribuciones, patron_tb (una por radiografía)."""
     resumen: dict[int, dict] = {}
     for f in filas:
         r = resumen.setdefault(f['estudio_id'], {'estado': None, 'indice': None, 'calidad': None,
-                                                 'contribuciones': [], 'radiografias': 0})
+                                                 'contribuciones': [], 'radiografias': 0, 'patron_tb': None})
         r['radiografias'] += 1
+        if f.get('patron_tb') == 'compatible':
+            r['patron_tb'] = 'compatible'
         if f['indice'] is not None and (r['indice'] is None or f['indice'] > r['indice']):
             r['indice'] = f['indice']
             r['contribuciones'] = list(f.get('contribuciones') or [])[:3]
@@ -54,3 +56,12 @@ class TriarRadiografia:
         contenido = await asyncio.to_thread(self.leer_archivo, archivo)
         visual = await asyncio.to_thread(self.vision.analizar, contenido, proyeccion='frontal_no_especificada')
         return {'experimental': True, 'tipo': 'triaje', **visual}
+
+
+def umbrales_triaje() -> tuple[float, float]:
+    """(alta, media) en uso: la configuración local si existe; si no, los provisionales del artefacto del índice."""
+    from app.config.settings import settings
+    from app.imagenes.infrastructure.vision.indice import cargar_indice
+    provisional = cargar_indice()['umbrales_provisionales']
+    alta, media = settings.radiology_triage_umbral_alta, settings.radiology_triage_umbral_media
+    return (provisional['alta'] if alta is None else alta, provisional['media'] if media is None else media)
