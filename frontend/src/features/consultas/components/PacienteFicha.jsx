@@ -11,6 +11,7 @@ import RegistrosPublicados from '../../enfermeria/components/RegistrosPublicados
 import RecetaMedica from './RecetaMedica.jsx'
 import { nombreSexo } from '../../../shared/utils/personas.js'
 import { formatearFechaHora } from '../../../shared/utils/formatearFecha.js'
+import NavegacionPagina from '../../../shared/ui/NavegacionPagina.jsx'
 
 export function IdentidadPaciente({ paciente }) {
   return <div className="med-patient">
@@ -98,6 +99,7 @@ export default function PacienteFicha({ id, usuario }) {
   if (paciente.isError) return <p role="alert">No se pudo cargar el paciente. Comprueba el acceso y vuelve a intentarlo.</p>
   const esDemo = paciente.data.codigo_paciente === 'PAC-DEMO-CONSULTA-001'
   return <>
+    <NavegacionPagina volverA="/consultas" textoVolver="Volver a pacientes" migas={[{ texto: 'Pacientes', ruta: '/consultas' }, { texto: paciente.data.nombre_completo }]} />
     <div className="med-heading"><div><p className="med-eyebrow">FICHA CLÍNICA</p><h1>{paciente.data.nombre_completo}</h1></div><Link className="primary-button med-button-link" to={`/consultas/pacientes/${id}/nueva`}>+ Nueva consulta</Link></div>
     <IdentidadPaciente paciente={paciente.data} />
     <nav className="med-patient-tabs" role="tablist" aria-label="Secciones de la ficha del paciente">

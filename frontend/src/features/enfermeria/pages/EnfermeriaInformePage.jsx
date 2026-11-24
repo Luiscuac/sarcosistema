@@ -12,6 +12,7 @@ import { useNotificacion } from '../../../shared/notifications/NotificationConte
 import './enfermeria.css'
 import Boton from '../../../shared/ui/Boton.jsx'
 import { mensajeError } from '../../../shared/utils/mensajeError.js'
+import NavegacionPagina from '../../../shared/ui/NavegacionPagina.jsx'
 
 const fechaHora = (value) => value ? formatearFechaHora(value) : 'Sin fecha'
 const fechaReceta = (receta) => receta.publicado_en
@@ -32,7 +33,7 @@ function CamposInforme({ lineas, titulo }) {
   </section>
 }
 
-function InformeAdmision({ registro, paciente, onVolver, onEditar, onPublicar, ocupado }) {
+function InformeAdmision({ registro, paciente, onEditar, onPublicar, ocupado }) {
   const lineas = resumenDelFormulario(formularioDesdeRegistro(registro))
   const camposMedicion = new Set([...Object.keys(MEDICIONES), 'imc', 'presion', 'dolor_escala'])
   const observaciones = lineas.filter(({ campo }) => TEXTOS.some(([nombre]) => nombre === campo))
@@ -46,7 +47,6 @@ function InformeAdmision({ registro, paciente, onVolver, onEditar, onPublicar, o
         <h2>Admisión y valoración</h2>
         <p>{publicado ? 'Publicado' : 'Borrador guardado'} el {fecha}</p>
       </div>
-      <button type="button" className="enf-history-back" onClick={() => onVolver()}>Volver a registros</button>
     </header>
     <div className="enf-history-report">
       <dl className="enf-report-meta">
@@ -65,7 +65,7 @@ function InformeAdmision({ registro, paciente, onVolver, onEditar, onPublicar, o
   </section>
 }
 
-function InformeReceta({ receta, paciente, onVolver }) {
+function InformeReceta({ receta, paciente }) {
   return <section className="enf-panel enf-prescription-report">
     <header className="enf-history-report-header">
       <div>
@@ -73,7 +73,6 @@ function InformeReceta({ receta, paciente, onVolver }) {
         <h2>{receta.numero_receta || `Receta #${receta.id}`}</h2>
         <p>Emitida el {fechaReceta(receta)}</p>
       </div>
-      <button type="button" className="enf-history-back" onClick={() => onVolver()}>Volver a recetas</button>
     </header>
     <div className="enf-history-report">
       <dl className="enf-report-meta">
@@ -155,6 +154,8 @@ export default function EnfermeriaInformePage({ usuario, logout }) {
   return <main className="lab-page enf-page">
     <BarraSuperior usuario={usuario} titulo="Enfermería" inicio="/enfermeria" onLogout={logout} />
     <div className="enf-content">
+      <NavegacionPagina onVolver={() => volver()} textoVolver={esReceta ? 'Volver a recetas' : 'Volver a registros'}
+        migas={[{ texto: 'Enfermería', onClick: () => volver() }, { texto: paciente?.nombre_completo || 'Paciente', onClick: () => volver() }, { texto: esReceta ? 'Receta' : 'Informe de admisión' }]} />
       {cargando
         ? <p role="status" className="enf-message">Cargando informe…</p>
         : error
@@ -162,10 +163,9 @@ export default function EnfermeriaInformePage({ usuario, logout }) {
           : !encontrado
             ? <p role="alert" className="enf-error">No se encontró el informe solicitado.</p>
             : esReceta
-              ? <InformeReceta receta={receta} paciente={paciente} onVolver={volver} />
-            : <InformeAdmision registro={registro} paciente={paciente} onVolver={volver}
+              ? <InformeReceta receta={receta} paciente={paciente} />
+            : <InformeAdmision registro={registro} paciente={paciente}
               onEditar={(item) => volver('admision', item)} onPublicar={() => setConfirmacion(true)} ocupado={ocupado} />}
-      {(error || !cargando && !encontrado) && <button type="button" className="enf-history-back" onClick={() => volver()}>Volver a Enfermería</button>}
     </div>
     {confirmacion && registro && <ConfirmarAccion titulo="Publicar registro de enfermería" textoConfirmar="Publicar para el médico"
       pendiente={ocupado} onCancelar={() => setConfirmacion(false)} onConfirmar={() => publicarBorrador(registro)}>

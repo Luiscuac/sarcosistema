@@ -21,6 +21,7 @@ import { useNotificacion } from '../../../shared/notifications/NotificationConte
 import { calcularEdad } from '../../../shared/utils/edad.js'
 import Boton from '../../../shared/ui/Boton.jsx'
 import { mensajeError } from '../../../shared/utils/mensajeError.js'
+import NavegacionPagina from '../../../shared/ui/NavegacionPagina.jsx'
 
 // Signos vitales: la presión se escribe en un campo ("120/80") en lugar de dos.
 const CAMPOS_VITALES = ['peso_kg', 'talla_cm', 'temperatura_c', 'frecuencia_cardiaca', 'frecuencia_respiratoria', 'presion', 'saturacion_oxigeno']
@@ -256,6 +257,8 @@ function FormularioPaciente({ id, usuario }) {
   const camposConDatos = Object.keys(etiquetas).filter((campo) => tieneValor(form[campo])).length
 
   return <>
+    <NavegacionPagina volverA={`/consultas/pacientes/${id}`} textoVolver="Volver a la ficha"
+      migas={[{ texto: 'Pacientes', ruta: '/consultas' }, { texto: paciente.data.nombre_completo, ruta: `/consultas/pacientes/${id}` }, { texto: 'Nueva consulta' }]} />
     <div className="med-heading"><div><p className="med-eyebrow">CONSULTA EXTERNA · SOAP</p><h1>Nueva consulta</h1></div></div>
     <IdentidadPaciente paciente={paciente.data} />
     <AdmisionEnfermeria consulta={admisiones} transferencia={transferencia} onUsar={() => usarEnfermeria(admisiones.data[0], true)} />

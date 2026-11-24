@@ -22,6 +22,7 @@ import {
   formularioDesdeRegistro, formularioVacio, resumenDelFormulario,
 } from '../utils/signosVitales.js'
 import { formatearFechaHora } from '../../../shared/utils/formatearFecha.js'
+import NavegacionPagina from '../../../shared/ui/NavegacionPagina.jsx'
 
 const fechaHora = (value) => value ? formatearFechaHora(value) : 'Sin fecha'
 const etiquetasCampos = {
@@ -299,6 +300,8 @@ export default function EnfermeriaPage({ usuario, logout }) {
   return <main className="lab-page enf-page">
     <BarraSuperior usuario={usuario} titulo="Enfermería" inicio="/enfermeria" onLogout={salir} />
     <div className="enf-content">
+      {paciente && !buscando && <NavegacionPagina onVolver={() => setBuscando(true)} textoVolver="Volver a la búsqueda"
+        migas={[{ texto: 'Enfermería', onClick: () => setBuscando(true) }, { texto: paciente.nombre_completo }]} />}
       <div className="enf-heading"><div><p>ADMISIÓN Y VALORACIÓN INICIAL</p><h1>Registro de enfermería</h1><span>Captura datos referidos y mediciones. Revisa y publica para que el médico pueda consultarlos.</span></div></div>
 
       {paciente && !buscando

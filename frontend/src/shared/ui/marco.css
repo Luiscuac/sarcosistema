@@ -49,3 +49,6 @@ a.lab-brand { text-decoration: none; }
 }
 @media print { .lab-nav { display: none; } }
 @media (prefers-reduced-motion: reduce) { .lab-progress-bar > span { transition: none; } }
+.lab-breadcrumb-link { padding: 0; border: 0; background: none; color: var(--brand); font: inherit; cursor: pointer; }
+.lab-breadcrumb-link:hover { text-decoration: underline; }
+button.lab-back-button { font-family: inherit; cursor: pointer; }

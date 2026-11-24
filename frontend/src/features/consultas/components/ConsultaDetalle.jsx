@@ -4,6 +4,7 @@ import { IdentidadPaciente } from './PacienteFicha.jsx'
 import { calcularImc, grupos } from '../utils/formulario.js'
 import { fecha } from '../utils/paciente.js'
 import { formatearFechaHora } from '../../../shared/utils/formatearFecha.js'
+import NavegacionPagina from '../../../shared/ui/NavegacionPagina.jsx'
 
 function DetalleContenido({ consulta }) {
   const imc = calcularImc(consulta.peso_kg ?? '', consulta.talla_cm ?? '')
@@ -18,5 +19,8 @@ export default function ConsultaDetalle({ id }) {
   const consulta = useConsulta(id)
   if (consulta.isPending) return <p role="status">Cargando consulta…</p>
   if (consulta.isError) return <p role="alert">No se pudo recuperar la consulta.</p>
-  return <><div className="med-heading"><div><p className="med-eyebrow">HISTORIA CLÍNICA</p><h1>Detalle de consulta</h1><p>Registro histórico de solo lectura · {fecha(consulta.data.fecha_hora_inicio)}</p></div><Link className="med-link-button" to={`/consultas/pacientes/${consulta.data.paciente_id}`}>Volver al historial</Link></div>{consulta.data.paciente && <><IdentidadPaciente paciente={consulta.data.paciente} />{consulta.data.paciente.estado !== 'activo' && <p className="med-hint">El paciente ya no está activo; esta consulta histórica se conserva en modo lectura.</p>}</>}<DetalleContenido consulta={consulta.data} /></>
+  const ficha = `/consultas/pacientes/${consulta.data.paciente_id}`
+  return <><NavegacionPagina volverA={ficha} textoVolver="Volver a la ficha"
+    migas={[{ texto: 'Pacientes', ruta: '/consultas' }, { texto: consulta.data.paciente?.nombre_completo || 'Paciente', ruta: ficha }, { texto: 'Detalle de consulta' }]} />
+    <div className="med-heading"><div><p className="med-eyebrow">HISTORIA CLÍNICA</p><h1>Detalle de consulta</h1><p>Registro histórico de solo lectura · {fecha(consulta.data.fecha_hora_inicio)}</p></div></div>{consulta.data.paciente && <><IdentidadPaciente paciente={consulta.data.paciente} />{consulta.data.paciente.estado !== 'activo' && <p className="med-hint">El paciente ya no está activo; esta consulta histórica se conserva en modo lectura.</p>}</>}<DetalleContenido consulta={consulta.data} /></>
 }
