@@ -6,7 +6,7 @@ services:
     plan: free
     dockerContext: ./backend
     dockerfilePath: ./backend/Dockerfile
-    dockerCommand: sh -c 'python -m alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port "$PORT"'
+    dockerCommand: python -m uvicorn app.main:app --host 0.0.0.0 --port 10000
     healthCheckPath: /health/db
     autoDeployTrigger: "off"
     envVars:
